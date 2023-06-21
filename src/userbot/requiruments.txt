@@ -1,0 +1,9 @@
+pyrogram
+telethon
+peewee
+pydantic[dotenv]
+pymysql
+cryptography
+loguru
+requests
+requests[socks]
