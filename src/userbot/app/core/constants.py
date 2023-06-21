@@ -20,5 +20,20 @@ groups_list = ["adaptaciyausa", "adaptaciya_ua_usa"]  # "ads_new_york", "calosan
 # "usa_job_helper", "usamexico", "used21cars", "biznesdvigusa", "miamiarea", "newyorkchat24",
 # "newyork_job", "vhi7f", "mayami_360", "nomadsfamilyla", "nyjobs_usa", "in_miami"]
 
-proxies_list = ["zrZ1na:vzSPV8@38.170.95.174:9504", "zrZ1na:vzSPV8@38.153.57.132:9851",
+proxies_list = ["zrZ1na:vzSPV8@38.170.95.174:9504", "zrZ1na:vzSPV8@38.153.57.132:9851", "zrZna:vzSPV8@38.12.57.11:9851",
                 "zrZ1na:vzSPV8@38.170.95.62:9805", "zrZ1na:vzSPV8@38.170.243.82:9329", "zrZ1na:vzSPV8@38.170.95.7:9460"]
+
+strings = {
+    "573213524152": {"phone": "573213524152", "user_id": 5619122397,
+                     "string_session": "AQAAB_gAik9fS8Hf3Ubk7_FfHMKaXzGX2BnISq3OZHp2xwFBhAE33Lj9VGNvBB4uirpwZDEWRglrQF6pNDhfZNNUJLcdp5RAklOF6qdIhnBKgnwAAvjg1iSEtNdEC2ClxHZAIMstCgcEnrnxtieEn3fYGVss12quMdzIwmheUnWaNGiHpLc-4jXrVHmW9DCIUI8j4CyN8sqYEf8IS8EAT2grLPwSemT3tRwfD1wmGi8l5ZsmBpu8nikMaGYHILxJltuPJfinTFzRX231sk2gAFiR8KZIOob83eDFwT2T6Vn9cLtF_ReGyA5cCOP4tlNZxydaXr1D0DwdbVOsVqpMvFdP_VR-HwAAAAFO7QDdAA",
+                     "api_id": 2040, "api_hash": "b18441a1ff607e10a989891a5462e627", "device_model": "PC 64bit",
+                     "app_version": "3.2.2 x64", "system_version": "Windows 11"},
+    "573213815626": {"phone": "573213815626", "user_id": 6067370896,
+                     "string_session": "AQAAB_gAk9dBnBQzGHb7f6NHE0G0wdKPhhJMod1jhZ4khtryRuhNffhgtFZXhfLi2rurkbtgiP-d4m25UTGq1vi72TR9yw3u9xmKeOEudAaZYJonY5fhyzcpeMajgUxfjA3OnIDVM3cU-N78w6es5Eir9V2QcctA0Mj4OSkkSgf3k1vLcwTl_0-yvswlfGBI60aIsIRlLkQb6oVK06BtTjtast0NynS_3ZQmsAtmwUgYwJOgdLVMTSFGDW9q6mpRcjRBh4Tzocj0k2RqWoQ4ioKExbDQuI9YV1ZnaC9qkjAOLRJc28tbxpL1sOCT4eyKae1D_-d5cxsLAoKyKolzIy4B7rq3twAAAAFppLuQAA",
+                     "api_id": 2040, "api_hash": "b18441a1ff607e10a989891a5462e627", "device_model": "PC 64bit",
+                     "app_version": "3.2.3 x64", "system_version": "Windows 11"},
+    "573214578014": {"phone": "573214578014", "user_id": 6235508623,
+                     "string_session": "AQAAB_gAkz1jBBy8fSksA1mtZMlNN0hiG4-hf6xenhzKgQgjxhan494tXm-Cx-6zB1aPVsEeyg180vOYjTbSXvbilMbglGKrm8evFQ-8ZMFE7AEF1pPhG5lc9WJ84ssUMAEjmSKnTBIXj-J2nz6MRb75gpugKnxVqC8THeqnpIxhjjum7kCuCnDni-QamxNAckeA1Jl_UcTVRLRbupS797wkpKFPTnEPVR_omy5HJhRzsCD8pmitFWl_DXmvyilPViUNaCGuLqNTWerdcphkPKMDBdYpB99AtUSLZr0s0452wIrbyHXxzLMlx0Oye93wdzn7wN9g6oindcV0VWuS80G4UYTe1AAAAAFzqk-PAA",
+                     "api_id": 2040, "api_hash": "b18441a1ff607e10a989891a5462e627", "device_model": "PC 64bit",
+                     "app_version": "3.2.2 x64", "system_version": "Windows 10"}
+}

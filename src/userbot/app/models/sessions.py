@@ -19,9 +19,10 @@ class Session(BaseModel):
     id = PrimaryKeyField()
     phone = CharField(max_length=32, unique=True)
     country = ForeignKeyField(Country, to_field='id')
-    app_id = BigIntegerField()
-    app_hash = CharField(max_length=256)
+    api_id = BigIntegerField()
+    api_hash = CharField(max_length=256)
     telegram_id = BigIntegerField()
+    string = CharField(max_length=512)
 
     state = CharField(max_length=64, default=SessionStates.wait)
     state_description = CharField(max_length=2056, null=True)

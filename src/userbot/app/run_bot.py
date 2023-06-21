@@ -7,7 +7,7 @@ from db.init_db import init_db
 from db.session import SessionLocal
 from models import Country
 from utils.checks.proxy import check_new_proxy
-from utils.checks.sessions import check_new_sessions, check_free_sessions
+from utils.checks.sessions import check_free_sessions
 from utils.logger import configure_logger
 
 
@@ -26,7 +26,6 @@ async def on_start_up():
     repo.proxies.add_new_proxy()
     repo.groups.add_new_group()
     check_new_proxy()
-    await check_new_sessions()
     await check_free_sessions()
 
     logger.info("Success init")

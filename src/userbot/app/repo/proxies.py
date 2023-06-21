@@ -21,11 +21,11 @@ class ProxyRepository:
         return SessionLocal
 
     def add_new_proxy(self, ):
-        for item in proxies_list:
-            item_data = item.split("@")
-            with self.get_session():
+        with self.get_session():
+            for item in proxies_list:
+                item_data = item.split("@")
                 self.model.get_or_create(
-                    type="socks5", host=item_data[1].split(':')[0], port=item_data[1].split(':')[1],
+                    type=ProxyTypes.socks5, host=item_data[1].split(':')[0], port=item_data[1].split(':')[1],
                     user=item_data[0].split(':')[0], password=item_data[0].split(':')[1], country=repo.countries.get(1)
                 )
 
@@ -49,12 +49,15 @@ class ProxyRepository:
             result = self.model.select().execute()
         return result
 
-    def get_dict(self, proxy_id: int) -> tuple:
+    def get_dict(self, proxy_id: int) -> dict:
         proxy = self.get(proxy_id)
-        result = (
-            socks.HTTP if proxy.type == ProxyTypes.http else socks.SOCKS5,
-            proxy.host, proxy.port, proxy.user, proxy.password
-        )
+        result = {
+            "scheme": proxy.type,
+            "hostname": proxy.host,
+            "port": proxy.port,
+            "username": proxy.user,
+            "password": proxy.password
+        }
         return result
 
     def get_random_dict(self):

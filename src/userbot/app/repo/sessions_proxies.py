@@ -18,7 +18,8 @@ class SessionProxyRepository:
 
     def create(self, **kwargs):
         with self.get_session():
-            self.model.get_or_create(**kwargs)
+            result = self.model.get_or_create(**kwargs)
+        return result
 
     def check_all(self):
         """Удаляем устаревшие"""

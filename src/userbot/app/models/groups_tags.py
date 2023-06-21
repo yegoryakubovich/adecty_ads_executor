@@ -10,4 +10,4 @@ class GroupTag(BaseModel):
     tag = ForeignKeyField(Tag, to_field='id')
 
     class Meta:
-        db_table = 'groups_countries'
+        db_table = 'groups_tags'

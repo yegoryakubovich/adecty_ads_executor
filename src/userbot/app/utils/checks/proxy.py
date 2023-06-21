@@ -1,4 +1,5 @@
 import requests
+from loguru import logger
 
 import repo
 from models.proxies import ProxyStates, ProxyTypes
@@ -6,19 +7,24 @@ from models.proxies import ProxyStates, ProxyTypes
 
 def check_proxy(proxy) -> bool:
     proxies = None
-    if proxy.type == ProxyTypes.http:
+    logger.info(proxy.id)
+    if proxy.type == ProxyTypes.socks5:
         proxies = {
-            'http': f"http://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}/"
+            'http': f'socks5://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}',
+            'https': f'socks5://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}',
         }
-    elif proxy.type == ProxyTypes.socks5:
+    elif proxy.type == ProxyTypes.http:
         proxies = {
-            'http': f"socks5://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}/"
+            'http': f'https://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}',
+            'https': f'https://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}',
         }
     if proxies:
-        r = requests.get("https://ya.ru", proxies=proxies)
-        print(r.status_code)
-        if r.status_code == 200:
-            return True
+        try:
+            r = requests.get("https://ifconfig.me/all.json", proxies=proxies, timeout=5)
+            if r.status_code == 200:
+                return True
+        except:
+            pass
     return False
 
 

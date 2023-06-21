@@ -18,4 +18,4 @@ class Order(BaseModel):
     datetime_stop = DateTimeField()
 
     class Meta:
-        db_table = 'proxies'
+        db_table = 'orders'
