@@ -1,6 +1,6 @@
 from peewee import PrimaryKeyField, CharField, DateTimeField
 
-from db.base_model import BaseModel
+from database.db import BaseModel
 
 
 class OrderStates:

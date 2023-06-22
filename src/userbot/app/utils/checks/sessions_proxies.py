@@ -1,5 +1,5 @@
-import repo
-from models import Session
+from database import repo
+from database.models import Session
 
 
 async def find_new_link(session: Session):

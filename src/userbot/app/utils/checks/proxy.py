@@ -1,8 +1,8 @@
 import requests
 from loguru import logger
 
-import repo
-from models.proxies import ProxyStates, ProxyTypes
+from database import repo
+from database.models import ProxyTypes, ProxyStates
 
 
 def check_proxy(proxy) -> bool:

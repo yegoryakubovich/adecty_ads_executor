@@ -1,7 +1,5 @@
-import repo
-from models import Order
-from models.groups import GroupStates
-from models.sessions import SessionStates
+from database import repo
+from database.models import Order, SessionStates, GroupStates
 
 
 async def smart_send_message(order: Order):

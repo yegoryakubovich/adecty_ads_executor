@@ -1,6 +1,7 @@
+
 from core.constants import groups_list
-from db.session import SessionLocal
-from models import Group
+from database import db_manager
+from database.models import Group
 
 model = Group
 
@@ -9,21 +10,16 @@ class GroupRepository:
     def __init__(self):
         self.model = model
 
-    @staticmethod
-    def get_session():
-        return SessionLocal
-
+    @db_manager
     def add_new_group(self, ):
         for item in groups_list:
             if item.count("@"):
                 item = item[1:]
-            with self.get_session():
-                self.model.get_or_create(name=item)
+            self.model.get_or_create(name=item)
 
+    @db_manager
     def get(self, id: int) -> model:
-        with self.get_session():
-            result = self.model.get_by_id(id)
-        return result
+        return self.model.get_by_id(id)
 
 
 groups = GroupRepository()

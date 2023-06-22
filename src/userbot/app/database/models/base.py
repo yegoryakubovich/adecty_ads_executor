@@ -1,8 +1,8 @@
 from peewee import Model
 
-from db.session import SessionLocal
+from database import db
 
 
 class BaseModel(Model):
     class Meta:
-        database = SessionLocal
+        database = db

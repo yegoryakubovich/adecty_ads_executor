@@ -1,6 +1,6 @@
-import repo
 from bot.sessions import session_actions
-from models.sessions import SessionStates
+from database import repo
+from database.models import SessionStates
 
 
 async def check_banned(client):

@@ -1,7 +1,7 @@
 from pyrogram import Client
 
-import repo
-from models import Session, SessionProxy
+from database import repo
+from database.models import Session, SessionProxy
 from utils.checks.sessions_proxies import find_new_link
 
 
