@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from datetime import datetime
 
 from peewee import PrimaryKeyField, BigIntegerField, CharField, DateTimeField, ForeignKeyField
 
@@ -41,7 +41,7 @@ class Session(BaseModel):
 
     state = CharField(max_length=64, default=SessionStates.wait)
     state_description = CharField(max_length=2056, null=True)
-    created = DateTimeField()
+    created = DateTimeField(default=datetime.utcnow)
 
     class Meta:
         db_table = 'sessions'

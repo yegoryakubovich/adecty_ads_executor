@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from datetime import datetime
 
 from peewee import PrimaryKeyField, CharField, ForeignKeyField, DateTimeField
 
-from . import Group
+from . import Group, Order
 from .base import BaseModel
 from .session import Session
 
@@ -29,11 +29,11 @@ class MessageStates:
 class Message(BaseModel):
     id = PrimaryKeyField()
     session = ForeignKeyField(Session, to_field='id')
-    # ad = ForeignKeyField(Ad, to_field='id')
+    order = ForeignKeyField(Order, to_field='id')
     group = ForeignKeyField(Group, to_field='id')
     state = CharField(max_length=64, default=MessageStates.waiting)
 
-    created = DateTimeField()
+    created = DateTimeField(default=datetime.utcnow)
 
     class Meta:
         db_table = 'messages'

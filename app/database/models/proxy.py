@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from datetime import datetime
 
-
-from peewee import PrimaryKeyField, IntegerField, CharField, ForeignKeyField
+from peewee import PrimaryKeyField, IntegerField, CharField, ForeignKeyField, DateTimeField
 
 from .base import BaseModel
 from .country import Country
@@ -40,6 +40,10 @@ class Proxy(BaseModel):
     port = IntegerField()
     user = CharField(max_length=128)
     password = CharField(max_length=256)
+
+    state = CharField(max_length=64, default=ProxyStates.wait)
+    state_description = CharField(max_length=2056, null=True)
+    created = DateTimeField(default=datetime.utcnow)
 
     class Meta:
         db_table = 'proxies'

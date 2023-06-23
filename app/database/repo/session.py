@@ -1,5 +1,19 @@
-from typing import List
-
+#
+# (c) 2023, Yegor Yakubovich, yegoryakubovich.com, personal@yegoryakybovich.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+from typing import List, Optional
 
 from core.constants import SESSIONS_DIR, strings
 from database import db_manager, repo
@@ -30,8 +44,8 @@ class SessionRepository:
         return self.model.select().count()
 
     @db_manager
-    def get(self, id: int) -> model:
-        return self.model.get_by_id(id)
+    def get_by_id(self, id: int) -> model:
+        return self.model.get_or_none(id=id)
 
     @db_manager
     def get_all(self) -> List[model]:
@@ -43,10 +57,11 @@ class SessionRepository:
 
     @db_manager
     def get_dict(self, id: int) -> dict:
-        session = self.get(id)
+        session = self.get_by_id(id)
         return {
             "session": f"{SESSIONS_DIR}/{session.phone}", "api_id": session.app_id, "api_hash": session.app_hash
         }
+
 
     @db_manager
     def move_state(self, session: Session, state: SessionStates):

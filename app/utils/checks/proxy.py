@@ -1,3 +1,18 @@
+#
+# (c) 2023, Yegor Yakubovich, yegoryakubovich.com, personal@yegoryakybovich.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import requests
 from loguru import logger
 
@@ -7,7 +22,6 @@ from database.models import ProxyTypes, ProxyStates
 
 def check_proxy(proxy) -> bool:
     proxies = None
-    logger.info(proxy.id)
     if proxy.type == ProxyTypes.socks5:
         proxies = {
             'http': f'socks5://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}',
@@ -20,7 +34,7 @@ def check_proxy(proxy) -> bool:
         }
     if proxies:
         try:
-            r = requests.get("https://ifconfig.me/all.json", proxies=proxies, timeout=5)
+            r = requests.get(url="https://ifconfig.me/all.json", proxies=proxies, timeout=5)
             if r.status_code == 200:
                 return True
         except:

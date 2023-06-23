@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from datetime import datetime
 
-
-from peewee import PrimaryKeyField, ForeignKeyField
+from peewee import PrimaryKeyField, ForeignKeyField, DateTimeField
 
 from .base import BaseModel
 from .group import Group
@@ -26,6 +26,8 @@ class SessionGroup(BaseModel):
     id = PrimaryKeyField()
     session = ForeignKeyField(Session, to_field='id')
     group = ForeignKeyField(Group, to_field='id')
+
+    created = DateTimeField(default=datetime.utcnow)
 
     class Meta:
         db_table = 'sessions_groups'

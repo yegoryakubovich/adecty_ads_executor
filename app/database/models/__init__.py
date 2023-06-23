@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-
+from .order import Order
 from .account import Account
 from .admin import Admin
 from .country import Country
@@ -22,7 +22,7 @@ from .group import Group, GroupStates
 from .group_country import GroupCountry
 from .group_tag import GroupTag
 from .message import Message, MessageStates
-from .order import Order
+
 from .proxy import Proxy, ProxyTypes, ProxyStates
 from .session import Session, SessionStates
 from .session_group import SessionGroup
@@ -54,6 +54,7 @@ models = (
     Admin,
     Country,
     Tag,
+    Order,
     Proxy,
     Group,
     GroupCountry,

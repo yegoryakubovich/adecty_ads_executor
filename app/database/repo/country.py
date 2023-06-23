@@ -13,13 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from bot.sessions import session_actions
-from database import repo
-from database.models import Order, GroupStates
+from database import db_manager
+from database.models import Country
+
+model = Country
 
 
-async def smart_send_message(order: Order):
-    for group in repo.groups.get_all_by_state(state=GroupStates.active):
-        session_from_send_msg = repo.messages.get_session_from_send_message(order=order, group=group)
-        client = await session_actions.open_session(session_from_send_msg)
-        await session_actions.send_message(client, group.name, order.message)
+class CountryRepository:
+    def __init__(self):
+        self.model = model
+
+    @db_manager
+    def get_by_id(self, id: int) -> model:
+        return self.model.get_or_none(id=id)
+
+
+countries = CountryRepository()
