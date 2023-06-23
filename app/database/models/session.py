@@ -39,7 +39,7 @@ class Session(BaseModel):
     api_hash = CharField(max_length=256)
     tg_user_id = BigIntegerField()
 
-    state = CharField(max_length=64, default=SessionStates.waiting)
+    state = CharField(max_length=64, default=SessionStates.wait)
     state_description = CharField(max_length=2056, null=True)
     created = DateTimeField()
 

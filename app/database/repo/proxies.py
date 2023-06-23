@@ -42,10 +42,8 @@ class ProxyRepository:
         proxy = self.get(proxy_id)
         return {
             "scheme": proxy.type,
-            "hostname": proxy.host,
-            "port": proxy.port,
-            "username": proxy.user,
-            "password": proxy.password
+            "hostname": proxy.host, "port": proxy.port,
+            "username": proxy.user, "password": proxy.password
         }
 
     @db_manager

@@ -1,3 +1,4 @@
+
 from pyrogram import Client
 
 from database import repo
@@ -8,6 +9,9 @@ from utils.checks.sessions_proxies import find_new_link
 class SessionActions:
     async def open_session(self, session: Session) -> Client:
         sp: SessionProxy = repo.sessions_proxies.get_by_session(session=session)
+        a: Client
+        a.export_session_string()
+        struct.pack
         if not sp:
             sp = await find_new_link(session)
             print(sp)

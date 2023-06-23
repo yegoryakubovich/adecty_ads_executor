@@ -2,7 +2,7 @@
 .vscode
 .mypy_cache
 .env
-data/*
+data
 src/bot/app/data/images/nft_items/*
 logs/*
 tests/
