@@ -6,3 +6,4 @@ cryptography
 requests
 requests[socks]
 loguru
+apscheduler

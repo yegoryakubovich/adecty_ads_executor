@@ -14,13 +14,20 @@
 # limitations under the License.
 #
 import asyncio
+from datetime import datetime
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
 
-from bot.send_message import smart_send_message
-from database import init_db, db
-from database.models import Country, Order
+from database import init_db, db, repo
+from database.models import Country, Order, SessionStates
+from functions.bot.main import BotAction
+from functions.other.main import AssistantAction
 from utils.logger import configure_logger
+
+
+async def hi_men():
+    print("Hi men")
 
 
 async def on_start_up():
@@ -35,7 +42,11 @@ async def on_start_up():
         Country.get_or_create(name="Russia")
         order, _ = Order.get_or_create(name="Test1",
                                        message="Всем привет, хочу узнать как вообще здесь относятся к новеньким?")
-    await smart_send_message(order)
+    # await session_actions.smart_send_message(order)
+
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(hi_men, 'interval', minutes=1, next_run_time=datetime.now())
+    scheduler.start()
 
     # repo.sessions.session_add_new()
     # repo.proxies.add_new_proxy()
@@ -47,4 +58,24 @@ async def on_start_up():
 
 
 if __name__ == '__main__':
-    asyncio.run(on_start_up())
+    all_functions = [AssistantAction()]
+    for session in repo.sessions.get_all_by_state(state=SessionStates.free):
+        all_functions.append(BotAction(session=session))
+    loop = asyncio.get_event_loop()
+    all_tasks = []
+    for function in all_functions:
+        all_tasks.append(
+            loop.create_task(
+                function.start()
+            )
+        )
+    loop.run_until_complete(asyncio.wait(all_tasks))
+
+
+    # loop = asyncio.get_event_loop()
+    # loop.create_task(hi_men())
+    # asyncio.run(on_start_up())
+    # scheduler = AsyncIOScheduler()
+    # scheduler.add_job(hi_men, 'interval', minutes=1, next_run_time=datetime.now())
+    # scheduler.start()
+    # loop.run_forever()

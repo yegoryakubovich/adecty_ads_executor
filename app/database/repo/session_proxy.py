@@ -40,7 +40,10 @@ class SessionProxyRepository:
 
     @db_manager
     def get_by_session(self, session: Session):
-        return self.model.get_or_none(session=session)
+        result = self.model.get_or_none(session=session)
+        if not result:
+            result = self.create(session=session, proxy=repo.sessions_proxies.get_free_proxy())[0]
+        return result
 
     @db_manager
     def get_by_proxy(self, proxy: Proxy):
