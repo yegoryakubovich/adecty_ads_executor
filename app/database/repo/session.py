@@ -36,7 +36,7 @@ class SessionRepository:
             item = strings[session]
             self.model.get_or_create(
                 phone=item["phone"], tg_user_id=item["user_id"], string=item["string_session"],
-                api_id=item["api_id"], api_hash=item["api_hash"], country=repo.countries.get(1)
+                api_id=item["api_id"], api_hash=item["api_hash"], country=repo.countries.get_by_id(1)
             )
 
     @db_manager

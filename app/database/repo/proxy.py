@@ -33,7 +33,8 @@ class ProxyRepository:
             item_data = item.split("@")
             self.model.get_or_create(
                 type=ProxyTypes.socks5, host=item_data[1].split(':')[0], port=item_data[1].split(':')[1],
-                user=item_data[0].split(':')[0], password=item_data[0].split(':')[1], country=repo.countries.get(1)
+                user=item_data[0].split(':')[0], password=item_data[0].split(':')[1],
+                country=repo.countries.get_by_id(1)
             )
 
     @db_manager

@@ -1,3 +1,5 @@
+import asyncio
+
 from loguru import logger
 from pyrogram import Client
 
@@ -5,6 +7,10 @@ from database import repo
 from database.models import Session, SessionProxy
 from functions.bot.executor import ExecutorAction
 from functions.bot.simulator import SimulatorAction
+
+
+def start_project():
+    pass
 
 
 class BotAction:
@@ -33,10 +39,19 @@ class BotAction:
 
     async def start(self):
         self.client = await self.open_session()
-        await self.start_session()
         self.executor_actions = ExecutorAction(self.client)
         self.simulator_actions = SimulatorAction(self.client)
-        """CODE"""
-        logger.info(f"[{self.session.id}] Запустился!")
-        """END CODE"""
-        await self.stop_session()
+        try:
+            self.client = await self.open_session()
+            # """CODE"""
+
+            while True:
+                logger.info(f"[{self.session.id}] Запустился!")
+
+                await asyncio.sleep(120)
+
+            # """END CODE"""
+        except ZeroDivisionError:
+            pass
+        finally:
+            await self.stop_session()

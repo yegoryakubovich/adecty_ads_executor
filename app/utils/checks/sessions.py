@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from bot.sessions import session_actions
 from database import repo
 from database.models import SessionStates
 
@@ -36,10 +35,10 @@ async def check_wait_sessions():
             repo.sessions.move_state(session, SessionStates.banned)
 
 
-async def check_free_sessions():
-    for session in repo.sessions.get_all_by_state(state=SessionStates.free):
-        client = await session_actions.open_session(session)
-        if await check_banned(client):
-            repo.sessions.move_state(session, SessionStates.free)
-        else:
-            repo.sessions.move_state(session, SessionStates.banned)
+# async def check_free_sessions():
+#     for session in repo.sessions.get_all_by_state(state=SessionStates.free):
+#         client = await session_actions.open_session(session)
+#         if await check_banned(client):
+#             repo.sessions.move_state(session, SessionStates.free)
+#         else:
+#             repo.sessions.move_state(session, SessionStates.banned)
