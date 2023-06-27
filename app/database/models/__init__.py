@@ -13,21 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from .order import Order
+"""FIRST"""
 from .account import Account
 from .admin import Admin
 from .country import Country
 from .group import Group, GroupStates
-from .group_country import GroupCountry
-from .group_tag import GroupTag
-from .message import Message, MessageStates
+from .order import Order
+from .tag import Tag
 
+"""SECOND"""
 from .proxy import Proxy, ProxyTypes, ProxyStates
 from .session import Session, SessionStates
+
+"""THREE"""
+from .message import Message, MessageStates
+from .group_country import GroupCountry
+from .group_tag import GroupTag
 from .session_group import SessionGroup
 from .session_proxy import SessionProxy
-from .tag import Tag
+from .session_task import SessionTask
 
 __all__ = (
     # Main
@@ -49,7 +53,7 @@ __all__ = (
     GroupStates, SessionStates, MessageStates,
 )
 
-models = (
+all_models = (
     Account,
     Admin,
     Country,
@@ -63,4 +67,5 @@ models = (
     SessionGroup,
     SessionProxy,
     Message,
+    SessionTask
 )

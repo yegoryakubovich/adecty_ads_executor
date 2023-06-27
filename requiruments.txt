@@ -3,7 +3,5 @@ peewee
 pydantic[dotenv]
 pymysql
 cryptography
-requests
-requests[socks]
 loguru
 apscheduler

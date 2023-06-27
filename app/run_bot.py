@@ -13,14 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import asyncio
 
 from loguru import logger
 
 from database import init_db, repo
 from database.models import SessionStates
-from functions.bot.main import BotAction
-from functions.other.main import AssistantAction
+from functions import BotAction, AssistantAction
 from utils.logger import configure_logger
 
 
@@ -33,15 +33,35 @@ def on_start_up():
         logger.error("[Database] Failed to connect to database ")
         exit(1)
 
-    all_functions = [AssistantAction()]
-    all_functions.extend([
-        BotAction(session=session) for session in repo.sessions.get_all_by_state(state=SessionStates.free)
-    ])
+    """temporary"""
+    repo.countries.create(name="Russia")
+    repo.proxies.add_new_proxy()
+    repo.sessions.session_add_new()
+    repo.groups.add_new_group()
+    """temporary"""
+
     loop = asyncio.get_event_loop()
-    all_tasks = [loop.create_task(function.start()) for function in all_functions]
-    loop.run_until_complete(asyncio.wait(all_tasks))
+    all_functions = [{'fun': AssistantAction(), 'name': 'Assistant'}]
+    all_functions.extend([
+        {
+            'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
+        } for session in repo.sessions.get_all_by_state(state=SessionStates.free)
+    ])
+    all_tasks = [
+                    loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions
+                ] + [
+                    loop.create_task(hello(), name="TEST")
+                ]
+    for task in all_tasks:
+        loop.run_until_complete(task)
 
     logger.info("Success init")
+
+
+async def hello():
+    while True:
+        logger.info([task.get_name() for task in asyncio.all_tasks()])
+        await asyncio.sleep(5)
 
 
 if __name__ == '__main__':

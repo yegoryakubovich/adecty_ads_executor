@@ -19,4 +19,6 @@ from .message import messages
 from .order import orders
 from .proxy import proxies
 from .session import sessions
+from .session_group import sessions_groups
 from .session_proxy import sessions_proxies
+from .session_task import sessions_tasks

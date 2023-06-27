@@ -13,28 +13,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from datetime import datetime
 
-from peewee import PrimaryKeyField, CharField, ForeignKeyField, DateTimeField, BigIntegerField
 
-from . import Group, Order
+from peewee import PrimaryKeyField, ForeignKeyField, CharField
+
+from . import Session, Group, Order, Message
 from .base import BaseModel
-from .session import Session
 
 
-class MessageStates:
-    waiting = 'waiting'
+class SessionTaskType:
+    non_type = 'non_type'
+    check_group = 'check_group'
+    send_by_order = 'send_by_order'
+    check_message = 'check_message'
 
 
-class Message(BaseModel):
+class SessionTaskStates:
+    enable = 'enable'
+    finished = 'finished'
+    stop = 'stop'
+
+
+class SessionTask(BaseModel):
     id = PrimaryKeyField()
     session = ForeignKeyField(Session, to_field='id')
-    order = ForeignKeyField(Order, to_field='id')
-    group = ForeignKeyField(Group, to_field='id')
-    state = CharField(max_length=64, default=MessageStates.waiting)
-    message_id = BigIntegerField()
+    group = ForeignKeyField(Group, to_field='id', null=True)
+    order = ForeignKeyField(Order, to_field='id', null=True)
+    message = ForeignKeyField(Message, to_field='id', null=True)
 
-    created = DateTimeField(default=datetime.utcnow)
+    state = CharField(max_length=32, default=SessionTaskStates.enable)
+    type = CharField(max_length=32, default=SessionTaskType.non_type)
 
     class Meta:
-        db_table = 'messages'
+        db_table = 'sessions_tasks'

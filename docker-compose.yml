@@ -21,14 +21,13 @@ services:
     restart: on-failure
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_DATABASE: ${MYSQL_NAME}
     ports:
       - "3306:3306"
     volumes:
       - ./data/mysql/:/var/lib/mysql
-  phpmyadmin:
+  pma:
     image: phpmyadmin/phpmyadmin
-    container_name: pma
     environment:
       PMA_HOST: db
       PMA_PORT: 3306

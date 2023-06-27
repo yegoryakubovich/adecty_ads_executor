@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import List, Optional
+from random import randint
+from typing import List
 
 from core.constants import SESSIONS_DIR, strings
 from database import db_manager, repo
@@ -56,16 +57,28 @@ class SessionRepository:
         return self.model.select().filter(state=state).execute()
 
     @db_manager
+    def get_free(self) -> List[model]:
+        result = self.get_all_by_state(state=SessionStates.free)
+        return result[randint(0, len(result) - 1)]
+
+    @db_manager
     def get_dict(self, id: int) -> dict:
         session = self.get_by_id(id)
         return {
             "session": f"{SESSIONS_DIR}/{session.phone}", "api_id": session.app_id, "api_hash": session.app_hash
         }
 
-
     @db_manager
     def move_state(self, session: Session, state: SessionStates):
         session.state = state
+        session.save()
+
+    @db_manager
+    def set_banned(self, session: Session):
+        session.state = SessionStates.banned
+        repo.sessions_tasks.delete_by_session(session)
+        repo.sessions_proxies.delete_by_session(session)
+        repo.sessions_groups.delete_by_session(session)
         session.save()
 
 

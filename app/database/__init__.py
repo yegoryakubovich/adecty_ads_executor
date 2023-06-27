@@ -15,9 +15,9 @@
 #
 from .db import db
 from .db_manager import db_manager
-from .models import models
+from .models import all_models
 
 
 @db_manager
 def init_db() -> None:
-    db.create_tables(models)
+    db.create_tables(all_models)

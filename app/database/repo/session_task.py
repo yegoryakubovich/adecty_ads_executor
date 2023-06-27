@@ -15,17 +15,14 @@
 #
 from typing import List
 
-from loguru import logger
-from peewee import ModelObjectCursorWrapper
+from database import db_manager
+from database.models import SessionTask, Session, Group
+from database.models.session_task import SessionTaskStates
 
-from core.constants import MAX_SESSION2ONE_PROXY
-from database import db_manager, repo
-from database.models import SessionProxy, Proxy, Session, ProxyStates
-
-model = SessionProxy
+model = SessionTask
 
 
-class SessionProxyRepository:
+class SessionTaskRepository:
     def __init__(self):
         self.model = model
 
@@ -46,29 +43,16 @@ class SessionProxyRepository:
         return self.model.select().execute()
 
     @db_manager
-    def get_free_proxy(self):
-        proxies: ModelObjectCursorWrapper = repo.proxies.get_all_by_state(state=ProxyStates.enable)
-        for proxy in proxies:
-            if len(self.get_by_proxy(proxy)) < MAX_SESSION2ONE_PROXY:
-                return proxy
-        logger.info("Not free proxy")
+    def get_by_session(self, session: Session) -> model:
+        return self.model.get_or_none(session=session)
 
     @db_manager
-    def get_by_session(self, session: Session):
-        result = self.model.get_or_none(session=session)
-        if not result:
-            proxy = repo.sessions_proxies.get_free_proxy()
-            if proxy:
-                return self.create(session=session, proxy=proxy)[0]
-        return result
-
-    @db_manager
-    def get_by_proxy(self, proxy: Proxy):
-        return self.model.select().filter(proxy=proxy).execute()
+    def get_by_group(self, group: Group, state: SessionTaskStates = SessionTaskStates.enable) -> model:
+        return self.model.select().where(self.model.group == group, self.model.state == state).execute()
 
     @db_manager
     def delete_by_session(self, session: Session):
         self.model.delete().where(self.model.session == session).execute()
 
 
-sessions_proxies = SessionProxyRepository()
+sessions_tasks = SessionTaskRepository()
