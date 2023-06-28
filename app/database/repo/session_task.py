@@ -27,7 +27,7 @@ class SessionTaskRepository:
         self.model = model
 
     @db_manager
-    def create(self, **kwargs):
+    def create(self, **kwargs) -> None:
         return self.model.get_or_create(**kwargs)
 
     @db_manager
@@ -51,8 +51,14 @@ class SessionTaskRepository:
         return self.model.select().where(self.model.group == group, self.model.state == state).execute()
 
     @db_manager
-    def delete_by_session(self, session: Session):
-        self.model.delete().where(self.model.session == session).execute()
+    def delete_by_session(self, session: Session) -> None:
+        return self.model.delete().where(self.model.session == session).execute()
+
+    @db_manager
+    def get_active_task(self, session: Session) -> List[model]:
+        return self.model.select().where(
+            self.model.session == session, self.model.state == SessionTaskStates.enable
+        ).execute()
 
 
 sessions_tasks = SessionTaskRepository()

@@ -65,9 +65,10 @@ class CheckerAction:
         for group in repo.groups.get_all_by_state(state=GroupStates.checking_waiting):
             st: SessionTask = repo.sessions_tasks.get_by_group(group=group)
             if not st:
-                repo.sessions_tasks.create(
-                    session=repo.sessions.get_free(),
-                    group=group,
-                    type=SessionTaskType.check_group,
-                    state=SessionTaskStates.enable
-                )
+                session = repo.sessions.get_free()
+                if session:
+                    repo.sessions_tasks.create(
+                        session=session, group=group,
+                        type=SessionTaskType.check_group,
+                        state=SessionTaskStates.enable
+                    )

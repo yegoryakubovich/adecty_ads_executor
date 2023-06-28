@@ -59,7 +59,8 @@ class SessionRepository:
     @db_manager
     def get_free(self) -> List[model]:
         result = self.get_all_by_state(state=SessionStates.free)
-        return result[randint(0, len(result) - 1)]
+        if result:
+            return result[randint(0, len(result) - 1)]
 
     @db_manager
     def get_dict(self, id: int) -> dict:

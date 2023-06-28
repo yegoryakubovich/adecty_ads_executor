@@ -37,10 +37,9 @@ class AssistantAction:
 
         while True:
             self.logger("Start checks")
-            # await self.checker.wait_proxy_check()
-            # await self.checker.wait_session_check()
+            await self.checker.wait_proxy_check()
+            await self.checker.wait_session_check()
             await self.checker.wait_session_group()
-            repo.sessions.set_banned(repo.sessions.get_by_id(1))
 
             # repo.sessions.session_add_new()
             # repo.proxies.add_new_proxy()

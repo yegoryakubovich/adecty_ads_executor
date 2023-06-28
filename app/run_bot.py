@@ -60,8 +60,8 @@ def on_start_up():
 
 async def hello():
     while True:
-        logger.info([task.get_name() for task in asyncio.all_tasks()])
-        await asyncio.sleep(5)
+        logger.info([{'name': task.get_name(), 'func': task.get_coro()} for task in asyncio.all_tasks()])
+        await asyncio.sleep(30)
 
 
 if __name__ == '__main__':

@@ -16,7 +16,7 @@
 from typing import List
 
 from database import db_manager
-from database.models import SessionGroup, Session
+from database.models import SessionGroup, Session, Group
 
 model = SessionGroup
 
@@ -44,6 +44,12 @@ class SessionGroupRepository:
     @db_manager
     def delete_by_session(self, session: Session):
         self.model.delete().where(self.model.session == session).execute()
+
+    @db_manager
+    def check_subscribe(self, session: Session, group: Group) -> bool:
+        if self.model.select().where(self.model.session == session, self.model.group == group).execute():
+            return True
+        return False
 
 
 sessions_groups = SessionGroupRepository()

@@ -24,6 +24,7 @@ from .session import Session
 
 class MessageStates:
     waiting = 'waiting'
+    fine = 'fine'
 
 
 class Message(BaseModel):

@@ -18,6 +18,9 @@ SESSIONS_DIR = 'sessions'
 NEW_SESSION_DIR = f"{SESSIONS_DIR}/wait"
 MAX_SESSION2ONE_PROXY = 1
 DAY_OLD = 5
+URL_FOR_TEST_PROXY = 'https://ifconfig.me/all.json'
+BOT_SLEEP_MIN = 20  # 1 * 60
+BOT_SLEEP_MAX = 20  # 30 * 60
 
 groups_list = ["@kekajangroup"]  # "adaptaciyausa", "adaptaciya_ua_usa", "@kekajangroup"]
 # "ads_new_york", "calosangeles", "ca_miami_chat", "chatamerika",
