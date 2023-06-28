@@ -15,8 +15,10 @@
 #
 import asyncio
 
+import httpx
 import requests
 
+from core.constants import URL_FOR_TEST_PROXY
 from database import repo
 from database.models import ProxyStates, ProxyTypes, SessionStates, GroupStates, SessionTask
 from database.models.session_task import SessionTaskType, SessionTaskStates
@@ -30,25 +32,14 @@ class CheckerAction:
     @classmethod
     async def wait_proxy_check(cls):
         for proxy in repo.proxies.get_all_by_state(state=ProxyStates.wait):
-            proxies = None
-            if proxy.type == ProxyTypes.socks5:
-                proxies = {
-                    'http': f'socks5://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}',
-                    'https': f'socks5://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}',
-                }
-            elif proxy.type == ProxyTypes.http:
-                proxies = {
-                    'http': f'https://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}',
-                    'https': f'https://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}',
-                }
-            if proxies:
-                try:
-                    r = requests.get(url="https://ifconfig.me/all.json", proxies=proxies, timeout=5)
-                    if r.status_code == 200:
-                        repo.proxies.move_state(proxy, ProxyStates.enable)
-                        continue
-                except:
-                    ...
+            try:
+                r = httpx.get(url=URL_FOR_TEST_PROXY,
+                              proxies=f'{proxy.type}://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}')
+                if r.status_code == 200:
+                    repo.proxies.move_state(proxy, ProxyStates.enable)
+                    continue
+            except:
+                ...
             repo.proxies.move_state(proxy, ProxyStates.disable)
 
     @classmethod
@@ -73,7 +64,6 @@ class CheckerAction:
     async def wait_session_group(cls):
         for group in repo.groups.get_all_by_state(state=GroupStates.checking_waiting):
             st: SessionTask = repo.sessions_tasks.get_by_group(group=group)
-            st = None
             if not st:
                 repo.sessions_tasks.create(
                     session=repo.sessions.get_free(),
