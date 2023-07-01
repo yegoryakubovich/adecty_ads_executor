@@ -14,31 +14,16 @@
 # limitations under the License.
 #
 
-from datetime import datetime
+from peewee import PrimaryKeyField, ForeignKeyField
 
-from peewee import PrimaryKeyField, CharField, ForeignKeyField, DateTimeField, BigIntegerField
-
-from . import Group, Order
+from . import Order, Group
 from .base import BaseModel
-from .session import Session
 
 
-class MessageStates:
-    waiting = 'waiting'
-    fine = 'fine'
-    deleted = 'deleted'
-
-
-class Message(BaseModel):
+class OrderGroup(BaseModel):
     id = PrimaryKeyField()
-    session = ForeignKeyField(Session, to_field='id')
-    order = ForeignKeyField(Order, to_field='id', null=True)
+    order = ForeignKeyField(Order, to_field='id')
     group = ForeignKeyField(Group, to_field='id')
-    state = CharField(max_length=64, default=MessageStates.waiting)
-
-    message_id = BigIntegerField()
-    text = CharField(max_length=1024)
-    created = DateTimeField(default=datetime.utcnow)
 
     class Meta:
-        db_table = 'messages'
+        db_table = 'orders_groups'

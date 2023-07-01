@@ -16,35 +16,35 @@
 
 from typing import List
 
-from core.constants import groups_list
 from database import db_manager
-from database.models import Group, GroupStates
+from database.models import OrderGroup, Order
 
-model = Group
+model = OrderGroup
 
 
-class GroupRepository:
+class OrderGroupRepository:
     def __init__(self):
         self.model = model
 
     @db_manager
-    def add_new_group(self, ):
-        for item in groups_list:
-            if item.count("@"):
-                item = item[1:]
-            self.model.get_or_create(name=item)
+    def create(self, **kwargs):
+        return self.model.get_or_create(**kwargs)
+
+    @db_manager
+    def get_count(self) -> int:
+        return self.model.select().count()
 
     @db_manager
     def get_by_id(self, id: int) -> model:
         return self.model.get_or_none(id=id)
 
     @db_manager
-    def update(self, group: Group, **kwargs) -> model:
-        return self.model.update(**kwargs).where(self.model.id == group.id).execute()
+    def get_all(self) -> List[model]:
+        return self.model.select().execute()
 
     @db_manager
-    def get_all_by_state(self, state: GroupStates) -> List[model]:
-        return self.model.select().filter(state=state).execute()
+    def get_by_order(self, order: Order) -> List[model]:
+        return self.model.select().where(self.model.order == order).execute()
 
 
-groups = GroupRepository()
+orders_groups = OrderGroupRepository()

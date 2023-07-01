@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from peewee import PrimaryKeyField, CharField, IntegerField, BooleanField
 
 from .base import BaseModel
@@ -31,6 +32,7 @@ class Group(BaseModel):
     name = CharField(max_length=128)
     state = CharField(max_length=32, default=GroupStates.checking_waiting)
     subcribers = IntegerField()
+
     captcha_type = CharField(max_length=128)
     captcha_data = CharField(max_length=128)
     captcha_have = BooleanField(default=False)

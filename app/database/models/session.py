@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from datetime import datetime
 
 from peewee import PrimaryKeyField, BigIntegerField, CharField, DateTimeField, ForeignKeyField
@@ -22,7 +23,7 @@ from .country import Country
 
 
 class SessionStates:
-    wait = "wait"
+    waiting = "waiting"
     check = "check"
     free = "free"
     in_work = "in_work"
@@ -39,7 +40,7 @@ class Session(BaseModel):
     api_hash = CharField(max_length=256)
     tg_user_id = BigIntegerField()
 
-    state = CharField(max_length=64, default=SessionStates.wait)
+    state = CharField(max_length=64, default=SessionStates.waiting)
     state_description = CharField(max_length=2056, null=True)
     created = DateTimeField(default=datetime.utcnow)
 

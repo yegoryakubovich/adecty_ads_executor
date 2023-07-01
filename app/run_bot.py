@@ -15,11 +15,12 @@
 #
 
 import asyncio
+from datetime import datetime, timedelta
 
 from loguru import logger
 
-from database import init_db, repo
-from database.models import SessionStates
+from database import init_db, repo, db
+from database.models import SessionStates, Message
 from functions import BotAction, AssistantAction
 from utils.logger import configure_logger
 

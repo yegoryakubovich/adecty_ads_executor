@@ -13,16 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 NEW_PROXY_FILE = "new/proxy.txt"
 SESSIONS_DIR = 'sessions'
 NEW_SESSION_DIR = f"{SESSIONS_DIR}/wait"
 MAX_SESSION2ONE_PROXY = 1
 DAY_OLD = 5
 URL_FOR_TEST_PROXY = 'https://ifconfig.me/all.json'
-BOT_SLEEP_MIN = 20  # 1 * 60
-BOT_SLEEP_MAX = 20  # 30 * 60
+BOT_SLEEP_MIN_MIN = 1  # 1 * 60
+BOT_SLEEP_MAX_MIN = 1  # 30 * 60
+SEND_MSG_DELAY_MIN = 3
+ASSISTANT_SLEEP_MIN = 2
 
-groups_list = ["@kekajangroup"]  # "adaptaciyausa", "adaptaciya_ua_usa", "@kekajangroup"]
+groups_list = ["@kekajangroup"]  # "adaptaciyausa", "adaptaciya_ua_usa"]
 # "ads_new_york", "calosangeles", "ca_miami_chat", "chatamerika",
 # "chatinnj", "chatinSeattle", "chatinsf", "chatnewyork1", "chchatua", "chicagoil", "la_services",
 # "losangeles2021immigrants", "los_angeles_avito", "los_angeles_ca", "los_angeles_california_usa",

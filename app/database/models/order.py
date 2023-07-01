@@ -13,15 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from peewee import PrimaryKeyField, CharField, DateTimeField
 
 from database.db import BaseModel
 
 
 class OrderStates:
-    wait = "wait"
-    enable = "enable"
-    disable = "disable"
+    waiting = "waiting"
+    disable = "finished"
+    stopped = "stopped"
 
 
 class Order(BaseModel):
@@ -29,7 +30,7 @@ class Order(BaseModel):
     name = CharField(max_length=128)
     message = CharField(max_length=256)
 
-    state = CharField(max_length=32, default=OrderStates.wait)
+    state = CharField(max_length=32, default=OrderStates.waiting)
     datetime_stop = DateTimeField()
 
     class Meta:

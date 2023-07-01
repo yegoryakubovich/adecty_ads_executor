@@ -13,14 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import asyncio
+from datetime import datetime, timedelta
 
 import httpx
-import requests
+from loguru import logger
 
-from core.constants import URL_FOR_TEST_PROXY
+from core.constants import URL_FOR_TEST_PROXY, SEND_MSG_DELAY_MIN
 from database import repo
-from database.models import ProxyStates, ProxyTypes, SessionStates, GroupStates, SessionTask
+from database.models import ProxyStates, SessionStates, GroupStates, SessionTask, MessageStates, Message
+from database.models.order import OrderStates
 from database.models.session_task import SessionTaskType, SessionTaskStates
 from functions import BotAction
 
@@ -33,42 +36,70 @@ class CheckerAction:
     async def wait_proxy_check(cls):
         for proxy in repo.proxies.get_all_by_state(state=ProxyStates.wait):
             try:
-                r = httpx.get(url=URL_FOR_TEST_PROXY,
+                r = httpx.get(url=URL_FOR_TEST_PROXY, timeout=5,
                               proxies=f'{proxy.type}://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}')
                 if r.status_code == 200:
-                    repo.proxies.move_state(proxy, ProxyStates.enable)
+                    repo.proxies.update(proxy, state=ProxyStates.enable)
                     continue
             except:
                 ...
-            repo.proxies.move_state(proxy, ProxyStates.disable)
+            repo.proxies.update(proxy, state=ProxyStates.disable)
 
     @classmethod
     async def wait_session_check(cls):
-        loop = asyncio.get_event_loop()
-        new_functions = []
-        for session in repo.sessions.get_all_by_state(state=SessionStates.wait):
+        for session in repo.sessions.get_all_by_state(state=SessionStates.waiting):
             bot = BotAction(session=session)
             await bot.all_connection()
-            async with bot.client:
-                try:
-                    await bot.executor.get_chat(chat_id="durov")
-                    repo.sessions.move_state(session=session, state=SessionStates.free)
-                    new_functions.append({'fun': BotAction(session=session), 'name': f"Bot_{session.id}"})
-                except:
-                    repo.sessions.set_banned()
-        await asyncio.gather(
-            *[loop.create_task(coro=function['fun'].start(), name=function['name']) for function in new_functions]
-        )
+            if await bot.check():
+                asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
 
     @classmethod
-    async def wait_session_group(cls):
+    async def wait_session_group_check(cls):
         for group in repo.groups.get_all_by_state(state=GroupStates.checking_waiting):
-            st: SessionTask = repo.sessions_tasks.get_by_group(group=group)
+            st: SessionTask = repo.sessions_tasks.get(
+                group=group, state=SessionTaskStates.enable, type=SessionTaskType.check_group
+            )
             if not st:
                 session = repo.sessions.get_free()
                 if session:
                     repo.sessions_tasks.create(
                         session=session, group=group,
-                        type=SessionTaskType.check_group,
-                        state=SessionTaskStates.enable
+                        type=SessionTaskType.check_group, state=SessionTaskStates.enable
                     )
+
+    @classmethod
+    async def wait_message_check(cls):
+        for message in repo.messages.get_all_by_state(state=MessageStates.waiting):
+            st: SessionTask = repo.sessions_tasks.get(
+                message=message, state=SessionTaskStates.enable, type=SessionTaskType.check_message
+            )
+            if not st:
+                session = repo.sessions.get_free()
+                if session:
+                    repo.sessions_tasks.create(
+                        session=session, message=message,
+                        type=SessionTaskType.check_message, state=SessionTaskStates.enable
+                    )
+
+    @classmethod
+    async def wait_order_check(cls):
+        for order in repo.orders.get_all_by_state(state=OrderStates.waiting):
+            for od in repo.orders_groups.get_by_order(order=order):
+                group = repo.groups.get_by_id(od.group_id)
+                st: SessionTask = repo.sessions_tasks.get(
+                    group=group, order=order,
+                    state=SessionTaskStates.enable, type=SessionTaskType.send_by_order
+                )
+                if not st:
+                    last_message: Message = repo.messages.get_last(order=order, group=group)
+                    time_delta_min = SEND_MSG_DELAY_MIN
+                    if last_message:
+                        time_delta_min = (datetime.utcnow() - last_message.created).total_seconds() / 60
+                    logger.info(time_delta_min)
+                    if time_delta_min >= SEND_MSG_DELAY_MIN:
+                        session = repo.sessions.get_free()
+                        if session:
+                            repo.sessions_tasks.create(
+                                session=session, group=group, order=order,
+                                type=SessionTaskType.send_by_order, state=SessionTaskStates.enable
+                            )

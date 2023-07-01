@@ -18,9 +18,10 @@ import asyncio
 
 from loguru import logger
 
-from database import repo
+from core.constants import ASSISTANT_SLEEP_MIN
 from functions.other.checker import CheckerAction
 from functions.other.innovation import InnovationAction
+from utils.decorators import func_logger
 
 
 class AssistantAction:
@@ -32,19 +33,20 @@ class AssistantAction:
     def logger(self, txt):
         logger.info(f"[{self.prefix}] {txt}")
 
+    @func_logger
     async def start(self):
-        self.logger(f"Started!")
-
         while True:
             self.logger("Start checks")
-            await self.checker.wait_proxy_check()
-            await self.checker.wait_session_check()
-            await self.checker.wait_session_group()
+            all_tasks_names = [task.get_name() for task in asyncio.all_tasks()]
+            if "assistant_wait_proxy_check" not in all_tasks_names:
+                asyncio.create_task(coro=self.checker.wait_proxy_check(), name="assistant_wait_proxy_check")
+            if "assistant_wait_session_check" not in all_tasks_names:
+                asyncio.create_task(coro=self.checker.wait_session_check(), name="assistant_wait_session_check")
+            if "assistant_wait_sg_check" not in all_tasks_names:
+                asyncio.create_task(coro=self.checker.wait_session_group_check(), name="assistant_wait_sg_check")
+            if "assistant_wait_message_check" not in all_tasks_names:
+                asyncio.create_task(coro=self.checker.wait_message_check(), name="assistant_wait_message_check")
+            if "assistant_wait_order_check" not in all_tasks_names:
+                asyncio.create_task(coro=self.checker.wait_order_check(), name="assistant_wait_order_check")
 
-            # repo.sessions.session_add_new()
-            # repo.proxies.add_new_proxy()
-            # repo.groups.add_new_group()
-            # check_new_proxy()
-            # await check_wait_sessions()
-
-            await asyncio.sleep(10)
+            await asyncio.sleep(ASSISTANT_SLEEP_MIN * 60)

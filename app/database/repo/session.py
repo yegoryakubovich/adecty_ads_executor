@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from random import randint
 from typing import List
 
@@ -57,7 +58,11 @@ class SessionRepository:
         return self.model.select().filter(state=state).execute()
 
     @db_manager
-    def get_free(self) -> List[model]:
+    def update(self, session: Session, **kwargs) -> model:
+        return self.model.update(**kwargs).where(self.model.id == session.id).execute()
+
+    @db_manager
+    def get_free(self) -> model:
         result = self.get_all_by_state(state=SessionStates.free)
         if result:
             return result[randint(0, len(result) - 1)]
@@ -68,11 +73,6 @@ class SessionRepository:
         return {
             "session": f"{SESSIONS_DIR}/{session.phone}", "api_id": session.app_id, "api_hash": session.app_hash
         }
-
-    @db_manager
-    def move_state(self, session: Session, state: SessionStates):
-        session.state = state
-        session.save()
 
     @db_manager
     def set_banned(self, session: Session):

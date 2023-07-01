@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import Union
 
 from pyrogram import Client, types
 
@@ -21,13 +20,15 @@ from pyrogram import Client, types
 class ExecutorAction:
     def __init__(self, client: Client):
         self.client = client
-        pass
 
-    async def get_chat(self, chat_id: int) -> types.Chat:
+    async def get_chat(self, chat_id: [str, int]) -> types.Chat:
         return await self.client.get_chat(chat_id=chat_id)
 
-    async def send_message(self, chat_id: int, text: str) -> types.Message:
-        return await self.client.send_message(chat_id=chat_id, text=text)
-
-    async def join_chat(self, chat_id: int) -> types.Chat:
+    async def join_chat(self, chat_id: [str, int]) -> types.Chat:
         return await self.client.join_chat(chat_id=chat_id)
+
+    async def get_messages(self, chat_id: [str, int], msg_id: int) -> types.Message:
+        return await self.client.get_messages(chat_id=chat_id, message_ids=msg_id)
+
+    async def send_message(self, chat_id: [str, int], text: str) -> types.Message:
+        return await self.client.send_message(chat_id=chat_id, text=text)

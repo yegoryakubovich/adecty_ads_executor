@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-
 from peewee import PrimaryKeyField, ForeignKeyField
 
 from .account import Account

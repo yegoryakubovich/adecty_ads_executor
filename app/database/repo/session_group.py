@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from typing import List
 
 from database import db_manager
@@ -30,6 +31,10 @@ class SessionGroupRepository:
         return self.model.get_or_create(**kwargs)
 
     @db_manager
+    def get(self, **kwargs):
+        return self.model.get_or_none(**kwargs)
+
+    @db_manager
     def get_count(self) -> int:
         return self.model.select().count()
 
@@ -42,12 +47,16 @@ class SessionGroupRepository:
         return self.model.select().execute()
 
     @db_manager
+    def update(self, sg: SessionGroup, **kwargs) -> model:
+        return self.model.update(**kwargs).where(self.model.id == sg.id).execute()
+
+    @db_manager
     def delete_by_session(self, session: Session):
         self.model.delete().where(self.model.session == session).execute()
 
     @db_manager
     def check_subscribe(self, session: Session, group: Group) -> bool:
-        if self.model.select().where(self.model.session == session, self.model.group == group).execute():
+        if self.model.get_or_none(session=session, group=group):
             return True
         return False
 

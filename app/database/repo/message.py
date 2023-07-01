@@ -13,11 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from datetime import datetime, timedelta
+from typing import List
 
 from core.constants import DAY_OLD
 from database import db_manager, repo
-from database.models import Message, SessionStates, Session, Order, Group
+from database.models import Message, SessionStates, Session, Order, Group, MessageStates
 
 model = Message
 
@@ -31,13 +33,16 @@ class MessageRepository:
         return self.model.create(**kwargs)
 
     @db_manager
-    def get(self, id: int) -> model:
+    def get_by_id(self, id: int) -> model:
         return self.model.get_or_none(id=id)
 
     @db_manager
-    def get_by(self, **kwargs) -> model:
-        print(kwargs)
+    def get(self, **kwargs) -> model:
         return self.model.get_or_none(**kwargs)
+
+    @db_manager
+    def get_last(self, **kwargs) -> model:
+        return self.model.select().filter(**kwargs).order_by(self.model.id.desc()).get_or_none()
 
     @db_manager
     def get_by_group(self, order_id, group_id: int, days_old: int = DAY_OLD) -> model:
@@ -48,15 +53,27 @@ class MessageRepository:
         ).execute()
 
     @db_manager
+    def update(self, message: Message, **kwargs) -> model:
+        return self.model.update(**kwargs).where(self.model.id == message.id).execute()
+
+    @db_manager
+    def get_by_state(self, state: MessageStates) -> model:
+        return self.model.select().filter(state=state).execute()
+
+    @db_manager
     def get_session_from_send_message(self, order: Order, group: Group) -> Session:
         all_session_free = repo.sessions.get_all_by_state(SessionStates.free)
         for session in all_session_free:
-            if not self.get_by(order=order, group=group, session=session):
+            if not self.model.get_or_none(order=order, group=group, session=session):
                 return session
         print("HI")
         my_session = all_session_free[0]
         for session in all_session_free[1:]:
             pass
+
+    @db_manager
+    def get_all_by_state(self, state: MessageStates) -> List[model]:
+        return self.model.select().filter(state=state).execute()
 
 
 messages = MessageRepository()

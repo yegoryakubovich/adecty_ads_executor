@@ -13,10 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from typing import List
 
 from database import db_manager
-from database.models import SessionTask, Session, Group
+from database.models import SessionTask, Session, Group, Message
 from database.models.session_task import SessionTaskStates
 
 model = SessionTask
@@ -35,6 +36,10 @@ class SessionTaskRepository:
         return self.model.select().count()
 
     @db_manager
+    def get(self, **kwargs) -> model:
+        return self.model.get_or_none(**kwargs)
+
+    @db_manager
     def get_by_id(self, id: int) -> model:
         return self.model.get_or_none(id=id)
 
@@ -43,12 +48,12 @@ class SessionTaskRepository:
         return self.model.select().execute()
 
     @db_manager
-    def get_by_session(self, session: Session) -> model:
-        return self.model.get_or_none(session=session)
+    def update(self, task: SessionTask, **kwargs) -> model:
+        return self.model.update(**kwargs).where(self.model.id == task.id).execute()
 
     @db_manager
-    def get_by_group(self, group: Group, state: SessionTaskStates = SessionTaskStates.enable) -> model:
-        return self.model.select().where(self.model.group == group, self.model.state == state).execute()
+    def get_by_session(self, session: Session) -> model:
+        return self.model.get_or_none(session=session)
 
     @db_manager
     def delete_by_session(self, session: Session) -> None:

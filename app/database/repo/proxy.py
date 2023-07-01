@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from random import randint
 from typing import List
 
@@ -46,12 +47,20 @@ class ProxyRepository:
         return self.model.get_or_none(id=id)
 
     @db_manager
+    def get(self, **kwargs) -> model:
+        return self.model.get_or_none(**kwargs)
+
+    @db_manager
     def get_all_by_state(self, state: ProxyStates) -> List[model]:
         return self.model.select().filter(state=state).execute()
 
     @db_manager
     def get_all(self) -> List[model]:
         return self.model.select().execute()
+
+    @db_manager
+    def update(self, proxy: Proxy, **kwargs) -> model:
+        return self.model.update(**kwargs).where(self.model.id == proxy.id).execute()
 
     @db_manager
     def get_dict(self, proxy_id: int) -> dict:
@@ -65,11 +74,6 @@ class ProxyRepository:
     @db_manager
     def get_random_dict(self):
         return self.get_dict(randint(1, self.get_count()))
-
-    @db_manager
-    def move_state(self, proxy: Proxy, state: ProxyStates):
-        proxy.state = state
-        proxy.save()
 
 
 proxies = ProxyRepository()

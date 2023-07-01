@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from loguru import logger
 
 from database import db_manager
@@ -31,9 +32,7 @@ class CountryRepository:
 
     @db_manager
     def create(self, name: str) -> model:
-        result = self.model.get_or_none(name=name)
-        if not result:
-            result, _ = self.model.get_or_create(name=name)
+        result, _ = self.model.get_or_create(name=name)
         return result
 
 

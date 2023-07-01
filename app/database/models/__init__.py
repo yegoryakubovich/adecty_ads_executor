@@ -13,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 """FIRST"""
 from .account import Account
 from .admin import Admin
 from .country import Country
 from .group import Group, GroupStates
-from .order import Order
+from .order import Order, OrderStates
 from .tag import Tag
 
 """SECOND"""
@@ -29,6 +30,7 @@ from .session import Session, SessionStates
 from .message import Message, MessageStates
 from .group_country import GroupCountry
 from .group_tag import GroupTag
+from .order_group import OrderGroup
 from .session_group import SessionGroup
 from .session_proxy import SessionProxy
 from .session_task import SessionTask
@@ -44,13 +46,13 @@ __all__ = (
     Group, GroupCountry, GroupTag,
 
     # Sessions
-    Session, SessionGroup, SessionProxy,
+    Session,
 
     # Messages
     Message,
 
     # States
-    GroupStates, SessionStates, MessageStates,
+    SessionGroup, SessionProxy, OrderGroup
 )
 
 all_models = (
@@ -61,11 +63,12 @@ all_models = (
     Order,
     Proxy,
     Group,
-    GroupCountry,
     GroupTag,
     Session,
+    Message,
+    GroupCountry,
     SessionGroup,
     SessionProxy,
-    Message,
-    SessionTask
+    SessionTask,
+    OrderGroup,
 )

@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-
 from peewee import PrimaryKeyField, ForeignKeyField, CharField
 
 from . import Session, Group, Order, Message
@@ -31,7 +30,7 @@ class SessionTaskType:
 class SessionTaskStates:
     enable = 'enable'
     finished = 'finished'
-    stop = 'stop'
+    abortively = 'abortively'
 
 
 class SessionTask(BaseModel):

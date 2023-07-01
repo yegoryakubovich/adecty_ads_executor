@@ -14,27 +14,16 @@
 # limitations under the License.
 #
 
-from datetime import datetime
+import asyncio
 
-from peewee import PrimaryKeyField, ForeignKeyField, DateTimeField, CharField
-
-from .base import BaseModel
-from .group import Group
-from .session import Session
+from loguru import logger
 
 
-class SessionGroupState:
-    active = 'active'
-    banned = 'banned'
+def func_logger(function):
+    async def wrapper(*args, **kwargs):
+        try:
+            await function(*args, **kwargs)
+        except Exception as e:
+            logger.error(f'[{asyncio.current_task().get_name()}] {e}')
 
-
-class SessionGroup(BaseModel):
-    id = PrimaryKeyField()
-    session = ForeignKeyField(Session, to_field='id')
-    group = ForeignKeyField(Group, to_field='id')
-    state = CharField(max_length=32, default=SessionGroupState.active)
-
-    created = DateTimeField(default=datetime.utcnow)
-
-    class Meta:
-        db_table = 'sessions_groups'
+    return wrapper
