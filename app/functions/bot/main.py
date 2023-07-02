@@ -21,9 +21,10 @@ from loguru import logger
 from pyrogram import Client
 from pyrogram.errors import Forbidden
 
-from core.constants import BOT_SLEEP_MAX_MIN, BOT_SLEEP_MIN_MIN
+from core.constants import BOT_SLEEP_MAX_SEC, BOT_SLEEP_MIN_SEC, SEND_MSG_DELAY_MSG
 from database import repo
-from database.models import Session, SessionProxy, SessionTask, SessionGroup, SessionStates, GroupStates, MessageStates
+from database.models import Session, SessionProxy, SessionTask, SessionGroup, SessionStates, GroupStates, MessageStates, \
+    Message
 from database.models.session_group import SessionGroupState
 from database.models.session_task import SessionTaskType, SessionTaskStates
 from functions.bot.executor import ExecutorAction
@@ -88,7 +89,7 @@ class BotAction:
         if not repo.sessions_groups.check_subscribe(session=self.session, group=group):
             await self.executor.join_chat(chat_id=group.name)
             repo.sessions_groups.create(session=self.session, group=group)
-            await asyncio.sleep(randint(BOT_SLEEP_MIN_MIN, BOT_SLEEP_MAX_MIN) * 60)
+            await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
         sg: SessionGroup = repo.sessions_groups.get(session=self.session, group=group)
         msg = None
         try:
@@ -132,17 +133,39 @@ class BotAction:
         logger.info('Im here')
         order = repo.orders.get_by_id(id=task.order_id)
         group = repo.groups.get_by_id(id=task.group_id)
+        chat_messages_ids = await self.executor.get_all_messages_ids(group.name, limit=SEND_MSG_DELAY_MSG)
+        last_message: Message = repo.messages.get_last(order=order, group=group)
+        if last_message:
+            if last_message.message_id in chat_messages_ids:
+                logger.info(f"{last_message.message_id} in {chat_messages_ids}")
+                return
+
         if not repo.sessions_groups.check_subscribe(session=self.session, group=group):
             logger.info("subscribe")
             await self.executor.join_chat(chat_id=group.name)
             repo.sessions_groups.create(session=self.session, group=group)
-            await asyncio.sleep(randint(BOT_SLEEP_MIN_MIN, BOT_SLEEP_MAX_MIN) * 60)
+            await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
         sg: SessionGroup = repo.sessions_groups.get(session=self.session, group=group)
         try:
             logger.info("send_msg")
-            msg = await self.executor.send_message(chat_id=group.name, text=order.message)
+            if group.images_can and order.image_link:
+                if group.bigtext_can:
+                    msg = await self.executor.send_photo(
+                        chat_id=group.name, photo_link=order.image_link, text=order.message_long
+                    )
+                else:
+                    msg = await self.executor.send_photo(
+                        chat_id=group.name, photo_link=order.image_link, text=order.message
+                    )
+            elif group.bigtext_can:
+                msg = await self.executor.send_message(chat_id=group.name, text=order.message_long)
+            else:
+                msg = await self.executor.send_message(chat_id=group.name, text=order.message)
             repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
-            repo.messages.create(session=self.session, group=group, order=order, message_id=msg.id, text=msg.text)
+            repo.messages.create(
+                session=self.session, group=group, order=order, message_id=msg.id,
+                text=msg.caption if msg.caption else msg.text
+            )
         except Forbidden:
             logger.info("forbidden")
             repo.sessions_groups.update(sg, state=SessionGroupState.banned)
@@ -158,7 +181,7 @@ class BotAction:
             if my_tasks:
                 await self.start_session()
                 for task in my_tasks:
-                    await asyncio.sleep(randint(BOT_SLEEP_MIN_MIN, BOT_SLEEP_MAX_MIN) * 60)
+                    # await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
                     if task.type == SessionTaskType.check_group:
                         await self.task_check_group(task)
                     elif task.type == SessionTaskType.check_message:
@@ -167,7 +190,7 @@ class BotAction:
                         await self.task_send_by_order(task)
                     else:
                         pass
-                await asyncio.sleep(randint(BOT_SLEEP_MIN_MIN, BOT_SLEEP_MAX_MIN) * 60)
+                await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
                 await self.stop_session()
 
-            await asyncio.sleep(randint(BOT_SLEEP_MIN_MIN, BOT_SLEEP_MAX_MIN) * 60)
+            await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))

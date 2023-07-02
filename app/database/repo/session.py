@@ -19,7 +19,8 @@ from typing import List
 
 from core.constants import SESSIONS_DIR, strings
 from database import db_manager, repo
-from database.models import Session, SessionStates
+from database.models import Session, SessionStates, Group
+from database.models.session_group import SessionGroupState
 
 model = Session
 
@@ -62,10 +63,16 @@ class SessionRepository:
         return self.model.update(**kwargs).where(self.model.id == session.id).execute()
 
     @db_manager
-    def get_free(self) -> model:
-        result = self.get_all_by_state(state=SessionStates.free)
-        if result:
-            return result[randint(0, len(result) - 1)]
+    def get_free(self, group: Group = None) -> model:
+        sessions = self.get_all_by_state(state=SessionStates.free)
+        for i in range(len(sessions)):
+            session = sessions[randint(0, len(sessions) - 1)]
+            if group:
+                sg = repo.sessions_groups.get(session=session, group=group)
+                if sg:
+                    if sg.state == SessionGroupState.banned:
+                        continue
+            return session
 
     @db_manager
     def get_dict(self, id: int) -> dict:

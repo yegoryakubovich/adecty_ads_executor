@@ -15,14 +15,13 @@
 #
 
 import asyncio
-from datetime import datetime, timedelta
 
 import httpx
 from loguru import logger
 
-from core.constants import URL_FOR_TEST_PROXY, SEND_MSG_DELAY_MIN
+from core.constants import URL_FOR_TEST_PROXY
 from database import repo
-from database.models import ProxyStates, SessionStates, GroupStates, SessionTask, MessageStates, Message
+from database.models import ProxyStates, SessionStates, GroupStates, SessionTask, MessageStates
 from database.models.order import OrderStates
 from database.models.session_task import SessionTaskType, SessionTaskStates
 from functions import BotAction
@@ -91,15 +90,9 @@ class CheckerAction:
                     state=SessionTaskStates.enable, type=SessionTaskType.send_by_order
                 )
                 if not st:
-                    last_message: Message = repo.messages.get_last(order=order, group=group)
-                    time_delta_min = SEND_MSG_DELAY_MIN
-                    if last_message:
-                        time_delta_min = (datetime.utcnow() - last_message.created).total_seconds() / 60
-                    logger.info(time_delta_min)
-                    if time_delta_min >= SEND_MSG_DELAY_MIN:
-                        session = repo.sessions.get_free()
-                        if session:
-                            repo.sessions_tasks.create(
-                                session=session, group=group, order=order,
-                                type=SessionTaskType.send_by_order, state=SessionTaskStates.enable
-                            )
+                    session = repo.sessions.get_free(group)
+                    if session:
+                        repo.sessions_tasks.create(
+                            session=session, group=group, order=order,
+                            type=SessionTaskType.send_by_order, state=SessionTaskStates.enable
+                        )

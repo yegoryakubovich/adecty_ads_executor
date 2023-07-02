@@ -14,16 +14,24 @@
 # limitations under the License.
 #
 
+def min2sec(minutes: int):
+    return minutes * 60
+
+
+def hour2sec(hours: int):
+    return min2sec(hours * 60)
+
+
 NEW_PROXY_FILE = "new/proxy.txt"
 SESSIONS_DIR = 'sessions'
 NEW_SESSION_DIR = f"{SESSIONS_DIR}/wait"
 MAX_SESSION2ONE_PROXY = 1
 DAY_OLD = 5
 URL_FOR_TEST_PROXY = 'https://ifconfig.me/all.json'
-BOT_SLEEP_MIN_MIN = 1  # 1 * 60
-BOT_SLEEP_MAX_MIN = 1  # 30 * 60
-SEND_MSG_DELAY_MIN = 3
-ASSISTANT_SLEEP_MIN = 2
+BOT_SLEEP_MIN_SEC = min2sec(1)  # sleep min
+BOT_SLEEP_MAX_SEC = min2sec(2)  # sleep max
+SEND_MSG_DELAY_MSG = 30  # msg delay
+ASSISTANT_SLEEP_SEC = min2sec(1)  # assistant sleep
 
 groups_list = ["@kekajangroup"]  # "adaptaciyausa", "adaptaciya_ua_usa"]
 # "ads_new_york", "calosangeles", "ca_miami_chat", "chatamerika",

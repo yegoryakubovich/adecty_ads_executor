@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import List
 
 from pyrogram import Client, types
 
@@ -30,5 +31,18 @@ class ExecutorAction:
     async def get_messages(self, chat_id: [str, int], msg_id: int) -> types.Message:
         return await self.client.get_messages(chat_id=chat_id, message_ids=msg_id)
 
+    async def get_all_messages(self, chat_id: [str, int], limit: int = 0) -> List[types.Message]:
+        return [
+            message async for message in self.client.get_chat_history(chat_id=chat_id, limit=limit)
+        ]
+
+    async def get_all_messages_ids(self, chat_id: [str, int], limit: int = 0) -> List[int]:
+        return [
+            message.id async for message in self.client.get_chat_history(chat_id=chat_id, limit=limit)
+        ]
+
     async def send_message(self, chat_id: [str, int], text: str) -> types.Message:
         return await self.client.send_message(chat_id=chat_id, text=text)
+
+    async def send_photo(self, chat_id: [str, int], photo_link: str, text: str) -> types.Message:
+        return await self.client.send_photo(chat_id=chat_id, photo=photo_link, caption=text)

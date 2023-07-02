@@ -18,7 +18,7 @@ import asyncio
 
 from loguru import logger
 
-from core.constants import ASSISTANT_SLEEP_MIN
+from core.constants import ASSISTANT_SLEEP_SEC
 from functions.other.checker import CheckerAction
 from functions.other.innovation import InnovationAction
 from utils.decorators import func_logger
@@ -49,4 +49,4 @@ class AssistantAction:
             if "assistant_wait_order_check" not in all_tasks_names:
                 asyncio.create_task(coro=self.checker.wait_order_check(), name="assistant_wait_order_check")
 
-            await asyncio.sleep(ASSISTANT_SLEEP_MIN * 60)
+            await asyncio.sleep(ASSISTANT_SLEEP_SEC)
