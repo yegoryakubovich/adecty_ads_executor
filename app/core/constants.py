@@ -22,9 +22,6 @@ def hour2sec(hours: int):
     return min2sec(hours * 60)
 
 
-NEW_PROXY_FILE = "new/proxy.txt"
-SESSIONS_DIR = 'sessions'
-NEW_SESSION_DIR = f"{SESSIONS_DIR}/wait"
 MAX_SESSION2ONE_PROXY = 1
 DAY_OLD = 5
 URL_FOR_TEST_PROXY = 'https://ifconfig.me/all.json'

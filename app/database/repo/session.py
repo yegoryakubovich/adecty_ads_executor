@@ -17,7 +17,7 @@
 from random import randint
 from typing import List
 
-from core.constants import SESSIONS_DIR, strings
+from core.constants import strings
 from database import db_manager, repo
 from database.models import Session, SessionStates, Group
 from database.models.session_group import SessionGroupState
@@ -73,13 +73,6 @@ class SessionRepository:
                     if sg.state == SessionGroupState.banned:
                         continue
             return session
-
-    @db_manager
-    def get_dict(self, id: int) -> dict:
-        session = self.get_by_id(id)
-        return {
-            "session": f"{SESSIONS_DIR}/{session.phone}", "api_id": session.app_id, "api_hash": session.app_hash
-        }
 
     @db_manager
     def set_banned(self, session: Session):
