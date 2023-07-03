@@ -36,7 +36,7 @@ class AssistantAction:
     @func_logger
     async def start(self):
         while True:
-            self.logger("Start checks")
+            self.logger("Checks started")
             all_tasks_names = [task.get_name() for task in asyncio.all_tasks()]
             if "assistant_wait_proxy_check" not in all_tasks_names:
                 asyncio.create_task(coro=self.checker.wait_proxy_check(), name="assistant_wait_proxy_check")
@@ -48,5 +48,4 @@ class AssistantAction:
                 asyncio.create_task(coro=self.checker.wait_message_check(), name="assistant_wait_message_check")
             if "assistant_wait_order_check" not in all_tasks_names:
                 asyncio.create_task(coro=self.checker.wait_order_check(), name="assistant_wait_order_check")
-
             await asyncio.sleep(ASSISTANT_SLEEP_SEC)

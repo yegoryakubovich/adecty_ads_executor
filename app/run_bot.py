@@ -15,12 +15,11 @@
 #
 
 import asyncio
-from datetime import datetime, timedelta
 
 from loguru import logger
 
-from database import init_db, repo, db
-from database.models import SessionStates, Message
+from database import init_db, repo
+from database.models import SessionStates
 from functions import BotAction, AssistantAction
 from utils.logger import configure_logger
 
@@ -48,11 +47,10 @@ def on_start_up():
             'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
         } for session in repo.sessions.get_all_by_state(state=SessionStates.free)
     ])
-    all_tasks = [
-                    loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions
-                ] + [
-                    loop.create_task(hello(), name="TEST")
-                ]
+
+    all_tasks = [loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions]
+    all_tasks.extend([loop.create_task(hello(), name="TEST")])
+
     for task in all_tasks:
         loop.run_until_complete(task)
 
@@ -61,7 +59,10 @@ def on_start_up():
 
 async def hello():
     while True:
-        logger.info([{'name': task.get_name(), 'func': task.get_coro()} for task in asyncio.all_tasks()])
+        # logger.info([{'name': task.get_name(), 'func': task.get_coro()} for task in asyncio.all_tasks()])
+        all_tasks = [task.get_name() for task in asyncio.all_tasks()]
+        sorted(all_tasks)
+        print(all_tasks)
         await asyncio.sleep(30)
 
 

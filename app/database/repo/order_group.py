@@ -44,7 +44,7 @@ class OrderGroupRepository:
 
     @db_manager
     def get_by_order(self, order: Order) -> List[model]:
-        return self.model.select().where(self.model.order == order).execute()
+        return self.model.select().filter(order=order).execute()
 
 
 orders_groups = OrderGroupRepository()

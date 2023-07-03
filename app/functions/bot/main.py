@@ -18,7 +18,7 @@ import asyncio
 from random import randint
 
 from loguru import logger
-from pyrogram import Client
+from pyrogram import Client, errors
 from pyrogram.errors import Forbidden
 
 from core.constants import BOT_SLEEP_MAX_SEC, BOT_SLEEP_MIN_SEC, SEND_MSG_DELAY_MSG
@@ -60,137 +60,120 @@ class BotAction:
 
     async def all_connection(self):
         self.client = await self.open_session()
-        self.executor = ExecutorAction(self.client)
-        self.simulator = SimulatorAction(self.client)
+        self.executor = ExecutorAction(client=self.client, session=self.session)
+        self.simulator = SimulatorAction(client=self.client)
 
     async def check(self, chat_id: [int, str] = "durov") -> bool:
-        await self.start_session()
         try:
+            await self.start_session()
             await self.executor.get_chat(chat_id=chat_id)
             repo.sessions.update(self.session, state=SessionStates.free)
             await self.stop_session()
             return True
         except:
             repo.sessions.set_banned(self.session)
-            await self.stop_session()
             return False
 
+    async def task_join_group(self, task: SessionTask):
+        self.logger("task_join_group")
+        """
+            Задача входа в группу.
+        """
+        group = repo.groups.get_by_id(task.group_id)
+        chat = await self.executor.join_chat(chat_id=group.name)
+        repo.groups.update(group, subcribers=chat.members_count)
+        repo.sessions_groups.create(session=self.session, group=group)
+        repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
+
     async def task_check_group(self, task: SessionTask):
+        self.logger("task_check_group")
         """
             Задача проверки группы.
-
-            ВХодит в группу, если ранее не был в ней (сохраняет в sessions_groups)
-            Отправляет тестовое сообщение (сохраняет в messages)
         """
-
         group = repo.groups.get_by_id(task.group_id)
         chat = await self.executor.get_chat(group.name)
-        repo.groups.update(group, subcribers=chat.members_count)
-        if not repo.sessions_groups.check_subscribe(session=self.session, group=group):
-            await self.executor.join_chat(chat_id=group.name)
-            repo.sessions_groups.create(session=self.session, group=group)
-            await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
-        sg: SessionGroup = repo.sessions_groups.get(session=self.session, group=group)
-        msg = None
-        try:
-            msg = await self.executor.send_message(
-                chat_id=group.name, text="\n".join([
-                    "Обмен валют 💁‍♀️", "",
-                    "🇷🇺RUB 🔃 USD 🇺🇸",
-                    "🇺🇦UAH ➡️ USD 🇺🇸",
-                    "🔐USDT ➡️ USD 🇺🇸", "",
-                    "🖇 Безопасно, быстро, круглосуточно",
-                ]))
-            repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
-        except Forbidden:
-            repo.sessions_groups.update(sg, state=SessionGroupState.banned)
-            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
-        if msg:
-            repo.messages.create(session=self.session, group=group, message_id=msg.id)
-            repo.groups.update(group, state=GroupStates.active)
+        repo.groups.update(group, subcribers=chat.members_count, state=GroupStates.active)
+        repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
+        return self
 
     async def task_check_message(self, task: SessionTask):
+        self.logger("task_check_message")
         """
             Задача проверки сообщения.
-
-
         """
         message = repo.messages.get_by_id(id=task.message_id)
-        group = repo.groups.get_by_id(message.group_id)
+        group = repo.groups.get_by_id(id=message.group_id)
+        chat_messages_ids = await self.executor.get_all_messages_ids(group.name, limit=SEND_MSG_DELAY_MSG)
+
+        if message.message_id in chat_messages_ids:
+            return
+
         msg = await self.executor.get_messages(chat_id=group.name, msg_id=message.message_id)
         if msg.empty:
-            repo.messages.update(message=message, state=MessageStates.deleted)
+            repo.messages.update(message, state=MessageStates.deleted)
         else:
             repo.messages.update(message, state=MessageStates.fine)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
 
     async def task_send_by_order(self, task: SessionTask):
+        self.logger("task_send_by_order")
         """
             Задача отправки сообщения.
-
-
         """
-        logger.info('Im here')
         order = repo.orders.get_by_id(id=task.order_id)
         group = repo.groups.get_by_id(id=task.group_id)
-        chat_messages_ids = await self.executor.get_all_messages_ids(group.name, limit=SEND_MSG_DELAY_MSG)
-        last_message: Message = repo.messages.get_last(order=order, group=group)
-        if last_message:
-            if last_message.message_id in chat_messages_ids:
-                logger.info(f"{last_message.message_id} in {chat_messages_ids}")
-                return
-
-        if not repo.sessions_groups.check_subscribe(session=self.session, group=group):
-            logger.info("subscribe")
-            await self.executor.join_chat(chat_id=group.name)
-            repo.sessions_groups.create(session=self.session, group=group)
-            await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
         sg: SessionGroup = repo.sessions_groups.get(session=self.session, group=group)
+
         try:
-            logger.info("send_msg")
-            if group.images_can and order.image_link:
-                if group.bigtext_can:
-                    msg = await self.executor.send_photo(
-                        chat_id=group.name, photo_link=order.image_link, text=order.message_long
-                    )
-                else:
-                    msg = await self.executor.send_photo(
-                        chat_id=group.name, photo_link=order.image_link, text=order.message
-                    )
-            elif group.bigtext_can:
-                msg = await self.executor.send_message(chat_id=group.name, text=order.message_long)
-            else:
-                msg = await self.executor.send_message(chat_id=group.name, text=order.message)
+            self.logger(f"Send message to {group} by order {order}")
+            msg = await self.executor.send_message(
+                chat_id=group.name,
+                text=order.message_long if group.bigtext_can else order.message,
+                photo=order.image_link if group.images_can else None
+            )
             repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
             repo.messages.create(
                 session=self.session, group=group, order=order, message_id=msg.id,
                 text=msg.caption if msg.caption else msg.text
             )
         except Forbidden:
-            logger.info("forbidden")
+            self.logger("ForBidden")
             repo.sessions_groups.update(sg, state=SessionGroupState.banned)
             repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
+
+    """
+    
+        MAIN FUNCTION
+    
+    """
 
     @func_logger
     async def start(self):
         self.logger(f"Started!")
         await self.all_connection()
         while True:
-            await asyncio.sleep(randint(1, 30))
             my_tasks = repo.sessions_tasks.get_active_task(session=self.session)
             if my_tasks:
-                await self.start_session()
-                for task in my_tasks:
-                    # await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
-                    if task.type == SessionTaskType.check_group:
-                        await self.task_check_group(task)
-                    elif task.type == SessionTaskType.check_message:
-                        await self.task_check_message(task)
-                    elif task.type == SessionTaskType.send_by_order:
-                        await self.task_send_by_order(task)
-                    else:
-                        pass
-                await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
-                await self.stop_session()
-
+                self.logger("Task find")
+                try:
+                    await self.start_session()
+                    while my_tasks:
+                        for task in my_tasks:
+                            await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
+                            if task.type == SessionTaskType.join_group:
+                                await self.task_join_group(task)
+                            elif task.type == SessionTaskType.check_group:
+                                await self.task_check_group(task)
+                            elif task.type == SessionTaskType.check_message:
+                                await self.task_check_message(task)
+                            elif task.type == SessionTaskType.send_by_order:
+                                await self.task_send_by_order(task)
+                            else:
+                                pass
+                            my_tasks = repo.sessions_tasks.get_active_task(session=self.session)
+                            await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
+                    await self.stop_session()
+                except errors.UserDeactivatedBan:
+                    repo.sessions.set_banned(self.session)
+                    return
             await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))

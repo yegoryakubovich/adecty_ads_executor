@@ -23,6 +23,7 @@ from .base import BaseModel
 class SessionTaskType:
     non_type = 'non_type'
     check_group = 'check_group'
+    join_group = 'join_group'
     send_by_order = 'send_by_order'
     check_message = 'check_message'
 

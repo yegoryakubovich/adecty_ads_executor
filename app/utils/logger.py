@@ -48,3 +48,4 @@ def configure_logger(capture_exceptions: bool = False) -> None:
     logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)
     logger.disable("sqlalchemy.engine.base")
     logger.disable("apscheduler")
+    logger.disable("pyrogram")

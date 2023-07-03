@@ -13,14 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from typing import List
 
-from pyrogram import Client, types
+from pyrogram import Client, types, errors
+
+from database import repo
+from database.models import Session, SessionStates
 
 
 class ExecutorAction:
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, session: Session):
         self.client = client
+        self.session = session
 
     async def get_chat(self, chat_id: [str, int]) -> types.Chat:
         return await self.client.get_chat(chat_id=chat_id)
@@ -32,17 +37,16 @@ class ExecutorAction:
         return await self.client.get_messages(chat_id=chat_id, message_ids=msg_id)
 
     async def get_all_messages(self, chat_id: [str, int], limit: int = 0) -> List[types.Message]:
-        return [
-            message async for message in self.client.get_chat_history(chat_id=chat_id, limit=limit)
-        ]
+        return [message async for message in self.client.get_chat_history(chat_id=chat_id, limit=limit)]
 
     async def get_all_messages_ids(self, chat_id: [str, int], limit: int = 0) -> List[int]:
-        return [
-            message.id async for message in self.client.get_chat_history(chat_id=chat_id, limit=limit)
-        ]
+        return [message.id async for message in self.client.get_chat_history(chat_id=chat_id, limit=limit)]
 
-    async def send_message(self, chat_id: [str, int], text: str) -> types.Message:
-        return await self.client.send_message(chat_id=chat_id, text=text)
-
-    async def send_photo(self, chat_id: [str, int], photo_link: str, text: str) -> types.Message:
-        return await self.client.send_photo(chat_id=chat_id, photo=photo_link, caption=text)
+    async def send_message(self, chat_id: [str, int], text: str, photo: str = None):
+        try:
+            if photo:
+                return await self.client.send_photo(chat_id=chat_id, photo=photo, caption=text)
+            else:
+                return await self.client.send_message(chat_id=chat_id, text=text)
+        except errors.UserBannedInChannel:
+            repo.sessions.update(self.session, state=SessionStates.spam_block)

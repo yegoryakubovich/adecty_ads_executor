@@ -64,19 +64,23 @@ class SessionRepository:
 
     @db_manager
     def get_free(self, group: Group = None) -> model:
-        sessions = self.get_all_by_state(state=SessionStates.free)
-        for i in range(len(sessions)):
-            session = sessions[randint(0, len(sessions) - 1)]
+        for session in self.get_all_by_state(state=SessionStates.free):
             if group:
-                sg = repo.sessions_groups.get(session=session, group=group)
-                if sg:
-                    if sg.state == SessionGroupState.banned:
-                        continue
+                if repo.sessions_groups.get(session=session, group=group):
+                    continue
             return session
 
     @db_manager
     def set_banned(self, session: Session):
         session.state = SessionStates.banned
+        repo.sessions_tasks.delete_by_session(session)
+        repo.sessions_proxies.delete_by_session(session)
+        repo.sessions_groups.delete_by_session(session)
+        session.save()
+
+    @db_manager
+    def to_check(self, session: Session):
+        session.state = SessionStates.waiting
         repo.sessions_tasks.delete_by_session(session)
         repo.sessions_proxies.delete_by_session(session)
         repo.sessions_groups.delete_by_session(session)

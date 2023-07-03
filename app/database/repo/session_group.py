@@ -31,7 +31,7 @@ class SessionGroupRepository:
         return self.model.get_or_create(**kwargs)
 
     @db_manager
-    def get(self, **kwargs):
+    def get(self, **kwargs) -> model:
         return self.model.get_or_none(**kwargs)
 
     @db_manager

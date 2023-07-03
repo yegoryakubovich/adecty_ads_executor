@@ -28,6 +28,7 @@ class SessionStates:
     free = "free"
     in_work = "in_work"
     banned = "banned"
+    spam_block = "spam_block"
 
 
 class Session(BaseModel):

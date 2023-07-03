@@ -15,21 +15,27 @@
 #
 
 import asyncio
+from datetime import datetime
 
 import httpx
 from loguru import logger
 
-from core.constants import URL_FOR_TEST_PROXY
+from core.constants import URL_FOR_TEST_PROXY, SEND_MSG_DELAY_SEC
 from database import repo
-from database.models import ProxyStates, SessionStates, GroupStates, SessionTask, MessageStates
+from database.models import ProxyStates, SessionStates, GroupStates, SessionTask, MessageStates, SessionGroup, Message, \
+    Group
 from database.models.order import OrderStates
+from database.models.session_group import SessionGroupState
 from database.models.session_task import SessionTaskType, SessionTaskStates
 from functions import BotAction
 
 
 class CheckerAction:
     def __init__(self):
-        pass
+        self.prefix = "Checker"
+
+    def logger(self, txt):
+        logger.info(f"[{self.prefix}] {txt}")
 
     @classmethod
     async def wait_proxy_check(cls):
@@ -52,47 +58,87 @@ class CheckerAction:
             if await bot.check():
                 asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
 
-    @classmethod
-    async def wait_session_group_check(cls):
-        for group in repo.groups.get_all_by_state(state=GroupStates.checking_waiting):
+    async def get_session_by_group(self, group: Group):
+        for session in repo.sessions.get_all_by_state(state=SessionStates.free):
+            sg: SessionGroup = repo.sessions_groups.get(session=session, group=group)
+            if sg:
+                if sg.state == SessionGroupState.banned:
+                    continue
+                delay_seconds = SEND_MSG_DELAY_SEC
+                last_message_session: Message = repo.messages.get_last(session=session)
+                if last_message_session:
+                    delay_seconds = (datetime.utcnow() - last_message_session.created).total_seconds()
+                self.logger(f"{delay_seconds} > {SEND_MSG_DELAY_SEC}")
+                if delay_seconds >= SEND_MSG_DELAY_SEC:
+                    return session
+
+    async def wait_session_group_check(self):
+        for group in repo.groups.get_all_by_state(state=GroupStates.waiting):
             st: SessionTask = repo.sessions_tasks.get(
-                group=group, state=SessionTaskStates.enable, type=SessionTaskType.check_group
+                group=group, type=SessionTaskType.check_group, state=SessionTaskStates.enable
             )
             if not st:
-                session = repo.sessions.get_free()
+                session = await self.get_session_by_group(group=group)
                 if session:
                     repo.sessions_tasks.create(
-                        session=session, group=group,
-                        type=SessionTaskType.check_group, state=SessionTaskStates.enable
+                        session=session,
+                        group=group, type=SessionTaskType.check_group, state=SessionTaskStates.enable
                     )
+                else:
+                    session = repo.sessions.get_free(group=group)
+                    if session:
+                        repo.sessions_tasks.create(
+                            session=session,
+                            group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
+                        )
 
-    @classmethod
-    async def wait_message_check(cls):
+    async def wait_message_check(self):
         for message in repo.messages.get_all_by_state(state=MessageStates.waiting):
+            group = repo.groups.get_by_id(message.group_id)
             st: SessionTask = repo.sessions_tasks.get(
-                message=message, state=SessionTaskStates.enable, type=SessionTaskType.check_message
+                group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.enable,
             )
             if not st:
-                session = repo.sessions.get_free()
+                session = await self.get_session_by_group(group=group)
                 if session:
                     repo.sessions_tasks.create(
-                        session=session, message=message,
-                        type=SessionTaskType.check_message, state=SessionTaskStates.enable
+                        session=session,
+                        group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.enable
                     )
+                else:
+                    session = repo.sessions.get_free(group=group)
+                    if session:
+                        repo.sessions_tasks.create(
+                            session=session,
+                            group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
+                        )
 
-    @classmethod
-    async def wait_order_check(cls):
+    async def wait_order_check(self):
         for order in repo.orders.get_all_by_state(state=OrderStates.waiting):
             for od in repo.orders_groups.get_by_order(order=order):
                 group = repo.groups.get_by_id(od.group_id)
-                st: SessionTask = repo.sessions_tasks.get(
-                    group=group, order=order,
-                    state=SessionTaskStates.enable, type=SessionTaskType.send_by_order
-                )
+                if group.state != GroupStates.active:
+                    return
+                last_message = repo.messages.get_last(order=order, group=group)
+                if last_message:
+                    self.logger(f"Message {last_message} have state {last_message.state}")
+                    if last_message.state == MessageStates.waiting:
+                        return
+                self.logger(group.name)
+                st: SessionTask = repo.sessions_tasks.get(group=group, state=SessionTaskStates.enable)
                 if not st:
-                    session = repo.sessions.get_free(group)
+                    self.logger("1")
+                    session = await self.get_session_by_group(group=group)
                     if session:
+                        self.logger("1")
                         repo.sessions_tasks.create(
                             session=session, group=group, order=order,
                             type=SessionTaskType.send_by_order, state=SessionTaskStates.enable
                         )
+                    else:
+                        session = repo.sessions.get_free(group=group)
+                        if session:
+                            repo.sessions_tasks.create(
+                                session=session, group=group,
+                                type=SessionTaskType.join_group, state=SessionTaskStates.enable
+                            )

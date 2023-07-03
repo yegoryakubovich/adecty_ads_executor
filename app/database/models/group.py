@@ -20,8 +20,6 @@ from .base import BaseModel
 
 
 class GroupStates:
-    checking_waiting = 'checking_waiting'
-    checking = 'checking'
     waiting = 'waiting'
     active = 'active'
     inactive = 'inactive'
@@ -30,15 +28,17 @@ class GroupStates:
 class Group(BaseModel):
     id = PrimaryKeyField()
     name = CharField(max_length=128)
-    state = CharField(max_length=32, default=GroupStates.checking_waiting)
-    subcribers = IntegerField()
+    state = CharField(max_length=32, default=GroupStates.waiting)
+    subscribers = IntegerField()  # Количество подписчиков
 
+    can_image = BooleanField(default=False)  # Отправка с картинками
+    can_message = BooleanField(default=False)  # Отправка ссылок
+    can_message_no_url = BooleanField(default=False)  # Отправки без ссылок
+    can_message_short = BooleanField(default=False)  # Отправки короткого текста / Если False, то замена символами
+
+    captcha_have = BooleanField(default=False)
     captcha_type = CharField(max_length=128)
     captcha_data = CharField(max_length=128)
-    captcha_have = BooleanField(default=False)
-    images_can = BooleanField(default=False)
-    url_can = BooleanField(default=False)
-    bigtext_can = BooleanField(default=False)
 
     class Meta:
         db_table = 'groups'
