@@ -22,41 +22,49 @@ from loguru import logger
 
 from core.constants import URL_FOR_TEST_PROXY, SEND_MSG_DELAY_SEC
 from database import repo
-from database.models import ProxyStates, SessionStates, GroupStates, SessionTask, MessageStates, SessionGroup, Message, \
-    Group
+from database.models import ProxyStates, SessionStates, GroupStates, MessageStates, Shop
+from database.models import SessionTask, SessionGroup, Message, Group
 from database.models.order import OrderStates
 from database.models.session_group import SessionGroupState
 from database.models.session_task import SessionTaskType, SessionTaskStates
 from functions import BotAction
+from functions.other.executor import AssistantExecutorAction
 
 
 class CheckerAction:
-    def __init__(self):
+    def __init__(self, executor: AssistantExecutorAction):
+        self.executor = executor
         self.prefix = "Checker"
 
     def logger(self, txt):
         logger.info(f"[{self.prefix}] {txt}")
 
-    @classmethod
-    async def wait_proxy_check(cls):
+    async def wait_proxy_check(self):
         for proxy in repo.proxies.get_all_by_state(state=ProxyStates.wait):
             try:
                 r = httpx.get(url=URL_FOR_TEST_PROXY, timeout=5,
                               proxies=f'{proxy.type}://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}')
                 if r.status_code == 200:
                     repo.proxies.update(proxy, state=ProxyStates.enable)
+                    proxy_shop: Shop = repo.shops.get(proxy.shop_id)
+                    await self.executor.proxy_added_log(
+                        proxy_id=proxy.id, proxy_shop_id=proxy_shop.id, proxy_shop_name=proxy_shop.name
+                    )
                     continue
             except:
                 ...
-            repo.proxies.update(proxy, state=ProxyStates.disable)
+            await self.executor.proxy_disable(proxy)
 
-    @classmethod
-    async def wait_session_check(cls):
+    async def wait_session_check(self):
         for session in repo.sessions.get_all_by_state(state=SessionStates.waiting):
             bot = BotAction(session=session)
             await bot.all_connection()
             if await bot.check():
-                asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
+                asyncio.create_task(coro=BotAction(session=session).start_new_session(), name=f"Bot_{session.id}")
+                session_shop: Shop = repo.shops.get(session.shop_id)
+                await self.executor.session_added_log(
+                    session_id=session.id, session_shop_id=session_shop.id, session_shop_name=session_shop.name
+                )
 
     async def get_session_by_group(self, group: Group):
         for session in repo.sessions.get_all_by_state(state=SessionStates.free):

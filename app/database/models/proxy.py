@@ -18,6 +18,7 @@ from datetime import datetime
 
 from peewee import PrimaryKeyField, IntegerField, CharField, ForeignKeyField, DateTimeField
 
+from . import Shop
 from .base import BaseModel
 from .country import Country
 
@@ -37,6 +38,7 @@ class Proxy(BaseModel):
     id = PrimaryKeyField()
     type = CharField(max_length=128)
     country = ForeignKeyField(Country, to_field='id')
+    shop = ForeignKeyField(Shop, to_field='id')
     host = CharField(max_length=32)
     port = IntegerField()
     user = CharField(max_length=128)

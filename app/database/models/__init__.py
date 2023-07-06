@@ -20,6 +20,7 @@ from .admin import Admin
 from .country import Country
 from .group import Group, GroupStates
 from .order import Order, OrderStates
+from .shop import Shop, ShopTypes
 from .tag import Tag
 
 """SECOND"""
@@ -37,7 +38,7 @@ from .session_task import SessionTask
 
 __all__ = (
     # Main
-    Account, Admin, Country, Tag, Order,
+    Account, Admin, Country, Tag, Order, Shop,
 
     # Proxies
     Proxy,
@@ -61,6 +62,7 @@ all_models = (
     Country,
     Tag,
     Order,
+    Shop,
     Proxy,
     Group,
     GroupTag,

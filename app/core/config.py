@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     MYSQL_USER: str
     MYSQL_PASSWORD: str
 
+    TELEGRAM_TOKEN: str
+    TELEGRAM_CHAT_ID: str
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

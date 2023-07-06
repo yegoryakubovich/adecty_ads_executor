@@ -16,8 +16,9 @@
 
 from datetime import datetime
 
-from peewee import PrimaryKeyField, BigIntegerField, CharField, DateTimeField, ForeignKeyField
+from peewee import PrimaryKeyField, BigIntegerField, CharField, DateTimeField, ForeignKeyField, IntegerField
 
+from . import Shop
 from .base import BaseModel
 from .country import Country
 
@@ -35,14 +36,16 @@ class Session(BaseModel):
     id = PrimaryKeyField()
     phone = BigIntegerField()
     country = ForeignKeyField(Country, to_field='id')
-    string = CharField(max_length=512)
+    shop = ForeignKeyField(Shop, to_field='id')
 
+    string = CharField(max_length=512)
     api_id = BigIntegerField()
     api_hash = CharField(max_length=256)
     tg_user_id = BigIntegerField()
 
     state = CharField(max_length=64, default=SessionStates.waiting)
     state_description = CharField(max_length=2056, null=True)
+    messages_send = IntegerField()
     created = DateTimeField(default=datetime.utcnow)
 
     class Meta:

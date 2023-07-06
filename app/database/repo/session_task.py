@@ -17,53 +17,22 @@
 from typing import List
 
 from database import db_manager
-from database.models import SessionTask, Session, Group, Message
+from database.base_repository import BaseRepository
+from database.models import SessionTask, Session
 from database.models.session_task import SessionTaskStates
 
-model = SessionTask
 
-
-class SessionTaskRepository:
-    def __init__(self):
-        self.model = model
+class SessionTaskRepository(BaseRepository):
 
     @db_manager
-    def create(self, **kwargs) -> None:
-        return self.model.get_or_create(**kwargs)
-
-    @db_manager
-    def get_count(self) -> int:
-        return self.model.select().count()
-
-    @db_manager
-    def get(self, **kwargs) -> model:
-        return self.model.get_or_none(**kwargs)
-
-    @db_manager
-    def get_by_id(self, id: int) -> model:
-        return self.model.get_or_none(id=id)
-
-    @db_manager
-    def get_all(self) -> List[model]:
-        return self.model.select().execute()
-
-    @db_manager
-    def update(self, task: SessionTask, **kwargs) -> model:
-        return self.model.update(**kwargs).where(self.model.id == task.id).execute()
-
-    @db_manager
-    def get_by_session(self, session: Session) -> model:
+    def get_by_session(self, session: Session) -> SessionTask:
         return self.model.get_or_none(session=session)
-
-    @db_manager
-    def delete_by_session(self, session: Session) -> None:
-        return self.model.delete().where(self.model.session == session).execute()
-
-    @db_manager
-    def get_active_task(self, session: Session) -> List[model]:
-        return self.model.select().where(
-            self.model.session == session, self.model.state == SessionTaskStates.enable
-        ).execute()
+    #
+    # @db_manager
+    # def get_active_task(self, session: Session) -> List[SessionTask]:
+    #     return self.model.select().where(
+    #         self.model.session == session, self.model.state == SessionTaskStates.enable
+    #     ).execute()
 
 
-sessions_tasks = SessionTaskRepository()
+sessions_tasks = SessionTaskRepository(SessionTask)

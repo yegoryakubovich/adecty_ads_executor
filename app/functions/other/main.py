@@ -20,13 +20,15 @@ from loguru import logger
 
 from core.constants import ASSISTANT_SLEEP_SEC
 from functions.other.checker import CheckerAction
+from functions.other.executor import AssistantExecutorAction
 from functions.other.innovation import InnovationAction
 from utils.decorators import func_logger
 
 
 class AssistantAction:
     def __init__(self):
-        self.checker = CheckerAction()
+        self.executor = AssistantExecutorAction()
+        self.checker = CheckerAction(self.executor)
         self.innovation = InnovationAction()
         self.prefix = "Assistant"
 

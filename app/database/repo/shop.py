@@ -13,26 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from database import repo, db_manager
+from core.default_data import shops_list
+from database import db_manager
 from database.base_repository import BaseRepository
-from database.models import Message, SessionStates, Session, Order, Group
-
-model = Message
+from database.models import Shop
 
 
-class MessageRepository(BaseRepository):
+class ShopRepository(BaseRepository):
 
     @db_manager
-    def get_session_from_send_message(self, order: Order, group: Group) -> Session:
-        all_session_free = repo.sessions.get_all_by_state(SessionStates.free)
-        for session in all_session_free:
-            if not self.model.get_or_none(order=order, group=group, session=session):
-                return session
-        print("HI")
-        my_session = all_session_free[0]
-        for session in all_session_free[1:]:
-            pass
+    def fill(self):
+        for shop in shops_list:
+            self.create(name=shop['name'])
 
 
-messages = MessageRepository(Message)
+
+shops = ShopRepository(Shop)

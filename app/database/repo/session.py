@@ -14,71 +14,35 @@
 # limitations under the License.
 #
 
-from random import randint
-from typing import List
-
-from core.constants import strings
-from database import db_manager, repo
+from core.default_data import sessions_list
+from database import repo, db_manager
+from database.base_repository import BaseRepository
 from database.models import Session, SessionStates, Group
-from database.models.session_group import SessionGroupState
-
-model = Session
+from utils.country import get_by_phone
 
 
-class SessionRepository:
-    def __init__(self):
-        self.model = model
+class SessionRepository(BaseRepository):
 
     @db_manager
-    def create(self, **kwargs):
-        self.model.get_or_create(**kwargs)
-
-    @db_manager
-    def session_add_new(self):
-        for session in strings:
-            item = strings[session]
+    def fill(self):
+        for session in sessions_list:
+            item = sessions_list[session]
+            country_type = get_by_phone(item["phone"])
+            country = repo.countries.create(code=country_type.code, name=country_type.name)
+            shop = repo.shops.get(1)
             self.model.get_or_create(
                 phone=item["phone"], tg_user_id=item["user_id"], string=item["string_session"],
-                api_id=item["api_id"], api_hash=item["api_hash"], country=repo.countries.get_by_id(1)
+                api_id=item["api_id"], api_hash=item["api_hash"], country=country, shop=shop
             )
 
     @db_manager
-    def get_count(self) -> int:
-        return self.model.select().count()
-
-    @db_manager
-    def get_by_id(self, id: int) -> model:
-        return self.model.get_or_none(id=id)
-
-    @db_manager
-    def get_all(self) -> List[model]:
-        return self.model.select().execute()
-
-    @db_manager
-    def get_all_by_state(self, state: SessionStates) -> List[model]:
-        return self.model.select().filter(state=state).execute()
-
-    @db_manager
-    def update(self, session: Session, **kwargs) -> model:
-        return self.model.update(**kwargs).where(self.model.id == session.id).execute()
-
-    @db_manager
-    def get_free(self, group: Group = None) -> model:
-        for session in self.get_all_by_state(state=SessionStates.free):
+    def get_free(self, group: Group = None) -> Session:
+        for session in self.get_all(state=SessionStates.free):
             if group:
                 if repo.sessions_groups.get(session=session, group=group):
                     continue
             return session
 
-    @db_manager
-    def set_banned(self, session: Session):
-        session.state = SessionStates.banned
-        repo.sessions_tasks.delete_by_session(session)
-        repo.sessions_proxies.delete_by_session(session)
-        repo.sessions_groups.delete_by_session(session)
-        session.save()
-
-    @db_manager
     def to_check(self, session: Session):
         session.state = SessionStates.waiting
         repo.sessions_tasks.delete_by_session(session)
@@ -87,4 +51,4 @@ class SessionRepository:
         session.save()
 
 
-sessions = SessionRepository()
+sessions = SessionRepository(Session)

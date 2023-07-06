@@ -14,62 +14,33 @@
 # limitations under the License.
 #
 
-from typing import List
+from typing import Optional
 
 from loguru import logger
-from peewee import ModelObjectCursorWrapper
 
 from core.constants import MAX_SESSION2ONE_PROXY
-from database import db_manager, repo
-from database.models import SessionProxy, Proxy, Session, ProxyStates
+from database import repo, db_manager
+from database.base_repository import BaseRepository
+from database.models import SessionProxy, ProxyStates, Proxy
 
-model = SessionProxy
 
-
-class SessionProxyRepository:
-    def __init__(self):
-        self.model = model
+class SessionProxyRepository(BaseRepository):
 
     @db_manager
-    def create(self, **kwargs):
-        return self.model.get_or_create(**kwargs)
-
-    @db_manager
-    def get_count(self) -> int:
-        return self.model.select().count()
-
-    @db_manager
-    def get_by_id(self, id: int) -> model:
-        return self.model.get_or_none(id=id)
-
-    @db_manager
-    def get_all(self) -> List[model]:
-        return self.model.select().execute()
-
-    @db_manager
-    def get_free_proxy(self):
-        proxies: ModelObjectCursorWrapper = repo.proxies.get_all_by_state(state=ProxyStates.enable)
+    def get_free_proxy(self) -> Optional[Proxy]:
+        proxies = repo.proxies.get_all_by_state(state=ProxyStates.enable)
         for proxy in proxies:
             if len(self.get_by_proxy(proxy)) < MAX_SESSION2ONE_PROXY:
                 return proxy
         logger.info("Not free proxy")
 
-    @db_manager
-    def get_by_session(self, session: Session):
-        result = self.model.get_or_none(session=session)
-        if not result:
-            proxy = repo.sessions_proxies.get_free_proxy()
-            if proxy:
-                return self.create(session=session, proxy=proxy)[0]
-        return result
-
-    @db_manager
-    def get_by_proxy(self, proxy: Proxy):
-        return self.model.select().filter(proxy=proxy).execute()
-
-    @db_manager
-    def delete_by_session(self, session: Session):
-        self.model.delete().where(self.model.session == session).execute()
+    # def get_by_session(self, session: Session):
+    #     result = self.model.get_or_none(session=session)
+    #     if not result:
+    #         proxy = repo.sessions_proxies.get_free_proxy()
+    #         if proxy:
+    #             return self.create(session=session, proxy=proxy)[0]
+    #     return result
 
 
-sessions_proxies = SessionProxyRepository()
+sessions_proxies = SessionProxyRepository(SessionProxy)

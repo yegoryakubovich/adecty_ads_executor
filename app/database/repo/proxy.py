@@ -15,56 +15,34 @@
 #
 
 from random import randint
-from typing import List
 
-from core.constants import proxies_list
+from core.default_data import proxies_list
 from database import db_manager, repo
-from database.models import Proxy, ProxyTypes, ProxyStates
+from database.base_repository import BaseRepository
+from database.models import Proxy, ProxyTypes
+from utils.country import get_by_ip
 
 model = Proxy
 
 
-class ProxyRepository:
-    def __init__(self):
-        self.model = model
+class ProxyRepository(BaseRepository):
 
     @db_manager
-    def add_new_proxy(self, ):
+    def fill(self):
         for item in proxies_list:
             item_data = item.split("@")
+            host, port = item_data[1].split(':')[0], item_data[1].split(':')[1]
+            user, password = item_data[0].split(':')[0], item_data[0].split(':')[1]
+            country_type = get_by_ip(host)
+            country = repo.countries.create(code=country_type.code, name=country_type.name)
+            shop = repo.shops.get(1)
             self.model.get_or_create(
-                type=ProxyTypes.socks5, host=item_data[1].split(':')[0], port=item_data[1].split(':')[1],
-                user=item_data[0].split(':')[0], password=item_data[0].split(':')[1],
-                country=repo.countries.get_by_id(1)
+                type=ProxyTypes.socks5, host=host, port=port, user=user, password=password, country=country, shop=shop
             )
 
     @db_manager
-    def get_count(self) -> int:
-        return self.model.select().count()
-
-    @db_manager
-    def get_by_id(self, id: int) -> model:
-        return self.model.get_or_none(id=id)
-
-    @db_manager
-    def get(self, **kwargs) -> model:
-        return self.model.get_or_none(**kwargs)
-
-    @db_manager
-    def get_all_by_state(self, state: ProxyStates) -> List[model]:
-        return self.model.select().filter(state=state).execute()
-
-    @db_manager
-    def get_all(self) -> List[model]:
-        return self.model.select().execute()
-
-    @db_manager
-    def update(self, proxy: Proxy, **kwargs) -> model:
-        return self.model.update(**kwargs).where(self.model.id == proxy.id).execute()
-
-    @db_manager
     def get_dict(self, proxy_id: int) -> dict:
-        proxy = self.get_by_id(proxy_id)
+        proxy = self.get(proxy_id)
         return {
             "scheme": proxy.type,
             "hostname": proxy.host, "port": proxy.port,
@@ -73,7 +51,7 @@ class ProxyRepository:
 
     @db_manager
     def get_random_dict(self):
-        return self.get_dict(randint(1, self.get_count()))
+        return self.get_dict(randint(1, self.count()))
 
 
-proxies = ProxyRepository()
+proxies = ProxyRepository(Proxy)

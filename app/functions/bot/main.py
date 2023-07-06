@@ -21,13 +21,13 @@ from loguru import logger
 from pyrogram import Client, errors
 from pyrogram.errors import Forbidden
 
-from core.constants import BOT_SLEEP_MAX_SEC, BOT_SLEEP_MIN_SEC, SEND_MSG_DELAY_MSG
+from core.constants import BOT_SLEEP_MAX_SEC, BOT_SLEEP_MIN_SEC, SEND_MSG_DELAY_MSG, NEW_SESSION_SLEEP_SEC
 from database import repo
 from database.models import Session, SessionProxy, SessionTask, SessionGroup, SessionStates, GroupStates, MessageStates, \
-    Message
+    Order, Group
 from database.models.session_group import SessionGroupState
 from database.models.session_task import SessionTaskType, SessionTaskStates
-from functions.bot.executor import ExecutorAction
+from functions.bot.executor import BotExecutorAction
 from functions.bot.simulator import SimulatorAction
 from utils.decorators import func_logger
 
@@ -60,7 +60,7 @@ class BotAction:
 
     async def all_connection(self):
         self.client = await self.open_session()
-        self.executor = ExecutorAction(client=self.client, session=self.session)
+        self.executor = BotExecutorAction(client=self.client, session=self.session)
         self.simulator = SimulatorAction(client=self.client)
 
     async def check(self, chat_id: [int, str] = "durov") -> bool:
@@ -71,7 +71,7 @@ class BotAction:
             await self.stop_session()
             return True
         except:
-            repo.sessions.set_banned(self.session)
+            await self.executor.session_banned()
             return False
 
     async def task_join_group(self, task: SessionTask):
@@ -81,7 +81,7 @@ class BotAction:
         """
         group = repo.groups.get_by_id(task.group_id)
         chat = await self.executor.join_chat(chat_id=group.name)
-        repo.groups.update(group, subcribers=chat.members_count)
+        repo.groups.update(group, subscribers=chat.members_count)
         repo.sessions_groups.create(session=self.session, group=group)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
 
@@ -92,7 +92,7 @@ class BotAction:
         """
         group = repo.groups.get_by_id(task.group_id)
         chat = await self.executor.get_chat(group.name)
-        repo.groups.update(group, subcribers=chat.members_count, state=GroupStates.active)
+        repo.groups.update(group, subscribers=chat.members_count, state=GroupStates.active)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
         return self
 
@@ -120,21 +120,38 @@ class BotAction:
         """
             Задача отправки сообщения.
         """
-        order = repo.orders.get_by_id(id=task.order_id)
-        group = repo.groups.get_by_id(id=task.group_id)
+        order: Order = repo.orders.get_by_id(id=task.order_id)
+        group: Group = repo.groups.get_by_id(id=task.group_id)
         sg: SessionGroup = repo.sessions_groups.get(session=self.session, group=group)
+
+        image = order.image_link if group.images_can else None
+        if group.can_message:
+            pass
+        elif group.can_message_no_url:
+            pass
+        elif group.can_message_short:
+            pass
+        else:
+            pass
 
         try:
             self.logger(f"Send message to {group} by order {order}")
             msg = await self.executor.send_message(
                 chat_id=group.name,
                 text=order.message_long if group.bigtext_can else order.message,
-                photo=order.image_link if group.images_can else None
+                photo=image,
             )
             repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
             repo.messages.create(
                 session=self.session, group=group, order=order, message_id=msg.id,
                 text=msg.caption if msg.caption else msg.text
+            )
+
+            await self.executor.send_message_log(
+                session_id=self.session.id,
+                order_id=order.id, order_name=order.name,
+                group_id=group.id, group_name=group.name, post_id=msg.id,
+                session_messages_count=len(repo.messages.get_all(session=self.session))
             )
         except Forbidden:
             self.logger("ForBidden")
@@ -146,6 +163,12 @@ class BotAction:
         MAIN FUNCTION
     
     """
+
+    @func_logger
+    async def start_new_session(self):
+        self.logger(f"New session started after {NEW_SESSION_SLEEP_SEC / 60} minutes")
+        await asyncio.sleep(NEW_SESSION_SLEEP_SEC)
+        await self.start()
 
     @func_logger
     async def start(self):
@@ -174,6 +197,6 @@ class BotAction:
                             await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
                     await self.stop_session()
                 except errors.UserDeactivatedBan:
-                    repo.sessions.set_banned(self.session)
+                    await self.executor.session_banned()
                     return
             await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))

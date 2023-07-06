@@ -19,13 +19,17 @@ from typing import List
 from pyrogram import Client, types, errors
 
 from database import repo
-from database.models import Session, SessionStates
+from database.models import Session, SessionStates, Shop, Proxy, SessionProxy
+from functions.base_executor import BaseExecutorAction
 
 
-class ExecutorAction:
+class BotExecutorAction(BaseExecutorAction):
     def __init__(self, client: Client, session: Session):
+        super().__init__()
         self.client = client
         self.session = session
+
+    """USERBOT"""
 
     async def get_chat(self, chat_id: [str, int]) -> types.Chat:
         return await self.client.get_chat(chat_id=chat_id)
@@ -50,3 +54,24 @@ class ExecutorAction:
                 return await self.client.send_message(chat_id=chat_id, text=text)
         except errors.UserBannedInChannel:
             repo.sessions.update(self.session, state=SessionStates.spam_block)
+
+    """OTHER"""
+
+    async def session_banned(self):
+        messages_send = len(repo.messages.get_by(session=self.session))
+        sp: SessionProxy = repo.sessions_proxies.get_by(session=self.session)
+        proxy: Proxy = repo.proxies.get(sp.proxy_id)
+        session_shop: Shop = repo.shops.get(self.session.shop_id)
+        proxy_shop: Shop = repo.shops.get(proxy.shop_id)
+
+        for st in repo.sessions_tasks.get_all(session=self.session):
+            repo.sessions_tasks.remove(st.id)
+        repo.sessions_proxies.remove(sp.id)
+        for sg in repo.sessions_groups.get_all(session=self.session):
+            repo.sessions_groups.remove(sg.id)
+        repo.sessions.update(self.session, state=SessionStates.banned, messages_send=messages_send)
+
+        await self.session_banned_log(session_id=self.session.id, proxy_id=proxy.id,
+                                      session_shop_id=session_shop.id, session_shop_name=session_shop.name,
+                                      proxy_shop_id=proxy_shop.id, proxy_shop_name=proxy_shop.name,
+                                      messages_send=messages_send)

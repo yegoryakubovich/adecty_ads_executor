@@ -14,26 +14,12 @@
 # limitations under the License.
 #
 
-from loguru import logger
-
-from database import db_manager
+from database.base_repository import BaseRepository
 from database.models import Country
 
-model = Country
+
+class CountryRepository(BaseRepository):
+    pass
 
 
-class CountryRepository:
-    def __init__(self):
-        self.model = model
-
-    @db_manager
-    def get_by_id(self, id: int) -> model:
-        return self.model.get_or_none(id=id)
-
-    @db_manager
-    def create(self, name: str) -> model:
-        result, _ = self.model.get_or_create(name=name)
-        return result
-
-
-countries = CountryRepository()
+countries = CountryRepository(Country)

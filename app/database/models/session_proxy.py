@@ -23,7 +23,7 @@ from .session import Session
 
 class SessionProxy(BaseModel):
     id = PrimaryKeyField()
-    session = ForeignKeyField(Session, to_field='id')
+    session = ForeignKeyField(Session, to_field='id', unique=True)
     proxy = ForeignKeyField(Proxy, to_field='id')
 
     class Meta:

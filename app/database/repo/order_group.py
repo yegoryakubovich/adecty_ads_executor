@@ -13,38 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from typing import List
-
-from database import db_manager
-from database.models import OrderGroup, Order
+from database.base_repository import BaseRepository
+from database.models import OrderGroup
 
 model = OrderGroup
 
 
-class OrderGroupRepository:
-    def __init__(self):
-        self.model = model
-
-    @db_manager
-    def create(self, **kwargs):
-        return self.model.get_or_create(**kwargs)
-
-    @db_manager
-    def get_count(self) -> int:
-        return self.model.select().count()
-
-    @db_manager
-    def get_by_id(self, id: int) -> model:
-        return self.model.get_or_none(id=id)
-
-    @db_manager
-    def get_all(self) -> List[model]:
-        return self.model.select().execute()
-
-    @db_manager
-    def get_by_order(self, order: Order) -> List[model]:
-        return self.model.select().filter(order=order).execute()
+class OrderGroupRepository(BaseRepository):
+    pass
 
 
-orders_groups = OrderGroupRepository()
+orders_groups = OrderGroupRepository(OrderGroup)

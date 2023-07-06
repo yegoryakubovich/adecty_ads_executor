@@ -19,8 +19,7 @@ import asyncio
 from loguru import logger
 
 from database import init_db, repo
-from database.models import SessionStates
-from functions import BotAction, AssistantAction
+from functions import BotAction
 from utils.logger import configure_logger
 
 
@@ -34,25 +33,25 @@ def on_start_up():
         exit(1)
 
     """temporary"""
-    repo.countries.create(name="Russia")
-    repo.proxies.add_new_proxy()
-    repo.sessions.session_add_new()
-    repo.groups.add_new_group()
+    repo.shops.fill()
+    repo.proxies.fill()
+    repo.sessions.fill()
+    repo.groups.fill()
     """temporary"""
 
-    loop = asyncio.get_event_loop()
-    all_functions = [{'fun': AssistantAction(), 'name': 'Assistant'}]
-    all_functions.extend([
-        {
-            'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
-        } for session in repo.sessions.get_all_by_state(state=SessionStates.free)
-    ])
-
-    all_tasks = [loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions]
-    all_tasks.extend([loop.create_task(hello(), name="TEST")])
-
-    for task in all_tasks:
-        loop.run_until_complete(task)
+    # loop = asyncio.get_event_loop()
+    # all_functions = [{'fun': AssistantAction(), 'name': 'Assistant'}]
+    # all_functions.extend([
+    #     {
+    #         'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
+    #     } for session in repo.sessions.get_all_by_state(state=SessionStates.free)
+    # ])
+    #
+    # all_tasks = [loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions]
+    # all_tasks.extend([loop.create_task(hello(), name="TEST")])
+    #
+    # for task in all_tasks:
+    #     loop.run_until_complete(task)
 
     logger.info("Success init")
 

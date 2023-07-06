@@ -14,37 +14,20 @@
 # limitations under the License.
 #
 
-from typing import List
-
-from core.constants import groups_list
+from core.default_data import groups_list
 from database import db_manager
-from database.models import Group, GroupStates
+from database.base_repository import BaseRepository
+from database.models import Group
 
-model = Group
 
-
-class GroupRepository:
-    def __init__(self):
-        self.model = model
+class GroupRepository(BaseRepository):
 
     @db_manager
-    def add_new_group(self, ):
+    def fill(self):
         for item in groups_list:
             if item.count("@"):
                 item = item[1:]
             self.model.get_or_create(name=item)
 
-    @db_manager
-    def get_by_id(self, id: int) -> model:
-        return self.model.get_or_none(id=id)
 
-    @db_manager
-    def update(self, group: Group, **kwargs) -> model:
-        return self.model.update(**kwargs).where(self.model.id == group.id).execute()
-
-    @db_manager
-    def get_all_by_state(self, state: GroupStates) -> List[model]:
-        return self.model.select().filter(state=state).execute()
-
-
-groups = GroupRepository()
+groups = GroupRepository(Group)

@@ -21,8 +21,8 @@ from .base import BaseModel
 
 class Country(BaseModel):
     id = PrimaryKeyField()
+    code = CharField(max_length=8, unique=True)
     name = CharField(max_length=128)
-    icon = CharField(max_length=8)
 
     class Meta:
         db_table = 'countries'
