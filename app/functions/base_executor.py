@@ -1,7 +1,10 @@
+from random import choice
+
 from aiogram import Bot
 from loguru import logger
 
 from core.config import settings
+from core.constants import LATTERS
 
 
 class BaseExecutorAction:
@@ -9,6 +12,15 @@ class BaseExecutorAction:
     def __init__(self):
         self.token = settings.TELEGRAM_TOKEN
         self.chat_id = settings.TELEGRAM_CHAT_ID
+
+    """COMMON"""
+
+    async def replace_text(self, text: str):
+        for latter in LATTERS:
+            text = text.replace(latter, choice(LATTERS[latter]))
+        return text
+
+    """LOGGING"""
 
     async def send_log_message(self, text):
         bot = Bot(token=self.token)

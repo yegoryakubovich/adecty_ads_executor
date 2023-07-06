@@ -126,21 +126,17 @@ class BotAction:
 
         image = order.image_link if group.images_can else None
         if group.can_message:
-            pass
+            text = order.message
         elif group.can_message_no_url:
-            pass
+            text = order.message_no_link
         elif group.can_message_short:
-            pass
+            text = order.message_short
         else:
-            pass
+            text = self.executor.replace_text(order.message_short)
 
         try:
             self.logger(f"Send message to {group} by order {order}")
-            msg = await self.executor.send_message(
-                chat_id=group.name,
-                text=order.message_long if group.bigtext_can else order.message,
-                photo=image,
-            )
+            msg = await self.executor.send_message(chat_id=group.name, text=text, photo=image, )
             repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
             repo.messages.create(
                 session=self.session, group=group, order=order, message_id=msg.id,

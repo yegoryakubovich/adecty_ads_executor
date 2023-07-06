@@ -28,9 +28,9 @@ class OrderStates:
 class Order(BaseModel):
     id = PrimaryKeyField()
     name = CharField(max_length=128)
-    message = CharField(max_length=256)
+    message = CharField(max_length=512)
+    message_no_link = CharField(max_length=512)
     message_short = CharField(max_length=256)
-    message_long = CharField(max_length=512)
     image_link = CharField(max_length=256)
 
     state = CharField(max_length=32, default=OrderStates.waiting)
