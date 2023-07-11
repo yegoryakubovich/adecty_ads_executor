@@ -14,12 +14,10 @@
 # limitations under the License.
 #
 
-from datetime import datetime
+from peewee import PrimaryKeyField, BigIntegerField, CharField, ForeignKeyField, IntegerField
 
-from peewee import PrimaryKeyField, BigIntegerField, CharField, DateTimeField, ForeignKeyField, IntegerField
-
+from database.db import BaseModel
 from . import Shop
-from .base import BaseModel
 from .country import Country
 
 
@@ -46,7 +44,6 @@ class Session(BaseModel):
     state = CharField(max_length=64, default=SessionStates.waiting)
     state_description = CharField(max_length=2056, null=True)
     messages_send = IntegerField()
-    created = DateTimeField(default=datetime.utcnow)
 
     class Meta:
         db_table = 'sessions'

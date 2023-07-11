@@ -14,12 +14,10 @@
 # limitations under the License.
 #
 
-from datetime import datetime
+from peewee import PrimaryKeyField, IntegerField, CharField, ForeignKeyField
 
-from peewee import PrimaryKeyField, IntegerField, CharField, ForeignKeyField, DateTimeField
-
+from database.db import BaseModel
 from . import Shop
-from .base import BaseModel
 from .country import Country
 
 
@@ -37,16 +35,16 @@ class ProxyStates:
 class Proxy(BaseModel):
     id = PrimaryKeyField()
     type = CharField(max_length=128)
-    country = ForeignKeyField(Country, to_field='id')
+    country = ForeignKeyField(Country, to_field='id', null=True)
     shop = ForeignKeyField(Shop, to_field='id')
     host = CharField(max_length=32)
     port = IntegerField()
     user = CharField(max_length=128)
     password = CharField(max_length=256)
+    max_link = IntegerField(default=3)
 
     state = CharField(max_length=64, default=ProxyStates.wait)
     state_description = CharField(max_length=2056, null=True)
-    created = DateTimeField(default=datetime.utcnow)
 
     class Meta:
         db_table = 'proxies'

@@ -13,13 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from datetime import datetime
 
 from peewee import PrimaryKeyField, CharField, ForeignKeyField, DateTimeField, BigIntegerField
 
+from database.db import BaseModel
 from . import Group, Order
-from .base import BaseModel
 from .session import Session
 
 
@@ -37,8 +36,7 @@ class Message(BaseModel):
     state = CharField(max_length=64, default=MessageStates.waiting)
 
     message_id = BigIntegerField()
-    text = CharField(max_length=1024)
-    created = DateTimeField(default=datetime.utcnow)
+    text = CharField(max_length=1024, null=True)
 
     class Meta:
         db_table = 'messages'

@@ -13,27 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from peewee import PrimaryKeyField, CharField, DateTimeField
+from peewee import PrimaryKeyField, CharField, IntegerField, ForeignKeyField
 
 from database.db import BaseModel
+from . import Session
 
 
-class OrderStates:
-    waiting = "waiting"
-    disable = "finished"
-    stopped = "stopped"
+class SleepStates:
+    enable = 'enable'
+    disable = 'disable'
 
 
-class Order(BaseModel):
+class Sleep(BaseModel):
     id = PrimaryKeyField()
-    name = CharField(max_length=128)
-    message = CharField(max_length=512)
-    message_no_link = CharField(max_length=512)
-    message_short = CharField(max_length=256)
-    image_link = CharField(max_length=256)
 
-    state = CharField(max_length=32, default=OrderStates.waiting)
-    datetime_stop = DateTimeField()
+    session = ForeignKeyField(Session, to_field='id')
+
+    time_second = IntegerField()
+    state = CharField(max_length=32, default=SleepStates.enable)
 
     class Meta:
-        db_table = 'orders'
+        db_table = 'sleeps'

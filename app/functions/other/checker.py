@@ -15,20 +15,20 @@
 #
 
 import asyncio
-from datetime import datetime
 
-import httpx
 from loguru import logger
 
-from core.constants import URL_FOR_TEST_PROXY, SEND_MSG_DELAY_SEC
+from core.constants import NEW_SESSION_SLEEP_SEC
 from database import repo
-from database.models import ProxyStates, SessionStates, GroupStates, MessageStates, Shop
-from database.models import SessionTask, SessionGroup, Message, Group
+from database.models import ProxyStates, SessionStates, GroupStates, MessageStates, Shop, ProxyTypes
+from database.models import SessionTask
 from database.models.order import OrderStates
-from database.models.session_group import SessionGroupState
 from database.models.session_task import SessionTaskType, SessionTaskStates
 from functions import BotAction
 from functions.other.executor import AssistantExecutorAction
+from modules import convert
+from utils.country import get_by_phone
+from utils.new import new
 
 
 class CheckerAction:
@@ -39,54 +39,72 @@ class CheckerAction:
     def logger(self, txt):
         logger.info(f"[{self.prefix}] {txt}")
 
+    async def new_session_check(self):
+        self.logger("new_session_check")
+        new_session = convert.start()
+        if new_session:
+            self.logger("Find new sessions")
+            for session in new_session:
+                item = new_session[session]
+                country_type = get_by_phone(item["phone"])
+                country = repo.countries.create(code=country_type.code, name=country_type.name)
+                shop = repo.shops.get(1)
+                repo.sessions.create(
+                    phone=item["phone"], string=item["string_session"], api_id=item["api_id"],
+                    api_hash=item["api_hash"],
+                    country=country, shop=shop
+                )
+
+    async def new_proxy_check(self):
+        self.logger("new_proxy_check")
+        new_proxy = await new.get_proxy()
+        if new_proxy:
+            self.logger("Find new proxy")
+            for item in new_proxy:
+                item_data = item.split("@")
+                host, port = item_data[1].split(':')[0], item_data[1].split(':')[1]
+                user, password = item_data[0].split(':')[0], item_data[0].split(':')[1]
+                shop = repo.shops.get(1)
+                repo.proxies.create(
+                    type=ProxyTypes.socks5, host=host, port=port, user=user, password=password, shop=shop
+                )
+
     async def wait_proxy_check(self):
-        for proxy in repo.proxies.get_all_by_state(state=ProxyStates.wait):
-            try:
-                r = httpx.get(url=URL_FOR_TEST_PROXY, timeout=5,
-                              proxies=f'{proxy.type}://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}')
-                if r.status_code == 200:
-                    repo.proxies.update(proxy, state=ProxyStates.enable)
-                    proxy_shop: Shop = repo.shops.get(proxy.shop_id)
-                    await self.executor.proxy_added_log(
-                        proxy_id=proxy.id, proxy_shop_id=proxy_shop.id, proxy_shop_name=proxy_shop.name
-                    )
-                    continue
-            except:
-                ...
-            await self.executor.proxy_disable(proxy)
+        self.logger("wait_proxy_check")
+        for proxy in repo.proxies.get_all(state=ProxyStates.wait):
+            if await self.executor.check_proxy(proxy):
+                await self.executor.proxy_new(proxy)
+            else:
+                await self.executor.proxy_disable(proxy)
+
+        for proxy in repo.proxies.get_all(state=ProxyStates.enable):
+            if await self.executor.check_proxy(proxy):
+                pass
+            else:
+                await self.executor.proxy_disable(proxy)
 
     async def wait_session_check(self):
-        for session in repo.sessions.get_all_by_state(state=SessionStates.waiting):
+        self.logger("wait_session_check")
+        for session in repo.sessions.get_all(state=SessionStates.waiting):
             bot = BotAction(session=session)
             await bot.all_connection()
             if await bot.check():
-                asyncio.create_task(coro=BotAction(session=session).start_new_session(), name=f"Bot_{session.id}")
+                repo.sleeps.create(session=session, time_second=NEW_SESSION_SLEEP_SEC)
+                asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
                 session_shop: Shop = repo.shops.get(session.shop_id)
                 await self.executor.session_added_log(
                     session_id=session.id, session_shop_id=session_shop.id, session_shop_name=session_shop.name
                 )
 
-    async def get_session_by_group(self, group: Group):
-        for session in repo.sessions.get_all_by_state(state=SessionStates.free):
-            sg: SessionGroup = repo.sessions_groups.get(session=session, group=group)
-            if sg:
-                if sg.state == SessionGroupState.banned:
-                    continue
-                delay_seconds = SEND_MSG_DELAY_SEC
-                last_message_session: Message = repo.messages.get_last(session=session)
-                if last_message_session:
-                    delay_seconds = (datetime.utcnow() - last_message_session.created).total_seconds()
-                self.logger(f"{delay_seconds} > {SEND_MSG_DELAY_SEC}")
-                if delay_seconds >= SEND_MSG_DELAY_SEC:
-                    return session
-
     async def wait_session_group_check(self):
-        for group in repo.groups.get_all_by_state(state=GroupStates.waiting):
-            st: SessionTask = repo.sessions_tasks.get(
+        self.logger("wait_session_group_check")
+        for group in repo.groups.get_all(state=GroupStates.waiting):
+            st: SessionTask = repo.sessions_tasks.get_by(
                 group=group, type=SessionTaskType.check_group, state=SessionTaskStates.enable
             )
+
             if not st:
-                session = await self.get_session_by_group(group=group)
+                session = await self.executor.get_session_by_group(group=group, send_msg=False)
                 if session:
                     repo.sessions_tasks.create(
                         session=session,
@@ -101,13 +119,14 @@ class CheckerAction:
                         )
 
     async def wait_message_check(self):
-        for message in repo.messages.get_all_by_state(state=MessageStates.waiting):
-            group = repo.groups.get_by_id(message.group_id)
-            st: SessionTask = repo.sessions_tasks.get(
+        self.logger("wait_message_check")
+        for message in repo.messages.get_all(state=MessageStates.waiting):
+            group = repo.groups.get(message.group_id)
+            st: SessionTask = repo.sessions_tasks.get_by(
                 group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.enable,
             )
             if not st:
-                session = await self.get_session_by_group(group=group)
+                session = await self.executor.get_session_by_group(group=group)
                 if session:
                     repo.sessions_tasks.create(
                         session=session,
@@ -122,23 +141,21 @@ class CheckerAction:
                         )
 
     async def wait_order_check(self):
-        for order in repo.orders.get_all_by_state(state=OrderStates.waiting):
-            for od in repo.orders_groups.get_by_order(order=order):
-                group = repo.groups.get_by_id(od.group_id)
+        self.logger("wait_order_check")
+        for order in repo.orders.get_all(state=OrderStates.waiting):
+            for od in repo.orders_groups.get_all(order=order):
+                group = repo.groups.get(od.group_id)
                 if group.state != GroupStates.active:
-                    return
+                    continue
                 last_message = repo.messages.get_last(order=order, group=group)
                 if last_message:
                     self.logger(f"Message {last_message} have state {last_message.state}")
                     if last_message.state == MessageStates.waiting:
-                        return
-                self.logger(group.name)
-                st: SessionTask = repo.sessions_tasks.get(group=group, state=SessionTaskStates.enable)
+                        continue
+                st: SessionTask = repo.sessions_tasks.get_by(group=group, state=SessionTaskStates.enable)
                 if not st:
-                    self.logger("1")
-                    session = await self.get_session_by_group(group=group)
+                    session = await self.executor.get_session_by_group(group=group)
                     if session:
-                        self.logger("1")
                         repo.sessions_tasks.create(
                             session=session, group=group, order=order,
                             type=SessionTaskType.send_by_order, state=SessionTaskStates.enable

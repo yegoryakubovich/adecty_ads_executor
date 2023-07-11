@@ -14,11 +14,9 @@
 # limitations under the License.
 #
 
-from datetime import datetime
+from peewee import PrimaryKeyField, ForeignKeyField, CharField
 
-from peewee import PrimaryKeyField, ForeignKeyField, DateTimeField, CharField
-
-from .base import BaseModel
+from database.db import BaseModel
 from .group import Group
 from .session import Session
 
@@ -33,8 +31,6 @@ class SessionGroup(BaseModel):
     session = ForeignKeyField(Session, to_field='id')
     group = ForeignKeyField(Group, to_field='id')
     state = CharField(max_length=32, default=SessionGroupState.active)
-
-    created = DateTimeField(default=datetime.utcnow)
 
     class Meta:
         db_table = 'sessions_groups'

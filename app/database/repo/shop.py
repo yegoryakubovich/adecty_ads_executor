@@ -27,5 +27,4 @@ class ShopRepository(BaseRepository):
             self.create(name=shop['name'])
 
 
-
 shops = ShopRepository(Shop)

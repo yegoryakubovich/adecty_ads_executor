@@ -13,12 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from database import db_manager, repo
+from database.base_repository import BaseRepository
+from database.models import CountryLink, Country
 
-from peewee import Model
 
-from database import db
+class CountryLinkRepository(BaseRepository):
+
+    @db_manager
+    def get_link_country(self, country: Country):
+        ids = [country.id]
+        ids += [c.country_2_id for c in self.get_all(country_1=country)]
+        ids += [c.country_1_id for c in self.get_all(country_2=country)]
+        return [repo.countries.get(c_id) for c_id in list(set(ids))]
 
 
-class BaseModel(Model):
-    class Meta:
-        database = db
+countries_links = CountryLinkRepository(CountryLink)

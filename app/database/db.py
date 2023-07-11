@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from datetime import datetime
 
-from peewee import Model, MySQLDatabase
+from peewee import Model, MySQLDatabase, DateTimeField
 
 from core.config import settings
 
@@ -30,5 +31,7 @@ db = MySQLDatabase(
 
 
 class BaseModel(Model):
+    created = DateTimeField(default=datetime.utcnow)
+
     class Meta:
         database = db

@@ -13,15 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 import asyncio
-from random import randint
+from typing import Optional
 
 from loguru import logger
 from pyrogram import Client, errors
 from pyrogram.errors import Forbidden
 
-from core.constants import BOT_SLEEP_MAX_SEC, BOT_SLEEP_MIN_SEC, SEND_MSG_DELAY_MSG, NEW_SESSION_SLEEP_SEC
+from core.constants import SEND_MSG_DELAY_MSG, ASSISTANT_SLEEP_SEC
 from database import repo
 from database.models import Session, SessionProxy, SessionTask, SessionGroup, SessionStates, GroupStates, MessageStates, \
     Order, Group
@@ -30,6 +29,7 @@ from database.models.session_task import SessionTaskType, SessionTaskStates
 from functions.bot.executor import BotExecutorAction
 from functions.bot.simulator import SimulatorAction
 from utils.decorators import func_logger
+from utils.helpers import smart_sleep, smart_create_sleep
 
 
 class BotAction:
@@ -41,8 +41,11 @@ class BotAction:
         self.session = session
         self.prefix = f"Session #{self.session.id}"
 
-    async def open_session(self) -> Client:
+    async def open_session(self) -> Optional[Client]:
         sp: SessionProxy = repo.sessions_proxies.get_by_session(session=self.session)
+        if not sp:
+            self.logger("No find proxy")
+            return
         return Client(
             f"{self.session.id}", session_string=self.session.string,
             api_id=self.session.api_id, api_hash=self.session.api_hash,
@@ -79,9 +82,8 @@ class BotAction:
         """
             Задача входа в группу.
         """
-        group = repo.groups.get_by_id(task.group_id)
-        chat = await self.executor.join_chat(chat_id=group.name)
-        repo.groups.update(group, subscribers=chat.members_count)
+        group = repo.groups.get(task.group_id)
+        await self.executor.join_chat(chat_id=group.name)
         repo.sessions_groups.create(session=self.session, group=group)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
 
@@ -90,7 +92,7 @@ class BotAction:
         """
             Задача проверки группы.
         """
-        group = repo.groups.get_by_id(task.group_id)
+        group = repo.groups.get(task.group_id)
         chat = await self.executor.get_chat(group.name)
         repo.groups.update(group, subscribers=chat.members_count, state=GroupStates.active)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
@@ -101,9 +103,12 @@ class BotAction:
         """
             Задача проверки сообщения.
         """
-        message = repo.messages.get_by_id(id=task.message_id)
-        group = repo.groups.get_by_id(id=message.group_id)
+        message = repo.messages.get(id=task.message_id)
+        group = repo.groups.get(id=message.group_id)
+        chat = await self.executor.get_chat(group.name)
+
         chat_messages_ids = await self.executor.get_all_messages_ids(group.name, limit=SEND_MSG_DELAY_MSG)
+        repo.groups.update(group, subscribers=chat.members_count)
 
         if message.message_id in chat_messages_ids:
             return
@@ -120,11 +125,14 @@ class BotAction:
         """
             Задача отправки сообщения.
         """
-        order: Order = repo.orders.get_by_id(id=task.order_id)
-        group: Group = repo.groups.get_by_id(id=task.group_id)
-        sg: SessionGroup = repo.sessions_groups.get(session=self.session, group=group)
+        order: Order = repo.orders.get(id=task.order_id)
+        group: Group = repo.groups.get(id=task.group_id)
+        sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
 
-        image = order.image_link if group.images_can else None
+        chat = await self.executor.get_chat(group.name)
+        repo.groups.update(group, subscribers=chat.members_count)
+
+        image = order.image_link if group.can_image else None
         if group.can_message:
             text = order.message
         elif group.can_message_no_url:
@@ -132,11 +140,11 @@ class BotAction:
         elif group.can_message_short:
             text = order.message_short
         else:
-            text = self.executor.replace_text(order.message_short)
+            text = await self.executor.replace_text(order.message_short)
 
         try:
             self.logger(f"Send message to {group} by order {order}")
-            msg = await self.executor.send_message(chat_id=group.name, text=text, photo=image, )
+            msg = await self.executor.send_message(chat_id=group.name, text=text, photo=image)
             repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
             repo.messages.create(
                 session=self.session, group=group, order=order, message_id=msg.id,
@@ -150,7 +158,6 @@ class BotAction:
                 session_messages_count=len(repo.messages.get_all(session=self.session))
             )
         except Forbidden:
-            self.logger("ForBidden")
             repo.sessions_groups.update(sg, state=SessionGroupState.banned)
             repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
 
@@ -161,38 +168,36 @@ class BotAction:
     """
 
     @func_logger
-    async def start_new_session(self):
-        self.logger(f"New session started after {NEW_SESSION_SLEEP_SEC / 60} minutes")
-        await asyncio.sleep(NEW_SESSION_SLEEP_SEC)
-        await self.start()
-
-    @func_logger
     async def start(self):
         self.logger(f"Started!")
         await self.all_connection()
         while True:
-            my_tasks = repo.sessions_tasks.get_active_task(session=self.session)
+            await asyncio.sleep(await smart_sleep(self.session))
+            my_tasks = repo.sessions_tasks.get_all(session=self.session, state=SessionTaskStates.enable)
             if my_tasks:
-                self.logger("Task find")
+                self.logger("Find task")
                 try:
                     await self.start_session()
                     while my_tasks:
                         for task in my_tasks:
-                            await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
+                            await asyncio.sleep(await smart_sleep(self.session))
                             if task.type == SessionTaskType.join_group:
                                 await self.task_join_group(task)
+                                await asyncio.sleep(await smart_create_sleep(self.session))
                             elif task.type == SessionTaskType.check_group:
                                 await self.task_check_group(task)
+                                await asyncio.sleep(await smart_create_sleep(self.session))
                             elif task.type == SessionTaskType.check_message:
                                 await self.task_check_message(task)
+                                await asyncio.sleep(await smart_create_sleep(self.session))
                             elif task.type == SessionTaskType.send_by_order:
                                 await self.task_send_by_order(task)
+                                await asyncio.sleep(await smart_create_sleep(self.session))
                             else:
-                                pass
-                            my_tasks = repo.sessions_tasks.get_active_task(session=self.session)
-                            await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
+                                logger.info("task not found")
+                            my_tasks = repo.sessions_tasks.get_all(session=self.session, state=SessionTaskStates.enable)
                     await self.stop_session()
                 except errors.UserDeactivatedBan:
                     await self.executor.session_banned()
                     return
-            await asyncio.sleep(randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
+            await asyncio.sleep(ASSISTANT_SLEEP_SEC)

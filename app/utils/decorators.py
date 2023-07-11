@@ -15,6 +15,7 @@
 #
 
 import asyncio
+import traceback
 
 from loguru import logger
 
@@ -24,6 +25,7 @@ def func_logger(function):
         try:
             await function(*args, **kwargs)
         except Exception as e:
-            logger.error(f'[{asyncio.current_task().get_name()}] {e}')
+            traceback.print_exc()
+            logger.error(e)
 
     return wrapper

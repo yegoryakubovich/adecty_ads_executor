@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from core.default_data import sessions_list
 from database import repo, db_manager
 from database.base_repository import BaseRepository
@@ -30,7 +29,7 @@ class SessionRepository(BaseRepository):
             country_type = get_by_phone(item["phone"])
             country = repo.countries.create(code=country_type.code, name=country_type.name)
             shop = repo.shops.get(1)
-            self.model.get_or_create(
+            self.create(
                 phone=item["phone"], tg_user_id=item["user_id"], string=item["string_session"],
                 api_id=item["api_id"], api_hash=item["api_hash"], country=country, shop=shop
             )
@@ -39,7 +38,7 @@ class SessionRepository(BaseRepository):
     def get_free(self, group: Group = None) -> Session:
         for session in self.get_all(state=SessionStates.free):
             if group:
-                if repo.sessions_groups.get(session=session, group=group):
+                if repo.sessions_groups.get_by(session=session, group=group):
                     continue
             return session
 

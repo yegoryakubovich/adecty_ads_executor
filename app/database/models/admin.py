@@ -13,11 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from peewee import PrimaryKeyField, ForeignKeyField
 
 from .account import Account
-from .base import BaseModel
+from database.db import BaseModel
 
 
 class Admin(BaseModel):

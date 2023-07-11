@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from peewee import PrimaryKeyField, ForeignKeyField
 
-from .base import BaseModel
+from database.db import BaseModel
 from .proxy import Proxy
 from .session import Session
 

@@ -13,11 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from peewee import PrimaryKeyField, ForeignKeyField, CharField
 
+from database.db import BaseModel
 from . import Session, Group, Order, Message
-from .base import BaseModel
 
 
 class SessionTaskType:

@@ -13,27 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from peewee import PrimaryKeyField, CharField, DateTimeField
+
+from peewee import PrimaryKeyField, ForeignKeyField
 
 from database.db import BaseModel
+from .country import Country
 
 
-class OrderStates:
-    waiting = "waiting"
-    disable = "finished"
-    stopped = "stopped"
-
-
-class Order(BaseModel):
+class CountryLink(BaseModel):
     id = PrimaryKeyField()
-    name = CharField(max_length=128)
-    message = CharField(max_length=512)
-    message_no_link = CharField(max_length=512)
-    message_short = CharField(max_length=256)
-    image_link = CharField(max_length=256)
-
-    state = CharField(max_length=32, default=OrderStates.waiting)
-    datetime_stop = DateTimeField()
+    country_1 = ForeignKeyField(Country, to_field='id')
+    country_2 = ForeignKeyField(Country, to_field='id')
 
     class Meta:
-        db_table = 'orders'
+        db_table = 'countries_links'

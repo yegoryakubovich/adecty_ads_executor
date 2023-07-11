@@ -19,7 +19,8 @@ import asyncio
 from loguru import logger
 
 from database import init_db, repo
-from functions import BotAction
+from database.models import SessionStates
+from functions import BotAction, AssistantAction
 from utils.logger import configure_logger
 
 
@@ -39,19 +40,20 @@ def on_start_up():
     repo.groups.fill()
     """temporary"""
 
-    # loop = asyncio.get_event_loop()
-    # all_functions = [{'fun': AssistantAction(), 'name': 'Assistant'}]
-    # all_functions.extend([
-    #     {
-    #         'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
-    #     } for session in repo.sessions.get_all_by_state(state=SessionStates.free)
-    # ])
-    #
-    # all_tasks = [loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions]
-    # all_tasks.extend([loop.create_task(hello(), name="TEST")])
-    #
-    # for task in all_tasks:
-    #     loop.run_until_complete(task)
+    loop = asyncio.get_event_loop()
+    all_functions = [{'fun': AssistantAction(), 'name': 'Assistant'}]
+    all_functions.extend([
+        {
+            'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
+        } for session in repo.sessions.get_all(state=SessionStates.free)
+    ])
+
+    all_tasks = [loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions]
+    all_tasks.extend([loop.create_task(hello(), name="TEST")])
+
+    for task in all_tasks:
+        logger.info(task.get_name())
+        loop.run_until_complete(task)
 
     logger.info("Success init")
 
@@ -60,9 +62,8 @@ async def hello():
     while True:
         # logger.info([{'name': task.get_name(), 'func': task.get_coro()} for task in asyncio.all_tasks()])
         all_tasks = [task.get_name() for task in asyncio.all_tasks()]
-        sorted(all_tasks)
         print(all_tasks)
-        await asyncio.sleep(30)
+        await asyncio.sleep(80)
 
 
 if __name__ == '__main__':

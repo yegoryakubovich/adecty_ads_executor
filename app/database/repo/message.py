@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from database import repo, db_manager
 from database.base_repository import BaseRepository
 from database.models import Message, SessionStates, Session, Order, Group
@@ -25,7 +24,7 @@ class MessageRepository(BaseRepository):
 
     @db_manager
     def get_session_from_send_message(self, order: Order, group: Group) -> Session:
-        all_session_free = repo.sessions.get_all_by_state(SessionStates.free)
+        all_session_free = repo.sessions.get_all(SessionStates.free)
         for session in all_session_free:
             if not self.model.get_or_none(order=order, group=group, session=session):
                 return session

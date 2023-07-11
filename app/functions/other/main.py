@@ -40,6 +40,10 @@ class AssistantAction:
         while True:
             self.logger("Checks started")
             all_tasks_names = [task.get_name() for task in asyncio.all_tasks()]
+            if "assistant_new_proxy_check" not in all_tasks_names:
+                asyncio.create_task(coro=self.checker.new_proxy_check(), name="assistant_new_check")
+            if "assistant_new_session_check" not in all_tasks_names:
+                asyncio.create_task(coro=self.checker.new_session_check(), name="assistant_new_check")
             if "assistant_wait_proxy_check" not in all_tasks_names:
                 asyncio.create_task(coro=self.checker.wait_proxy_check(), name="assistant_wait_proxy_check")
             if "assistant_wait_session_check" not in all_tasks_names:

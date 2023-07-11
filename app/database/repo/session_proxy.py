@@ -13,34 +13,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from typing import Optional
 
 from loguru import logger
 
-from core.constants import MAX_SESSION2ONE_PROXY
 from database import repo, db_manager
 from database.base_repository import BaseRepository
-from database.models import SessionProxy, ProxyStates, Proxy
+from database.models import SessionProxy, ProxyStates, Proxy, Session
 
 
 class SessionProxyRepository(BaseRepository):
 
     @db_manager
-    def get_free_proxy(self) -> Optional[Proxy]:
-        proxies = repo.proxies.get_all_by_state(state=ProxyStates.enable)
-        for proxy in proxies:
-            if len(self.get_by_proxy(proxy)) < MAX_SESSION2ONE_PROXY:
-                return proxy
+    def get_free_proxy(self, country_id: int) -> Optional[Proxy]:
+        session_country = repo.countries.get(country_id)
+        for country in repo.countries_links.get_link_country(session_country):
+            for proxy in repo.proxies.get_all(state=ProxyStates.enable, country=country):
+                if len(self.get_all(proxy=proxy)) < proxy.max_link:
+                    return proxy
         logger.info("Not free proxy")
 
-    # def get_by_session(self, session: Session):
-    #     result = self.model.get_or_none(session=session)
-    #     if not result:
-    #         proxy = repo.sessions_proxies.get_free_proxy()
-    #         if proxy:
-    #             return self.create(session=session, proxy=proxy)[0]
-    #     return result
+    @db_manager
+    def get_by_session(self, session: Session):
+        result = self.model.get_or_none(session=session)
+        if not result:
+            proxy = repo.sessions_proxies.get_free_proxy(country_id=session.country_id)
+            if proxy:
+                return self.create(session=session, proxy=proxy)
+        return result
 
 
 sessions_proxies = SessionProxyRepository(SessionProxy)
