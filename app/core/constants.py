@@ -24,9 +24,10 @@ def hour2sec(hours: int):
 NEW_SESSION_SLEEP_SEC = min2sec(60)
 URL_FOR_TEST_PROXY = 'https://ifconfig.me/all.json'
 
-BOT_SLEEP_MIN_SEC = min2sec(10)  # sleep min
-BOT_SLEEP_MAX_SEC = min2sec(20)  # sleep max
-ASSISTANT_SLEEP_SEC = min2sec(1)  # assistant sleep
+BOT_SLEEP_MIN_SEC = min2sec(5)  # sleep min
+BOT_SLEEP_MAX_SEC = min2sec(10)  # sleep max
+ASSISTANT_SLEEP_SEC = min2sec(10)  # assistant sleep
+MAX_TASKS_COUNT = 3  # max count tasks by one session
 
 SEND_MSG_DELAY_MSG = 30  # msg delay
 SEND_MSG_DELAY_SEC = min2sec(10)  # msg delay

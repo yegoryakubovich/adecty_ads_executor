@@ -16,10 +16,13 @@
 
 from typing import List
 
+from loguru import logger
 from pyrogram import Client, types, errors
+from pyrogram.errors import UsernameNotOccupied, InviteRequestSent
 
 from database import repo
-from database.models import Session, SessionStates, SessionProxy
+from database.models import Session, SessionStates, SessionProxy, Group, SessionGroup, GroupStates
+from database.models.session_group import SessionGroupState
 from functions.base_executor import BaseExecutorAction
 
 
@@ -31,8 +34,28 @@ class BotExecutorAction(BaseExecutorAction):
 
     """USERBOT"""
 
+    async def get_chat_by_group(self, group: Group) -> types.Chat:
+        try:
+            return await self.get_chat(chat_id=group.name)
+        except KeyError:
+            sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
+            repo.sessions_groups.update(sg, state=SessionGroupState.banned)
+        except UsernameNotOccupied:
+            repo.groups.update(group, state=GroupStates.inactive)
+
     async def get_chat(self, chat_id: [str, int]) -> types.Chat:
         return await self.client.get_chat(chat_id=chat_id)
+
+    async def join_chat_by_group(self, group: Group) -> types.Chat:
+        try:
+            return await self.join_chat(chat_id=group.name)
+        except KeyError:
+            sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
+            repo.sessions_groups.update(sg, state=SessionGroupState.banned)
+        except UsernameNotOccupied:
+            repo.groups.update(group, state=GroupStates.inactive)
+        except InviteRequestSent:
+            logger.info(f"Запрос в группу {group.name} отправлен от сессии #{self.session}")
 
     async def join_chat(self, chat_id: [str, int]) -> types.Chat:
         return await self.client.join_chat(chat_id=chat_id)

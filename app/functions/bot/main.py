@@ -22,8 +22,8 @@ from pyrogram.errors import Forbidden
 
 from core.constants import SEND_MSG_DELAY_MSG, ASSISTANT_SLEEP_SEC
 from database import repo
-from database.models import Session, SessionProxy, SessionTask, SessionGroup, SessionStates, GroupStates, MessageStates, \
-    Order, Group
+from database.models import Session, SessionProxy, SessionTask, SessionStates, GroupStates, MessageStates, \
+    Order, Group, SessionGroup
 from database.models.session_group import SessionGroupState
 from database.models.session_task import SessionTaskType, SessionTaskStates
 from functions.bot.executor import BotExecutorAction
@@ -83,7 +83,9 @@ class BotAction:
             Задача входа в группу.
         """
         group = repo.groups.get(task.group_id)
-        await self.executor.join_chat(chat_id=group.name)
+
+        if not await self.executor.join_chat_by_group(group=group):
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
         repo.sessions_groups.create(session=self.session, group=group)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
 
@@ -93,10 +95,13 @@ class BotAction:
             Задача проверки группы.
         """
         group = repo.groups.get(task.group_id)
-        chat = await self.executor.get_chat(group.name)
+
+        chat = await self.executor.get_chat_by_group(group)
+        if not chat:
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
+
         repo.groups.update(group, subscribers=chat.members_count, state=GroupStates.active)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
-        return self
 
     async def task_check_message(self, task: SessionTask):
         self.logger("task_check_message")
@@ -105,10 +110,13 @@ class BotAction:
         """
         message = repo.messages.get(id=task.message_id)
         group = repo.groups.get(id=message.group_id)
-        chat = await self.executor.get_chat(group.name)
 
-        chat_messages_ids = await self.executor.get_all_messages_ids(group.name, limit=SEND_MSG_DELAY_MSG)
+        chat = await self.executor.get_chat_by_group(group)
+        if not chat:
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
+
         repo.groups.update(group, subscribers=chat.members_count)
+        chat_messages_ids = await self.executor.get_all_messages_ids(group.name, limit=SEND_MSG_DELAY_MSG)
 
         if message.message_id in chat_messages_ids:
             return
@@ -129,7 +137,10 @@ class BotAction:
         group: Group = repo.groups.get(id=task.group_id)
         sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
 
-        chat = await self.executor.get_chat(group.name)
+        chat = await self.executor.get_chat_by_group(group)
+        if not chat:
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
+
         repo.groups.update(group, subscribers=chat.members_count)
 
         image = order.image_link if group.can_image else None
@@ -189,13 +200,13 @@ class BotAction:
                                 await asyncio.sleep(await smart_create_sleep(self.session))
                             elif task.type == SessionTaskType.check_message:
                                 await self.task_check_message(task)
-                                await asyncio.sleep(await smart_create_sleep(self.session))
                             elif task.type == SessionTaskType.send_by_order:
                                 await self.task_send_by_order(task)
                                 await asyncio.sleep(await smart_create_sleep(self.session))
                             else:
                                 logger.info("task not found")
                             my_tasks = repo.sessions_tasks.get_all(session=self.session, state=SessionTaskStates.enable)
+                        await asyncio.sleep(ASSISTANT_SLEEP_SEC)
                     await self.stop_session()
                 except errors.UserDeactivatedBan:
                     await self.executor.session_banned()

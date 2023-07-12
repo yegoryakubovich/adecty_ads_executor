@@ -8,10 +8,10 @@ from database import repo
 from database.models import SleepStates, Session
 
 
-async def smart_create_sleep(session: Session):
+async def smart_create_sleep(session: Session, mi=BOT_SLEEP_MIN_SEC, ma=BOT_SLEEP_MAX_SEC):
     for sleep in repo.sleeps.get_all(session=session, state=SleepStates.enable):
         repo.sleeps.update(sleep, state=SleepStates.disable)
-    repo.sleeps.create(session=session, time_second=randint(BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC))
+    repo.sleeps.create(session=session, time_second=randint(mi, ma))
     return await smart_sleep(session)
 
 

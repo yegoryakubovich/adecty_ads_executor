@@ -1,6 +1,6 @@
+import httpx
 import phonenumbers
 import pycountry as pycountry
-import requests
 
 
 class CountryType:
@@ -18,7 +18,7 @@ def get_by_phone(phone: str) -> CountryType:
 
 
 def get_by_ip(ip: str) -> CountryType:
-    response = requests.get(f"http://ip-api.com/json/{ip}")
+    response = httpx.get(f"http://ip-api.com/json/{ip}")
     code = response.json()['countryCode']
     return CountryType(code=code, name=pycountry.countries.get(alpha_2=code).name)
 

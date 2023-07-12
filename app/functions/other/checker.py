@@ -15,6 +15,7 @@
 #
 
 import asyncio
+from random import randint
 
 from loguru import logger
 
@@ -82,6 +83,13 @@ class CheckerAction:
                 pass
             else:
                 await self.executor.proxy_disable(proxy)
+
+        if randint(1, 5) == 1:
+            for proxy in repo.proxies.get_all(state=ProxyStates.disable):
+                if await self.executor.check_proxy(proxy):
+                    pass
+                else:
+                    await self.executor.proxy_disable(proxy, log=False)
 
     async def wait_session_check(self):
         self.logger("wait_session_check")

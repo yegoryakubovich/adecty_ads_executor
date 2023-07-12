@@ -13,38 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-version: '3.7'
 
-services:
-  ads:
-    build:
-      context: ./app
-      dockerfile: Dockerfile
-    restart: on-failure
-    volumes:
-      - ./app/new:/src/new
-    env_file:
-      - .env
-    depends_on:
-      - db
-  db:
-    image: mysql
-    restart: on-failure
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_NAME}
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./data/mysql/:/var/lib/mysql
-  pma:
-    image: phpmyadmin/phpmyadmin
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
-    restart: always
-    ports:
-      - "8081:80"
-    links:
-      - db
+pyrogram
+peewee
+pydantic[dotenv]
+pymysql
+cryptography
+loguru
+apscheduler
+httpx[socks]
+aiogram==3.0.0b7
+phonenumbers
+pycountry

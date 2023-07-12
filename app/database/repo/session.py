@@ -13,10 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from core.constants import MAX_TASKS_COUNT
 from core.default_data import sessions_list
 from database import repo, db_manager
 from database.base_repository import BaseRepository
 from database.models import Session, SessionStates, Group
+from database.models.session_task import SessionTaskType, SessionTaskStates
 from utils.country import get_by_phone
 
 
@@ -40,6 +42,12 @@ class SessionRepository(BaseRepository):
             if group:
                 if repo.sessions_groups.get_by(session=session, group=group):
                     continue
+            tasks = []
+            for task in repo.sessions_tasks.get_all(session=session, state=SessionTaskStates.enable):
+                if not task.type == SessionTaskType.check_message:
+                    tasks.append(task)
+            if len(tasks) >= MAX_TASKS_COUNT:
+                continue
             return session
 
     def to_check(self, session: Session):

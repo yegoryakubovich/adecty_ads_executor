@@ -1,10 +1,10 @@
 shops_list = [{'name': 'no name'}]
 
-groups_list = ["@kekajangroup", "adaptaciyausa", "adaptaciya_ua_usa", "ads_new_york", "calosangeles", "ca_miami_chat"]
-# "chatamerika",
-# "chatinnj", "chatinSeattle", "chatinsf", "chatnewyork1", "chchatua", "chicagoil", "la_services",
-# "losangeles2021immigrants", "los_angeles_avito", "los_angeles_ca", "los_angeles_california_usa",
-# "miamichatik", "miamichatru", "movingsf", "multinational_group", "nashaphiladelphia", "nashlosangeles",
+groups_list = ["kekajangroup", "adaptaciyausa", "adaptaciya_ua_usa", "ads_new_york", "calosangeles", "ca_miami_chat",
+               "chatamerika", "chatinnj", "chatinSeattle", "chatinsf", "chatnewyork1", "chchatua", "chicagoil",
+               "la_services", "losangeles2021immigrants", "los_angeles_avito", "los_angeles_ca",
+               "los_angeles_california_usa", "miamichatik", "miamichatru", "movingsf"]
+# "multinational_group", "nashaphiladelphia", "nashlosangeles",
 # "nashmiami", "nashny", "newyorkchatru", "nyjobsusa", "philadelphiachat", "phillychat", "russianlo",
 # "sacramentocity", "telemarketus", "ukrnewyorkgroup", "usachatru", "usaforuz", "usagreen", "usarmenians",
 # "usa_360", "usb_mexico_usa", "uzbeksinusalup", "vatandoshimuzbus", "vatandoshim_usa_50_state",
