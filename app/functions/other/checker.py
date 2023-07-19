@@ -40,35 +40,41 @@ class CheckerAction:
     def logger(self, txt):
         logger.info(f"[{self.prefix}] {txt}")
 
-    async def new_session_check(self):
-        self.logger("new_session_check")
-        new_session = convert.start()
-        if new_session:
-            self.logger("Find new sessions")
-            for session in new_session:
-                item = new_session[session]
-                country_type = get_by_phone(item["phone"])
-                country = repo.countries.create(code=country_type.code, name=country_type.name)
-                shop = repo.shops.get(1)
-                repo.sessions.create(
-                    phone=item["phone"], string=item["string_session"], api_id=item["api_id"],
-                    api_hash=item["api_hash"],
-                    country=country, shop=shop
-                )
+    """INSIDE"""
+    async def all_task_check(self):
+        all_tasks = []
+        for task in asyncio.all_tasks():
+            task_name = task.get_name()
+            if task_name == 'Assistant' or task_name.split('_')[0] == 'Bot':
+                all_tasks.append(task_name)
+        print(all_tasks)
+        for session in repo.sessions.get_all(state=SessionStates.free):
+            if f"BOT_{session.id}" not in [task.get_name() for task in asyncio.all_tasks()]:
+                asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
+        print(all_tasks)
+
+    """
+    PROXY
+    """
+
+    # NEW PROXY CHECK
 
     async def new_proxy_check(self):
         self.logger("new_proxy_check")
-        new_proxy = await new.get_proxy()
-        if new_proxy:
+        shops = await new.get_proxy()
+        if shops:
             self.logger("Find new proxy")
-            for item in new_proxy:
-                item_data = item.split("@")
-                host, port = item_data[1].split(':')[0], item_data[1].split(':')[1]
-                user, password = item_data[0].split(':')[0], item_data[0].split(':')[1]
-                shop = repo.shops.get(1)
-                repo.proxies.create(
-                    type=ProxyTypes.socks5, host=host, port=port, user=user, password=password, shop=shop
-                )
+            for shop_name in shops:
+                shop = repo.shops.create(name=shop_name, link=shop_name)
+                for item in shops[shop_name]:
+                    item_data = item.split("@")
+                    host, port = item_data[1].split(':')[0], item_data[1].split(':')[1]
+                    user, password = item_data[0].split(':')[0], item_data[0].split(':')[1]
+                    repo.proxies.create(
+                        type=ProxyTypes.socks5, host=host, port=port, user=user, password=password, shop=shop
+                    )
+
+    # WAIT PROXY CHECK
 
     async def wait_proxy_check(self):
         self.logger("wait_proxy_check")
@@ -91,6 +97,31 @@ class CheckerAction:
                 else:
                     await self.executor.proxy_disable(proxy, log=False)
 
+    """
+    SESSION
+    """
+
+    # NEW SESSION CHECK
+
+    async def new_session_check(self):
+        self.logger("new_session_check")
+        new_session = convert.start()
+        if new_session:
+            self.logger("Find new sessions")
+            for item in new_session:
+                shop = repo.shops.create(name=item['shop_name'], link=item['shop_name'])
+                for session in item['items']:
+                    elem = item['items'][session]
+                    country_type = get_by_phone(elem["phone"])
+                    country = repo.countries.create(code=country_type.code, name=country_type.name)
+                    repo.sessions.create(
+                        phone=elem["phone"], string=elem["string_session"], tg_user_id=elem["user_id"],
+                        api_id=elem["api_id"], api_hash=elem["api_hash"],
+                        country=country, shop=shop
+                    )
+
+    # WAIT SESSION CHECK
+
     async def wait_session_check(self):
         self.logger("wait_session_check")
         for session in repo.sessions.get_all(state=SessionStates.waiting):
@@ -103,6 +134,20 @@ class CheckerAction:
                 await self.executor.session_added_log(
                     session_id=session.id, session_shop_id=session_shop.id, session_shop_name=session_shop.name
                 )
+
+    # SPAM_BLOCK SESSION CHECK
+
+    async def spam_block_session_check(self):
+        self.logger("spam_block_session_check")
+        for session in repo.sessions.get_all(state=SessionStates.spam_block):
+            bot = BotAction(session=session)
+            await bot.all_connection()
+            if await bot.spam_bot_check():
+                repo.sleeps.create(session=session, time_second=NEW_SESSION_SLEEP_SEC)
+                repo.sessions.update(session, state=SessionStates.free)
+                asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
+
+    # WAIT SESSION_GROUP CHECK
 
     async def wait_session_group_check(self):
         self.logger("wait_session_group_check")
@@ -126,6 +171,8 @@ class CheckerAction:
                             group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
                         )
 
+    # WAIT MESSAGE CHECK
+
     async def wait_message_check(self):
         self.logger("wait_message_check")
         for message in repo.messages.get_all(state=MessageStates.waiting):
@@ -134,7 +181,7 @@ class CheckerAction:
                 group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.enable,
             )
             if not st:
-                session = await self.executor.get_session_by_group(group=group)
+                session = await self.executor.get_session_by_group(group=group, spam=True)
                 if session:
                     repo.sessions_tasks.create(
                         session=session,
@@ -147,6 +194,8 @@ class CheckerAction:
                             session=session,
                             group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
                         )
+
+    # WAIT ORDER CHECK
 
     async def wait_order_check(self):
         self.logger("wait_order_check")

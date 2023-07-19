@@ -30,10 +30,10 @@ class Group(BaseModel):
     state = CharField(max_length=32, default=GroupStates.waiting)
     subscribers = IntegerField()  # Количество подписчиков
 
-    can_image = BooleanField(default=False)  # Отправка с картинками
+    can_image = BooleanField(default=True)  # Отправка с картинками
     can_message = BooleanField(default=False)  # Отправка ссылок
-    can_message_no_url = BooleanField(default=False)  # Отправки без ссылок
-    can_message_short = BooleanField(default=False)  # Отправки короткого текста / Если False, то замена символами
+    can_message_no_url = BooleanField(default=True)  # Отправки без ссылок
+    can_message_short = BooleanField(default=True)  # Отправки короткого текста / Если False, то замена символами
 
     captcha_have = BooleanField(default=False)
     captcha_type = CharField(max_length=128)

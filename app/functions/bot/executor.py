@@ -31,6 +31,10 @@ class BotExecutorAction(BaseExecutorAction):
         super().__init__()
         self.client = client
         self.session = session
+        self.prefix = f"[EXECUTOR_{self.session.id}]"
+
+    def logger(self, text: str):
+        logger.info(f"{self.prefix} {text}")
 
     """USERBOT"""
 
@@ -55,7 +59,7 @@ class BotExecutorAction(BaseExecutorAction):
         except UsernameNotOccupied:
             repo.groups.update(group, state=GroupStates.inactive)
         except InviteRequestSent:
-            logger.info(f"Запрос в группу {group.name} отправлен от сессии #{self.session}")
+            self.logger(f"Запрос в группу {group.name} отправлен от сессии #{self.session}")
 
     async def join_chat(self, chat_id: [str, int]) -> types.Chat:
         return await self.client.join_chat(chat_id=chat_id)
@@ -76,7 +80,15 @@ class BotExecutorAction(BaseExecutorAction):
             else:
                 return await self.client.send_message(chat_id=chat_id, text=text)
         except errors.UserBannedInChannel:
-            repo.sessions.update(self.session, state=SessionStates.spam_block)
+            return errors.UserBannedInChannel
+        except errors.Forbidden:
+            return errors.Forbidden
+
+    async def get_chat_history(self, chat_id: [str, int], limit: int = 0):
+        try:
+            return [msg async for msg in self.client.get_chat_history(chat_id=chat_id, limit=limit)]
+        except Exception as e:
+            self.logger(f"get_chat_history\n {e}")
 
     """OTHER"""
 
@@ -88,11 +100,15 @@ class BotExecutorAction(BaseExecutorAction):
         else:
             sp: SessionProxy = repo.sessions_proxies.get_by(session=self.session)
             messages_send = len(repo.messages.get_all(session=self.session))
-            proxy = repo.proxies.get(sp.proxy_id)
-            proxy_shop = repo.shops.get(proxy.shop_id)
-            await self.session_banned_log(session_id=self.session.id, proxy_id=proxy.id,
+            proxy = None
+            proxy_shop = None
+            if sp:
+                proxy = repo.proxies.get(sp.proxy_id)
+                proxy_shop = repo.shops.get(proxy.shop_id)
+            await self.session_banned_log(session_id=self.session.id, proxy_id=proxy.id if proxy else None,
                                           session_shop_id=session_shop.id, session_shop_name=session_shop.name,
-                                          proxy_shop_id=proxy_shop.id, proxy_shop_name=proxy_shop.name,
+                                          proxy_shop_id=proxy_shop.id if proxy else None,
+                                          proxy_shop_name=proxy_shop.name,
                                           messages_send=messages_send)
             repo.sessions.update(self.session, messages_send=messages_send)
 

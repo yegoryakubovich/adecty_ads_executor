@@ -87,3 +87,6 @@ class BaseExecutorAction:
             f"",
             f"#session_{session_id} #group_{group_id} #order_{order_id}",
         ]))
+
+
+test_executer = BaseExecutorAction()

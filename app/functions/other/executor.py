@@ -1,14 +1,11 @@
 from operator import itemgetter
-from operator import itemgetter
-from typing import List
 
 import httpx
 from loguru import logger
 
 from core.constants import URL_FOR_TEST_PROXY, MAX_TASKS_COUNT
 from database import repo
-from database.models import Proxy, ProxyStates, Shop, SessionGroup, Group, SessionStates, Sleep, SleepStates, \
-    SessionTask
+from database.models import Proxy, ProxyStates, Shop, SessionGroup, Group, SessionStates
 from database.models.session_group import SessionGroupState
 from database.models.session_task import SessionTaskStates, SessionTaskType
 from functions.base_executor import BaseExecutorAction
@@ -47,15 +44,16 @@ class AssistantExecutorAction(BaseExecutorAction):
             proxy_id=proxy.id, proxy_shop_id=proxy_shop.id, proxy_shop_name=proxy_shop.name
         )
 
-    async def get_session_by_group(self, group: Group, send_msg: bool = True):
+    async def get_session_by_group(self, group: Group, spam: bool = False):
         maybe_sessions = []
-        for session in repo.sessions.get_all(state=SessionStates.free):
+        all_sessions = repo.sessions.get_all(state=SessionStates.free)
+        if spam:
+            all_sessions.extend(repo.sessions.get_all(state=SessionStates.spam_block))
+
+        for session in all_sessions:
             sg: SessionGroup = repo.sessions_groups.get_by(session=session, group=group)
             if sg:
                 if sg.state == SessionGroupState.banned:
-                    continue
-                sleeps: List[Sleep] = repo.sleeps.get_all(session=session, state=SleepStates.enable)
-                if len(sleeps):
                     continue
                 tasks = []
                 for task in repo.sessions_tasks.get_all(session=session, state=SessionTaskStates.enable):
@@ -64,7 +62,6 @@ class AssistantExecutorAction(BaseExecutorAction):
                 if len(tasks) >= MAX_TASKS_COUNT:
                     continue
                 maybe_sessions.append({'id': session.id, 'tasks': len(tasks)})
-
         if maybe_sessions:
             logger.info(sorted(maybe_sessions, key=itemgetter('tasks')))
             return repo.sessions.get(sorted(maybe_sessions, key=itemgetter('tasks'))[0]['id'])

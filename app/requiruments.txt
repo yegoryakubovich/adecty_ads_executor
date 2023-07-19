@@ -20,7 +20,6 @@ pydantic[dotenv]
 pymysql
 cryptography
 loguru
-apscheduler
 httpx[socks]
 aiogram==3.0.0b7
 phonenumbers

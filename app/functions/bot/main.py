@@ -18,9 +18,10 @@ from typing import Optional
 
 from loguru import logger
 from pyrogram import Client, errors
-from pyrogram.errors import Forbidden
+from pyrogram.errors import Forbidden, UserBannedInChannel
 
-from core.constants import SEND_MSG_DELAY_MSG, ASSISTANT_SLEEP_SEC
+from core.constants import SEND_MSG_DELAY_MSG, ASSISTANT_SLEEP_SEC, SPAM_MESSAGE_ANSWERS, SPAM_STOP_MESSAGE, \
+    SPAM_REPLY_ANSWERS, SPAM_FREE_MESSAGE
 from database import repo
 from database.models import Session, SessionProxy, SessionTask, SessionStates, GroupStates, MessageStates, \
     Order, Group, SessionGroup
@@ -63,6 +64,8 @@ class BotAction:
 
     async def all_connection(self):
         self.client = await self.open_session()
+        if not self.client:
+            raise
         self.executor = BotExecutorAction(client=self.client, session=self.session)
         self.simulator = SimulatorAction(client=self.client)
 
@@ -76,6 +79,44 @@ class BotAction:
         except:
             await self.executor.session_banned()
             return False
+
+    async def spam_bot_check(self):
+        await asyncio.sleep(await smart_sleep(self.session))
+        chat_id = "SpamBot"
+        self.logger("Начинаю проверку")
+        await self.client.start()
+        await self.executor.send_message(chat_id, '/start')
+        self.logger("Отправил start")
+        while True:
+            msg = (await self.executor.get_chat_history(chat_id, limit=1))[0]
+            try:
+                keyboard = msg.reply_markup.keyboard
+            except:
+                keyboard = None
+            if keyboard:
+                if str(keyboard) in SPAM_REPLY_ANSWERS:
+                    self.logger(f"Ответ: {SPAM_REPLY_ANSWERS[str(keyboard)]}")
+                    await self.executor.send_message(chat_id=chat_id, text=SPAM_REPLY_ANSWERS[str(keyboard)])
+                    await asyncio.sleep(5)
+                else:
+                    self.logger(f"Найден новый ответ: \n{msg.text}\n{msg.reply_markup.keyboard}")
+                    break
+            elif msg.text in SPAM_STOP_MESSAGE:
+                self.logger("СТОП")
+                break
+            elif msg.text in SPAM_MESSAGE_ANSWERS:
+                await self.executor.send_message(chat_id=chat_id, text=SPAM_MESSAGE_ANSWERS[msg.text])
+                await asyncio.sleep(5)
+            else:
+                self.logger(f"Найден новый ответ: \n{msg.text}")
+                break
+
+            if msg.text in SPAM_FREE_MESSAGE:
+                self.logger("КАЕФ")
+                await self.client.stop()
+                return True
+        await self.client.stop()
+        return False
 
     async def task_join_group(self, task: SessionTask):
         self.logger("task_join_group")
@@ -153,24 +194,32 @@ class BotAction:
         else:
             text = await self.executor.replace_text(order.message_short)
 
-        try:
-            self.logger(f"Send message to {group} by order {order}")
-            msg = await self.executor.send_message(chat_id=group.name, text=text, photo=image)
-            repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
-            repo.messages.create(
-                session=self.session, group=group, order=order, message_id=msg.id,
-                text=msg.caption if msg.caption else msg.text
-            )
+        msg = await self.executor.send_message(chat_id=group.name, text=text, photo=image)
 
-            await self.executor.send_message_log(
-                session_id=self.session.id,
-                order_id=order.id, order_name=order.name,
-                group_id=group.id, group_name=group.name, post_id=msg.id,
-                session_messages_count=len(repo.messages.get_all(session=self.session))
-            )
-        except Forbidden:
+        if msg == UserBannedInChannel:
+            for st in repo.sessions_tasks.get_all(session=self.session):
+                repo.sessions_tasks.remove(st.id)
+            repo.sessions.update(self.session, state=SessionStates.spam_block)
+            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
+            return
+        elif msg == Forbidden:
             repo.sessions_groups.update(sg, state=SessionGroupState.banned)
             repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
+            return
+
+        self.logger(f"Send message to {group} by order {order}")
+        repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
+        repo.messages.create(
+            session=self.session, group=group, order=order, message_id=msg.id,
+            text=msg.caption if msg.caption else msg.text
+        )
+
+        await self.executor.send_message_log(
+            session_id=self.session.id,
+            order_id=order.id, order_name=order.name,
+            group_id=group.id, group_name=group.name, post_id=msg.id,
+            session_messages_count=len(repo.messages.get_all(session=self.session))
+        )
 
     """
     

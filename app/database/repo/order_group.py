@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from database import db_manager, repo
 from database.base_repository import BaseRepository
 from database.models import OrderGroup
 
@@ -20,7 +21,11 @@ model = OrderGroup
 
 
 class OrderGroupRepository(BaseRepository):
-    pass
+    @db_manager
+    def fill(self):
+        for order in repo.orders.get_all():
+            for group in repo.groups.get_all():
+                self.model.get_or_create(order=order, group=group)
 
 
 orders_groups = OrderGroupRepository(OrderGroup)

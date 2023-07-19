@@ -14,10 +14,11 @@
 # limitations under the License.
 #
 
-import asyncio
 import traceback
 
 from loguru import logger
+
+from functions.base_executor import test_executer
 
 
 def func_logger(function):
@@ -27,5 +28,6 @@ def func_logger(function):
         except Exception as e:
             traceback.print_exc()
             logger.error(e)
+            test_executer.send_log_message(f"Жесткий отруб\n{e}")
 
     return wrapper
