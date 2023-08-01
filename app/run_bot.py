@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 import asyncio
 
 from loguru import logger
@@ -34,28 +33,30 @@ def on_start_up():
         exit(1)
 
     """temporary"""
-    # repo.shops.fill()
-    # repo.proxies.fill()
-    # repo.sessions.fill()
+    repo.shops.fill()
     repo.groups.fill()
     repo.orders_groups.fill()
     """temporary"""
 
-    loop = asyncio.get_event_loop()
-    all_functions = [{'fun': AssistantAction(), 'name': 'Assistant'}]
-    all_functions.extend([
-        {
-            'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
-        } for session in repo.sessions.get_all(state=SessionStates.free)
-    ])
-
-    all_tasks = [loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions]
-    all_tasks.extend([loop.create_task(hello(), name="TEST")])
-
-    for task in all_tasks:
-        logger.info(task.get_name())
-        loop.run_until_complete(task)
-
+    # loop = asyncio.get_event_loop()
+    # all_functions = [{'fun': AssistantAction(), 'name': 'Assistant'}]
+    # all_functions.extend([
+    #     {
+    #         'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
+    #     } for session in repo.sessions.get_all(state=SessionStates.free)
+    # ])
+    # all_functions.extend([
+    #     {
+    #         'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
+    #     } for session in repo.sessions.get_all(state=SessionStates.spam_block)
+    # ])
+    #
+    # all_tasks = [loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions]
+    # all_tasks.extend([loop.create_task(hello(), name="TEST")])
+    #
+    # for task in all_tasks:
+    #     loop.run_until_complete(task)
+    asyncio.run(BotAction(repo.sessions.get(3)).start())
     logger.info("Success init")
 
 
@@ -65,7 +66,7 @@ async def hello():
         all_tasks = []
         for task in asyncio.all_tasks():
             task_name = task.get_name()
-            if task_name == 'Assistant' or task_name.split('_')[0] == 'Bot':
+            if task_name == 'Assistant' or task_name.split('_')[0] in ['Bot', 'BotAnswer']:
                 all_tasks.append(task_name)
         print(all_tasks)
         await asyncio.sleep(80)

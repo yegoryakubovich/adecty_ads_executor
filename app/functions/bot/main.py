@@ -17,11 +17,11 @@ import asyncio
 from typing import Optional
 
 from loguru import logger
-from pyrogram import Client, errors
-from pyrogram.errors import Forbidden, UserBannedInChannel
+from pyrogram import Client, errors, types
+from pyrogram.enums import ChatType
 
 from core.constants import SEND_MSG_DELAY_MSG, ASSISTANT_SLEEP_SEC, SPAM_MESSAGE_ANSWERS, SPAM_STOP_MESSAGE, \
-    SPAM_REPLY_ANSWERS, SPAM_FREE_MESSAGE
+    SPAM_REPLY_ANSWERS, SPAM_FREE_MESSAGE, ANSWER_MESSAGE
 from database import repo
 from database.models import Session, SessionProxy, SessionTask, SessionStates, GroupStates, MessageStates, \
     Order, Group, SessionGroup
@@ -40,6 +40,7 @@ class BotAction:
 
     def __init__(self, session: Session):
         self.session = session
+        self.black_list = [session.id, 777000]
         self.prefix = f"Session #{self.session.id}"
 
     async def open_session(self) -> Optional[Client]:
@@ -81,42 +82,49 @@ class BotAction:
             return False
 
     async def spam_bot_check(self):
-        await asyncio.sleep(await smart_sleep(self.session))
-        chat_id = "SpamBot"
-        self.logger("Начинаю проверку")
-        await self.client.start()
-        await self.executor.send_message(chat_id, '/start')
-        self.logger("Отправил start")
-        while True:
-            msg = (await self.executor.get_chat_history(chat_id, limit=1))[0]
-            try:
-                keyboard = msg.reply_markup.keyboard
-            except:
-                keyboard = None
-            if keyboard:
-                if str(keyboard) in SPAM_REPLY_ANSWERS:
-                    self.logger(f"Ответ: {SPAM_REPLY_ANSWERS[str(keyboard)]}")
-                    await self.executor.send_message(chat_id=chat_id, text=SPAM_REPLY_ANSWERS[str(keyboard)])
+        try:
+            await asyncio.sleep(await smart_sleep(self.session))
+            chat_id = "SpamBot"
+            self.logger("Начинаю проверку")
+            await self.start_session()
+            await self.executor.send_message(chat_id, '/start')
+            self.logger("Отправил start")
+            while True:
+                msg = (await self.executor.get_chat_history(chat_id, limit=1))[0]
+                try:
+                    keyboard = msg.reply_markup.keyboard
+                except:
+                    keyboard = None
+                if keyboard:
+                    if str(keyboard) in SPAM_REPLY_ANSWERS:
+                        self.logger(f"Ответ: {SPAM_REPLY_ANSWERS[str(keyboard)]}")
+                        await self.executor.send_message(chat_id=chat_id, text=SPAM_REPLY_ANSWERS[str(keyboard)])
+                        await asyncio.sleep(5)
+                    else:
+                        self.logger(f"Найден новый ответ: \n{msg.text}\n{msg.reply_markup.keyboard}")
+                        break
+                elif msg.text in SPAM_STOP_MESSAGE:
+                    self.logger("СТОП")
+                    break
+                elif msg.text in SPAM_MESSAGE_ANSWERS:
+                    await self.executor.send_message(chat_id=chat_id, text=SPAM_MESSAGE_ANSWERS[msg.text])
                     await asyncio.sleep(5)
                 else:
-                    self.logger(f"Найден новый ответ: \n{msg.text}\n{msg.reply_markup.keyboard}")
+                    self.logger(f"Найден новый ответ: \n{msg.text}")
                     break
-            elif msg.text in SPAM_STOP_MESSAGE:
-                self.logger("СТОП")
-                break
-            elif msg.text in SPAM_MESSAGE_ANSWERS:
-                await self.executor.send_message(chat_id=chat_id, text=SPAM_MESSAGE_ANSWERS[msg.text])
-                await asyncio.sleep(5)
-            else:
-                self.logger(f"Найден новый ответ: \n{msg.text}")
-                break
 
-            if msg.text in SPAM_FREE_MESSAGE:
-                self.logger("КАЕФ")
-                await self.client.stop()
-                return True
-        await self.client.stop()
-        return False
+                if msg.text in SPAM_FREE_MESSAGE:
+                    self.logger("КАЕФ")
+                    await self.client.stop()
+                    return True
+            await self.client.stop()
+            return False
+        except errors.UserDeactivatedBan:
+            await self.executor.session_banned()
+            return False
+        except errors.AuthKeyDuplicated:
+            await self.executor.session_banned()
+            return
 
     async def task_join_group(self, task: SessionTask):
         self.logger("task_join_group")
@@ -125,8 +133,10 @@ class BotAction:
         """
         group = repo.groups.get(task.group_id)
 
-        if not await self.executor.join_chat_by_group(group=group):
-            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
+        chat = await self.executor.join_chat_by_group(group=group)
+
+        if isinstance(chat, str):
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
         repo.sessions_groups.create(session=self.session, group=group)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
 
@@ -138,8 +148,8 @@ class BotAction:
         group = repo.groups.get(task.group_id)
 
         chat = await self.executor.get_chat_by_group(group)
-        if not chat:
-            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
+        if isinstance(chat, str):
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
 
         repo.groups.update(group, subscribers=chat.members_count, state=GroupStates.active)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
@@ -153,19 +163,18 @@ class BotAction:
         group = repo.groups.get(id=message.group_id)
 
         chat = await self.executor.get_chat_by_group(group)
-        if not chat:
-            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
+
+        if isinstance(chat, str):
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
 
         repo.groups.update(group, subscribers=chat.members_count)
         chat_messages_ids = await self.executor.get_all_messages_ids(group.name, limit=SEND_MSG_DELAY_MSG)
-
-        if message.message_id in chat_messages_ids:
-            return
-
         msg = await self.executor.get_messages(chat_id=group.name, msg_id=message.message_id)
         if msg.empty:
             repo.messages.update(message, state=MessageStates.deleted)
         else:
+            if message.message_id in chat_messages_ids:
+                return
             repo.messages.update(message, state=MessageStates.fine)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
 
@@ -179,8 +188,9 @@ class BotAction:
         sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
 
         chat = await self.executor.get_chat_by_group(group)
-        if not chat:
-            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
+
+        if isinstance(chat, str):
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
 
         repo.groups.update(group, subscribers=chat.members_count)
 
@@ -196,18 +206,18 @@ class BotAction:
 
         msg = await self.executor.send_message(chat_id=group.name, text=text, photo=image)
 
-        if msg == UserBannedInChannel:
-            for st in repo.sessions_tasks.get_all(session=self.session):
-                repo.sessions_tasks.remove(st.id)
-            repo.sessions.update(self.session, state=SessionStates.spam_block)
-            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
-            return
-        elif msg == Forbidden:
+        if isinstance(msg, str):
             repo.sessions_groups.update(sg, state=SessionGroupState.banned)
-            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively)
+            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)
             return
 
-        self.logger(f"Send message to {group} by order {order}")
+        if msg.empty:
+            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Empty")
+            return
+
+        if msg.from_user:
+            await self.executor.update_user(msg.from_user)
+
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
         repo.messages.create(
             session=self.session, group=group, order=order, message_id=msg.id,
@@ -240,6 +250,7 @@ class BotAction:
                     await self.start_session()
                     while my_tasks:
                         for task in my_tasks:
+                            # await self.start_answers()
                             await asyncio.sleep(await smart_sleep(self.session))
                             if task.type == SessionTaskType.join_group:
                                 await self.task_join_group(task)
@@ -260,4 +271,39 @@ class BotAction:
                 except errors.UserDeactivatedBan:
                     await self.executor.session_banned()
                     return
+                except errors.AuthKeyDuplicated:
+                    await self.executor.session_banned()
+                    return
+                except errors.InputUserDeactivated:
+                    await self.stop_session()
+            else:
+                await self.start_session()
+                # await self.start_answers()
+                await self.stop_session()
             await asyncio.sleep(ASSISTANT_SLEEP_SEC)
+
+    async def start_answers(self):
+        try:
+            async for dialog in self.client.get_dialogs(limit=100):
+                if dialog.chat.type == ChatType.PRIVATE:
+                    if dialog.chat.id in self.black_list:
+                        continue
+                    async for msg in self.client.get_chat_history(chat_id=dialog.chat.id, limit=1):
+                        if msg.from_user.id == self.session.tg_user_id:
+                            continue
+                        msg_send = await msg.reply("\n".join(ANSWER_MESSAGE), disable_web_page_preview=True)
+                        if msg_send and not msg_send.empty:
+                            if msg_send.from_user:
+                                await self.executor.update_user(msg_send.from_user)
+                        await self.executor.send_message_answer_log(
+                            session_id=self.session.id, username=msg.chat.username, user_id=msg.chat.id,
+                            text=msg.text
+                        )
+        except errors.UserDeactivatedBan:
+            await self.executor.session_banned()
+            return False
+        except errors.AuthKeyDuplicated:
+            await self.executor.session_banned()
+            return
+        except errors.InputUserDeactivated:
+            pass

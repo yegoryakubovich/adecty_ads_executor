@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 from core.constants import MAX_TASKS_COUNT
-from core.default_data import sessions_list
 from database import repo, db_manager
 from database.base_repository import BaseRepository
 from database.models import Session, SessionStates, Group
@@ -24,17 +23,17 @@ from utils.country import get_by_phone
 
 class SessionRepository(BaseRepository):
 
-    @db_manager
-    def fill(self):
-        for session in sessions_list:
-            item = sessions_list[session]
-            country_type = get_by_phone(item["phone"])
-            country = repo.countries.create(code=country_type.code, name=country_type.name)
-            shop = repo.shops.get(1)
-            self.create(
-                phone=item["phone"], tg_user_id=item["user_id"], string=item["string_session"],
-                api_id=item["api_id"], api_hash=item["api_hash"], country=country, shop=shop
-            )
+    # @db_manager
+    # def fill(self):
+    #     for session in sessions_list:
+    #         item = sessions_list[session]
+    #         country_type = get_by_phone(item["phone"])
+    #         country = repo.countries.create(code=country_type.code, name=country_type.name)
+    #         shop = repo.shops.get(1)
+    #         self.create(
+    #             phone=item["phone"], tg_user_id=item["user_id"], string=item["string_session"],
+    #             api_id=item["api_id"], api_hash=item["api_hash"], country=country, shop=shop
+    #         )
 
     @db_manager
     def get_free(self, group: Group = None) -> Session:

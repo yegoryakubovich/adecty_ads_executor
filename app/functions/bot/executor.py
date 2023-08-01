@@ -19,6 +19,7 @@ from typing import List
 from loguru import logger
 from pyrogram import Client, types, errors
 from pyrogram.errors import UsernameNotOccupied, InviteRequestSent
+from pyrogram.types import User
 
 from database import repo
 from database.models import Session, SessionStates, SessionProxy, Group, SessionGroup, GroupStates
@@ -38,28 +39,33 @@ class BotExecutorAction(BaseExecutorAction):
 
     """USERBOT"""
 
-    async def get_chat_by_group(self, group: Group) -> types.Chat:
+    async def get_chat_by_group(self, group: Group) -> [types.Chat, str]:
         try:
             return await self.get_chat(chat_id=group.name)
         except KeyError:
             sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
             repo.sessions_groups.update(sg, state=SessionGroupState.banned)
+            return "BanInGroup"
         except UsernameNotOccupied:
             repo.groups.update(group, state=GroupStates.inactive)
+            return "UsernameNotOccupied"
 
     async def get_chat(self, chat_id: [str, int]) -> types.Chat:
         return await self.client.get_chat(chat_id=chat_id)
 
-    async def join_chat_by_group(self, group: Group) -> types.Chat:
+    async def join_chat_by_group(self, group: Group) -> [types.Chat, str]:
         try:
             return await self.join_chat(chat_id=group.name)
         except KeyError:
             sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
             repo.sessions_groups.update(sg, state=SessionGroupState.banned)
-        except UsernameNotOccupied:
+            return "BanInGroup"
+        except errors.UsernameNotOccupied:
             repo.groups.update(group, state=GroupStates.inactive)
-        except InviteRequestSent:
+            return "UsernameNotOccupied"
+        except errors.InviteRequestSent:
             self.logger(f"Запрос в группу {group.name} отправлен от сессии #{self.session}")
+            return "InviteRequestSent"
 
     async def join_chat(self, chat_id: [str, int]) -> types.Chat:
         return await self.client.join_chat(chat_id=chat_id)
@@ -73,16 +79,18 @@ class BotExecutorAction(BaseExecutorAction):
     async def get_all_messages_ids(self, chat_id: [str, int], limit: int = 0) -> List[int]:
         return [message.id async for message in self.client.get_chat_history(chat_id=chat_id, limit=limit)]
 
-    async def send_message(self, chat_id: [str, int], text: str, photo: str = None):
+    async def send_message(self, chat_id: [str, int], text: str, photo: str = None) -> [types.Message, str]:
         try:
             if photo:
                 return await self.client.send_photo(chat_id=chat_id, photo=photo, caption=text)
             else:
                 return await self.client.send_message(chat_id=chat_id, text=text)
+        except errors.ChatAdminRequired:
+            return "ChatAdminRequired"
         except errors.UserBannedInChannel:
-            return errors.UserBannedInChannel
+            return "UserBannedInChannel"
         except errors.Forbidden:
-            return errors.Forbidden
+            return "Forbidden"
 
     async def get_chat_history(self, chat_id: [str, int], limit: int = 0):
         try:
@@ -122,3 +130,18 @@ class BotExecutorAction(BaseExecutorAction):
             repo.sleeps.remove(sleep.id)
 
         repo.sessions.update(self.session, state=SessionStates.banned)
+
+    async def update_user(self, user: User):
+        updates = {}
+        if self.session.username != user.username:
+            updates['username'] = user.username
+        if self.session.first_name != user.first_name:
+            updates['first_name'] = user.first_name
+        if self.session.last_name != user.last_name:
+            updates['last_name'] = user.last_name
+        if self.session.tg_user_id != user.id:
+            updates['tg_user_id'] = user.id
+
+        if updates:
+            repo.sessions.update(self.session, **updates)
+

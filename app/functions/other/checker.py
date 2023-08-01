@@ -47,10 +47,13 @@ class CheckerAction:
             task_name = task.get_name()
             if task_name == 'Assistant' or task_name.split('_')[0] == 'Bot':
                 all_tasks.append(task_name)
-        print(all_tasks)
+
         for session in repo.sessions.get_all(state=SessionStates.free):
             if f"BOT_{session.id}" not in [task.get_name() for task in asyncio.all_tasks()]:
+                repo.sessions.update(session, work=False)
                 asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
+            else:
+                repo.sessions.update(session, work=True)
         print(all_tasks)
 
     """
@@ -65,7 +68,8 @@ class CheckerAction:
         if shops:
             self.logger("Find new proxy")
             for shop_name in shops:
-                shop = repo.shops.create(name=shop_name, link=shop_name)
+                shop = repo.shops.create(name=shop_name)
+                self.logger(shop_name)
                 for item in shops[shop_name]:
                     item_data = item.split("@")
                     host, port = item_data[1].split(':')[0], item_data[1].split(':')[1]
@@ -109,7 +113,7 @@ class CheckerAction:
         if new_session:
             self.logger("Find new sessions")
             for item in new_session:
-                shop = repo.shops.create(name=item['shop_name'], link=item['shop_name'])
+                shop = repo.shops.create(name=item['shop_name'])
                 for session in item['items']:
                     elem = item['items'][session]
                     country_type = get_by_phone(elem["phone"])
@@ -157,7 +161,7 @@ class CheckerAction:
             )
 
             if not st:
-                session = await self.executor.get_session_by_group(group=group, send_msg=False)
+                session = await self.executor.get_session_by_group(group=group)
                 if session:
                     repo.sessions_tasks.create(
                         session=session,

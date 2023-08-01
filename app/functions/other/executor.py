@@ -46,22 +46,22 @@ class AssistantExecutorAction(BaseExecutorAction):
 
     async def get_session_by_group(self, group: Group, spam: bool = False):
         maybe_sessions = []
-        all_sessions = repo.sessions.get_all(state=SessionStates.free)
+        states = [SessionStates.free]
         if spam:
-            all_sessions.extend(repo.sessions.get_all(state=SessionStates.spam_block))
-
-        for session in all_sessions:
-            sg: SessionGroup = repo.sessions_groups.get_by(session=session, group=group)
-            if sg:
-                if sg.state == SessionGroupState.banned:
-                    continue
-                tasks = []
-                for task in repo.sessions_tasks.get_all(session=session, state=SessionTaskStates.enable):
-                    if not task.type == SessionTaskType.check_message:
-                        tasks.append(task)
-                if len(tasks) >= MAX_TASKS_COUNT:
-                    continue
-                maybe_sessions.append({'id': session.id, 'tasks': len(tasks)})
+            states.append(SessionStates.spam_block)
+        for state in states:
+            for session in repo.sessions.get_all(state=state):
+                sg: SessionGroup = repo.sessions_groups.get_by(session=session, group=group)
+                if sg:
+                    if sg.state == SessionGroupState.banned:
+                        continue
+                    tasks = []
+                    for task in repo.sessions_tasks.get_all(session=session, state=SessionTaskStates.enable):
+                        if not task.type == SessionTaskType.check_message:
+                            tasks.append(task)
+                    if len(tasks) >= MAX_TASKS_COUNT:
+                        continue
+                    maybe_sessions.append({'id': session.id, 'tasks': len(tasks)})
         if maybe_sessions:
             logger.info(sorted(maybe_sessions, key=itemgetter('tasks')))
             return repo.sessions.get(sorted(maybe_sessions, key=itemgetter('tasks'))[0]['id'])

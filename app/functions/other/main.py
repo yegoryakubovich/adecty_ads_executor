@@ -40,6 +40,8 @@ class AssistantAction:
     async def often(self):
         while True:
             all_tasks_names = [task.get_name() for task in asyncio.all_tasks()]
+            if "assistant_all_task_check" not in all_tasks_names:
+                asyncio.create_task(coro=self.checker.all_task_check(), name="assistant_all_task_check")
             if "assistant_wait_message_check" not in all_tasks_names:
                 asyncio.create_task(coro=self.checker.wait_message_check(), name="assistant_wait_message_check")
             if "assistant_wait_order_check" not in all_tasks_names:

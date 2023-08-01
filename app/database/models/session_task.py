@@ -41,6 +41,8 @@ class SessionTask(BaseModel):
     message = ForeignKeyField(Message, to_field='id', null=True)
 
     state = CharField(max_length=32, default=SessionTaskStates.enable)
+    state_description = CharField(max_length=64, null=True)
+
     type = CharField(max_length=32, default=SessionTaskType.non_type)
 
     class Meta:

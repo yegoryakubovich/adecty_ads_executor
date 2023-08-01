@@ -26,7 +26,8 @@ URL_FOR_TEST_PROXY = 'https://ifconfig.me/all.json'
 
 BOT_SLEEP_MIN_SEC = min2sec(10)  # sleep min
 BOT_SLEEP_MAX_SEC = min2sec(15)  # sleep max
-ASSISTANT_SLEEP_SEC = min2sec(15)  # assistant sleep
+BOT_SLEEP_ANSWER_SEC = min2sec(2)  # sleep max
+ASSISTANT_SLEEP_SEC = min2sec(10)  # assistant sleep
 ASSISTANT_RARELY_SLEEP_SEC = min2sec(30)  # assistant sleep
 ASSISTANT_OFTEN_SLEEP_SEC = min2sec(5)  # assistant sleep
 MAX_TASKS_COUNT = 3  # max count tasks by one session
@@ -95,4 +96,7 @@ SPAM_STOP_MESSAGE = [
 ]
 SPAM_FREE_MESSAGE = [
     "Good news, no limits are currently applied to your account. You’re free as a bird!",
+]
+ANSWER_MESSAGE = [
+    "За обменом денег обращайтесь в http://manager.tg.fexps.com"
 ]

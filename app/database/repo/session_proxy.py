@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from operator import itemgetter
 from typing import Optional
 
 from loguru import logger
@@ -27,10 +28,17 @@ class SessionProxyRepository(BaseRepository):
     @db_manager
     def get_free_proxy(self, country_id: int) -> Optional[Proxy]:
         session_country = repo.countries.get(country_id)
+        proxies = []
         for country in repo.countries_links.get_link_country(session_country):
             for proxy in repo.proxies.get_all(state=ProxyStates.enable, country=country):
-                if len(self.get_all(proxy=proxy)) < proxy.max_link:
+                sessions = self.get_all(proxy=proxy)
+                if len(sessions) < proxy.max_link:
+                    proxies.append({'id': proxy.id, 'tasks': len(sessions)})
                     return proxy
+
+        if proxies:
+            logger.info(sorted(proxies, key=itemgetter('sessions')))
+            return repo.proxies.get(sorted(proxies, key=itemgetter('sessions'))[0]['id'])
         logger.info("Not free proxy")
 
     @db_manager

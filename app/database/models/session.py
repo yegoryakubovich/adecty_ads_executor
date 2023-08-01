@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from peewee import PrimaryKeyField, BigIntegerField, CharField, ForeignKeyField, IntegerField
+from peewee import PrimaryKeyField, BigIntegerField, CharField, ForeignKeyField, IntegerField, BooleanField
 
 from database.db import BaseModel
 from . import Shop
@@ -39,10 +39,15 @@ class Session(BaseModel):
     string = CharField(max_length=512)
     api_id = BigIntegerField()
     api_hash = CharField(max_length=256)
+
     tg_user_id = BigIntegerField()
+    username = CharField(max_length=128, null=True)
+    first_name = CharField(max_length=128, null=True)
+    last_name = CharField(max_length=128, null=True)
 
     state = CharField(max_length=64, default=SessionStates.waiting)
     state_description = CharField(max_length=2056, null=True)
+    work = BooleanField(default=False)
     messages_send = IntegerField()
 
     class Meta:
