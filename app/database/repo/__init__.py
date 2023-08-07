@@ -20,6 +20,7 @@ from .group import groups
 from .message import messages
 from .order import orders
 from .order_group import orders_groups
+from .personals import personals
 from .proxy import proxies
 from .session import sessions
 from .session_group import sessions_groups

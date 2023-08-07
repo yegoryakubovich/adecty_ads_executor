@@ -1,0 +1,6 @@
+django
+environs
+loguru
+PyMySQL
+cryptography
+pydantic==1.*

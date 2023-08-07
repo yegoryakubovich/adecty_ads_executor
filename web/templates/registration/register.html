@@ -1,0 +1,52 @@
+{% extends 'mysite/../mysite/base.html' %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block inside_title %}Регистрация{% endblock %}
+
+{% block content %}
+
+    {% if form.errors.username %}
+        <p class="text-center">{{ form.errors.username }}</p>
+    {% endif %}
+    {% if form.errors.password2 %}
+        <p class="text-center">{{ form.errors.password2 }}</p>
+    {% endif %}
+
+    <form action="{% url 'register' %}" method="post">
+        <div class="mb-3">
+            <label class="form-label" for="id_username">Имя пользователя</label>
+            <input class="form-control" type="text" name="username" maxlength="150" autocapitalize="none"
+                   autocomplete="username" autofocus="" required="" id="id_username">
+            <div id="usernameHelpBlock" class="form-text">
+                <ul>
+                    <li>Не более 150 символов. Только буквы, цифры и символы @/./+/-/_.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="id_telegram">ID Телеграмма</label>
+            <input class="form-control" type="number" name="telegram" required="" id="id_telegram">
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="id_password1">Пароль</label>
+            <input class="form-control" type="password" name="password1" autocomplete="new-password"
+                   required="" id="id_password1">
+            <div id="passwordHelpBlock" class="form-text">
+                <ul>
+                    <li>Пароль не должен быть слишком похож на другую вашу личную информацию.</li>
+                    <li>Ваш пароль должен содержать как минимум 8 символов.</li>
+                    <li>Пароль не должен быть слишком простым и распространенным.</li>
+                    <li>Пароль не может состоять только из цифр.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="id_password2">Подтверждение пароля</label>
+            <input class="form-control" type="password" name="password2" autocomplete="new-password"
+                   required="" id="id_password2">
+        </div>
+        <button type="submit" class="btn btn-primary">Отправить</button>
+        {% csrf_token %}
+    </form>
+{% endblock %}

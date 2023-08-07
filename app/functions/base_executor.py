@@ -1,6 +1,7 @@
 from random import choice
 
 from aiogram import Bot
+from loguru import logger
 
 from core.config import settings
 from core.constants import LATTERS
@@ -25,7 +26,7 @@ class BaseExecutorAction:
     async def send_log_message(self, text):
         bot = Bot(token=self.token, parse_mode="HTML")
         return await bot.send_message(chat_id=self.chat_id, text=text, disable_web_page_preview=True)
-        # return logger.info(f"""\n{text}\n""")
+        return logger.info(text)
 
     @staticmethod
     async def create_link(group_name, post_id):
@@ -98,7 +99,7 @@ class BaseExecutorAction:
             f"️✉️ Сессия #{session_id} направила ответ клиенту {user_link}",
             f"",
             f"Сообщение пользователя:",
-            text,
+            f"{text}",
             f"",
             f"#send_answer #session_{session_id} #user_{user_id}"
         ]))

@@ -18,7 +18,6 @@ from database import repo, db_manager
 from database.base_repository import BaseRepository
 from database.models import Session, SessionStates, Group
 from database.models.session_task import SessionTaskType, SessionTaskStates
-from utils.country import get_by_phone
 
 
 class SessionRepository(BaseRepository):
@@ -55,6 +54,12 @@ class SessionRepository(BaseRepository):
         repo.sessions_proxies.delete_by_session(session)
         repo.sessions_groups.delete_by_session(session)
         session.save()
+
+    @db_manager
+    def not_work(self):
+        for session in repo.sessions.get_all(work=True):
+            session.work = False
+            session.save()
 
 
 sessions = SessionRepository(Session)

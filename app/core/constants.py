@@ -30,7 +30,7 @@ BOT_SLEEP_ANSWER_SEC = min2sec(2)  # sleep max
 ASSISTANT_SLEEP_SEC = min2sec(10)  # assistant sleep
 ASSISTANT_RARELY_SLEEP_SEC = min2sec(30)  # assistant sleep
 ASSISTANT_OFTEN_SLEEP_SEC = min2sec(5)  # assistant sleep
-MAX_TASKS_COUNT = 3  # max count tasks by one session
+MAX_TASKS_COUNT = 5  # max count tasks by one session
 
 SEND_MSG_DELAY_MSG = 30  # msg delay
 SEND_MSG_DELAY_SEC = min2sec(10)  # msg delay

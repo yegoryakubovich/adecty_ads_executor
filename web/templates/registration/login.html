@@ -1,0 +1,28 @@
+{% extends 'mysite/../mysite/base.html' %}
+
+{% block title %}Вход{% endblock %}
+
+{% block inside_title %}Авторизация{% endblock %}
+
+{% block content %}
+    {% if form.errors %}
+        <p class="text-center">
+            Пожалуйста, введите правильные имя пользователя и пароль. Оба поля могут быть чувствительны к регистру.
+        </p>
+    {% endif %}
+
+    <form action="{% url 'login' %}" method="post">
+        <div class="mb-3">
+            <label class="form-label" for="id_username">Имя пользователя</label>
+            <input class="form-control" type="text" id="exampleInputEmail1" name="username" autofocus=""
+                   autocapitalize="none" autocomplete="username" maxlength="150">
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="id_password">Пароль</label>
+            <input class="form-control" type="password" name="password" autocomplete="current-password"
+                   required="" id="id_password">
+        </div>
+        <button type="submit" class="btn btn-primary">Отправить</button>
+        {% csrf_token %}
+    </form>
+{% endblock %}

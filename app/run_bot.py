@@ -36,27 +36,26 @@ def on_start_up():
     repo.shops.fill()
     repo.groups.fill()
     repo.orders_groups.fill()
+    repo.personals.fill()
     """temporary"""
 
-    # loop = asyncio.get_event_loop()
-    # all_functions = [{'fun': AssistantAction(), 'name': 'Assistant'}]
-    # all_functions.extend([
-    #     {
-    #         'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
-    #     } for session in repo.sessions.get_all(state=SessionStates.free)
-    # ])
-    # all_functions.extend([
-    #     {
-    #         'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
-    #     } for session in repo.sessions.get_all(state=SessionStates.spam_block)
-    # ])
-    #
-    # all_tasks = [loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions]
-    # all_tasks.extend([loop.create_task(hello(), name="TEST")])
-    #
-    # for task in all_tasks:
-    #     loop.run_until_complete(task)
-    asyncio.run(BotAction(repo.sessions.get(3)).start())
+    repo.sessions.not_work()
+
+    loop = asyncio.get_event_loop()
+    all_functions = [{'fun': AssistantAction(), 'name': 'Assistant'}]
+    all_functions.extend([
+        {
+            'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
+        } for session in repo.sessions.get_all(state=SessionStates.free)
+    ])
+
+    all_tasks = [loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions]
+    all_tasks.extend([loop.create_task(hello(), name="TEST")])
+
+    for task in all_tasks:
+        logger.info(task)
+        loop.run_until_complete(task)
+
     logger.info("Success init")
 
 
@@ -68,8 +67,9 @@ async def hello():
             task_name = task.get_name()
             if task_name == 'Assistant' or task_name.split('_')[0] in ['Bot', 'BotAnswer']:
                 all_tasks.append(task_name)
-        print(all_tasks)
-        await asyncio.sleep(80)
+        logger.info(len(all_tasks))
+        logger.info(all_tasks)
+        await asyncio.sleep(60)
 
 
 if __name__ == '__main__':

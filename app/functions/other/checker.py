@@ -41,20 +41,15 @@ class CheckerAction:
         logger.info(f"[{self.prefix}] {txt}")
 
     """INSIDE"""
-    async def all_task_check(self):
-        all_tasks = []
-        for task in asyncio.all_tasks():
-            task_name = task.get_name()
-            if task_name == 'Assistant' or task_name.split('_')[0] == 'Bot':
-                all_tasks.append(task_name)
 
+    async def all_task_check(self):
         for session in repo.sessions.get_all(state=SessionStates.free):
-            if f"BOT_{session.id}" not in [task.get_name() for task in asyncio.all_tasks()]:
+            if f"Bot_{session.id}" not in [task.get_name() for task in asyncio.all_tasks()]:
+                self.logger(f"Повторный запуск Bot_{session.id}")
                 repo.sessions.update(session, work=False)
                 asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
             else:
                 repo.sessions.update(session, work=True)
-        print(all_tasks)
 
     """
     PROXY
@@ -132,6 +127,9 @@ class CheckerAction:
             bot = BotAction(session=session)
             await bot.all_connection()
             if await bot.check():
+                await bot.start_session()
+                await bot.change_profile()
+                await bot.stop_session()
                 repo.sleeps.create(session=session, time_second=NEW_SESSION_SLEEP_SEC)
                 asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
                 session_shop: Shop = repo.shops.get(session.shop_id)
@@ -210,20 +208,24 @@ class CheckerAction:
                     continue
                 last_message = repo.messages.get_last(order=order, group=group)
                 if last_message:
-                    self.logger(f"Message {last_message} have state {last_message.state}")
+                    self.logger(f"Group_{group.id}. Message {last_message} have state {last_message.state}")
                     if last_message.state == MessageStates.waiting:
                         continue
                 st: SessionTask = repo.sessions_tasks.get_by(group=group, state=SessionTaskStates.enable)
                 if not st:
+                    self.logger(f"Group_{group.id}. Task not found")
                     session = await self.executor.get_session_by_group(group=group)
                     if session:
+                        self.logger(f"Group_{group.id}. Found linked session")
                         repo.sessions_tasks.create(
                             session=session, group=group, order=order,
                             type=SessionTaskType.send_by_order, state=SessionTaskStates.enable
                         )
                     else:
+                        self.logger(f"Group_{group.id}. Not found linked session")
                         session = repo.sessions.get_free(group=group)
                         if session:
+                            self.logger(f"Group_{group.id}. Found session for link")
                             repo.sessions_tasks.create(
                                 session=session, group=group,
                                 type=SessionTaskType.join_group, state=SessionTaskStates.enable

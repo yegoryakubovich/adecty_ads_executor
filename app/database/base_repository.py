@@ -28,8 +28,10 @@ class BaseRepository(Generic[ModelType]):
         return result
 
     @db_manager
-    def get_all(self, **filters) -> List[ModelType]:
-        return self.model.select().filter(**filters).execute()
+    def get_all(self, in_list: bool = None, **filters) -> List[ModelType]:
+        if in_list:
+            return [item for item in self.model.select().filter(**filters).order_by(self.model.id.asc()).execute()]
+        return self.model.select().filter(**filters).order_by(self.model.id.asc()).execute()
 
     @db_manager
     def remove(self, id: int) -> None:

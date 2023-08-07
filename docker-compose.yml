@@ -23,28 +23,46 @@ services:
     restart: on-failure
     volumes:
       - ./app/new:/src/new
+      - ./data/media:/src/media
     env_file:
       - .env
-#    depends_on:
-#      - db
-#  db:
-#    image: mysql
-#    restart: on-failure
-#    environment:
-#      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
-#      MYSQL_DATABASE: ${MYSQL_NAME}
-#    ports:
-#      - "3306:3306"
-#    volumes:
-#      - ./data/mysql/:/var/lib/mysql
-#  pma:
-#    image: phpmyadmin/phpmyadmin
-#    environment:
-#      PMA_HOST: db
-#      PMA_PORT: 3306
-#      PMA_ARBITRARY: 1
-#    restart: always
-#    ports:
-#      - "8081:80"
-#    links:
-#      - db
+    depends_on:
+      - db
+  web:
+    build:
+      context: ./web
+      dockerfile: web.dockerfile
+    ports:
+      - "7777:8000"
+    restart: on-failure
+    volumes:
+      - ./web:/web
+      - ./data/media:/web/media
+    env_file:
+      - .env
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - db
+  db:
+    image: mysql
+    restart: on-failure
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_NAME}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql/:/var/lib/mysql
+  pma:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - "8081:80"
+    links:
+      - db

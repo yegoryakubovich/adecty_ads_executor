@@ -1,0 +1,76 @@
+{% extends 'mysite/base.html' %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block inside_title %}Задачи{% endblock %}
+
+{% block content %}
+    <div class="album py-5 bg-body-tertiary">
+        <div class="container ">
+            <div class="row">
+                <form action="{% url 'create_task' %}" method="post">
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <label class="form-label" for="id_title">Заголовок</label>
+                            <input class="form-control" type="text" name="title" maxlength="64" required=""
+                                   id="id_title">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="id_description">Описание</label>
+                            <textarea class="form-control" name="description" required=""
+                                      id="id_description"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Добавить запись</button>
+                        {% csrf_token %}
+                    </div>
+
+                </form>
+            </div>
+            <br>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                {% for task in tasks %}
+                    <div class="col">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ task.title }} {% if task.close %}✓{% endif %}</h5>
+                                <p class="card-text">
+                                    {{ task.description }}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        {% if task.close %}
+                                            <div class="btn-group">
+                                                <a href="{% url 'back_task' task_id=task.id %}">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary">
+                                                        Вернуть
+                                                    </button>
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                            <div class="btn-group">
+                                                <a href="{% url 'complete_task' task_id=task.id %}">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary">
+                                                        Завершить
+                                                    </button>
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                        <div class="btn-group">
+                                            <a href="{% url 'delete_task' task_id=task.id %}">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary">
+                                                    Удалить
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <small class="text-body-secondary">{{ task.created_at }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

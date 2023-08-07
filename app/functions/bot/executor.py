@@ -18,7 +18,7 @@ from typing import List
 
 from loguru import logger
 from pyrogram import Client, types, errors
-from pyrogram.errors import UsernameNotOccupied, InviteRequestSent
+from pyrogram.errors import UsernameNotOccupied
 from pyrogram.types import User
 
 from database import repo
@@ -58,7 +58,8 @@ class BotExecutorAction(BaseExecutorAction):
             return await self.join_chat(chat_id=group.name)
         except KeyError:
             sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
-            repo.sessions_groups.update(sg, state=SessionGroupState.banned)
+            if sg:
+                repo.sessions_groups.update(sg, state=SessionGroupState.banned)
             return "BanInGroup"
         except errors.UsernameNotOccupied:
             repo.groups.update(group, state=GroupStates.inactive)
@@ -97,6 +98,12 @@ class BotExecutorAction(BaseExecutorAction):
             return [msg async for msg in self.client.get_chat_history(chat_id=chat_id, limit=limit)]
         except Exception as e:
             self.logger(f"get_chat_history\n {e}")
+
+    async def update_profile(self, name=None, surname=None, about=None):
+        return await self.client.update_profile(first_name=name, last_name=surname, bio=about)
+
+    async def update_profile_photo(self, photo=None):
+        return await self.client.set_profile_photo(photo=photo)
 
     """OTHER"""
 
@@ -144,4 +151,3 @@ class BotExecutorAction(BaseExecutorAction):
 
         if updates:
             repo.sessions.update(self.session, **updates)
-

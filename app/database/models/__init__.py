@@ -19,6 +19,7 @@ from .admin import Admin
 from .country import Country
 from .group import Group, GroupStates
 from .order import Order, OrderStates
+from .personal import Personal
 from .shop import Shop
 from .tag import Tag
 
@@ -38,7 +39,7 @@ from .session_proxy import SessionProxy
 from .session_task import SessionTask
 
 all_models = (
-    Account, Admin, Country, Group, Order, Shop, Tag,
+    Account, Admin, Country, Group, Order, Shop, Tag, Personal,
     Proxy, Session, GroupCountry, GroupTag, OrderGroup, CountryLink,
     Sleep, Message, SessionGroup, SessionProxy, SessionTask,
 )

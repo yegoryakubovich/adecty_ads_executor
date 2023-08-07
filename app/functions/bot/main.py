@@ -17,7 +17,7 @@ import asyncio
 from typing import Optional
 
 from loguru import logger
-from pyrogram import Client, errors, types
+from pyrogram import Client, errors
 from pyrogram.enums import ChatType
 
 from core.constants import SEND_MSG_DELAY_MSG, ASSISTANT_SLEEP_SEC, SPAM_MESSAGE_ANSWERS, SPAM_STOP_MESSAGE, \
@@ -74,12 +74,22 @@ class BotAction:
         try:
             await self.start_session()
             await self.executor.get_chat(chat_id=chat_id)
+
             repo.sessions.update(self.session, state=SessionStates.free)
             await self.stop_session()
             return True
         except:
             await self.executor.session_banned()
             return False
+
+    async def change_profile(self):
+        self.logger("change_profile")
+        items = repo.personals.get_random_pack()
+        self.logger(items)
+        if items[0] or items[1] or items[2]:
+            await self.executor.update_profile(name=items[0], surname=items[1], about=items[2])
+        # if items[3]:
+        #     await self.executor.update_profile_photo(photo=items[3])
 
     async def spam_bot_check(self):
         try:
@@ -232,9 +242,9 @@ class BotAction:
         )
 
     """
-    
+
         MAIN FUNCTION
-    
+
     """
 
     @func_logger
@@ -243,11 +253,16 @@ class BotAction:
         await self.all_connection()
         while True:
             await asyncio.sleep(await smart_sleep(self.session))
-            my_tasks = repo.sessions_tasks.get_all(session=self.session, state=SessionTaskStates.enable)
+            my_tasks = repo.sessions_tasks.get_all(
+                in_list=True, session=self.session, state=SessionTaskStates.enable
+            )
             if my_tasks:
                 self.logger("Find task")
                 try:
+                    logger.info(1)
                     await self.start_session()
+                    logger.info(1)
+
                     while my_tasks:
                         for task in my_tasks:
                             # await self.start_answers()
@@ -264,22 +279,28 @@ class BotAction:
                                 await self.task_send_by_order(task)
                                 await asyncio.sleep(await smart_create_sleep(self.session))
                             else:
-                                logger.info("task not found")
-                            my_tasks = repo.sessions_tasks.get_all(session=self.session, state=SessionTaskStates.enable)
+                                self.logger(f"Task not found {task.type}")
+                            my_tasks = repo.sessions_tasks.get_all(
+                                in_list=True, session=self.session, state=SessionTaskStates.enable
+                            )
                         await asyncio.sleep(ASSISTANT_SLEEP_SEC)
                     await self.stop_session()
                 except errors.UserDeactivatedBan:
+                    self.logger("UserDeactivatedBan")
                     await self.executor.session_banned()
                     return
                 except errors.AuthKeyDuplicated:
+                    self.logger("AuthKeyDuplicated")
                     await self.executor.session_banned()
                     return
                 except errors.InputUserDeactivated:
+                    self.logger("InputUserDeactivated")
                     await self.stop_session()
             else:
-                await self.start_session()
+                self.logger("Not find task")
+                # await self.start_session()
                 # await self.start_answers()
-                await self.stop_session()
+                # await self.stop_session()
             await asyncio.sleep(ASSISTANT_SLEEP_SEC)
 
     async def start_answers(self):
@@ -300,10 +321,12 @@ class BotAction:
                             text=msg.text
                         )
         except errors.UserDeactivatedBan:
+            self.logger("UserDeactivatedBan")
             await self.executor.session_banned()
             return False
         except errors.AuthKeyDuplicated:
+            self.logger("AuthKeyDuplicated")
             await self.executor.session_banned()
             return
         except errors.InputUserDeactivated:
-            pass
+            self.logger("InputUserDeactivated")

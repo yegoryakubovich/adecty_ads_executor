@@ -13,14 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 pyrogram
 peewee
-pydantic[dotenv]
+pydantic-settings
+# pydantic[dotenv]
 pymysql
 cryptography
 loguru
 httpx[socks]
-aiogram==3.0.0b7
+aiogram
 phonenumbers
 pycountry

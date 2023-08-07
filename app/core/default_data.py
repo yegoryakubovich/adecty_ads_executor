@@ -1,6 +1,6 @@
 shops_list = [{'name': 'no name'}]
 
-groups_list = [
+groups_list = (
     "kekajangroup", "adaptaciyausa", "adaptaciya_ua_usa", "ads_new_york", "calosangeles", "ca_miami_chat",
     "chatamerika", "chatinnj", "chatinSeattle", "chatinsf", "chatnewyork1", "chchatua", "chicagoil", "la_services",
     "losangeles2021immigrants", "los_angeles_avito", "los_angeles_ca", "los_angeles_california_usa", "miamichatik",
@@ -41,5 +41,41 @@ groups_list = [
     "san_francisco_avito", "jobsinSF", "rentinSanFranciscoChat", "SanFranciscoinChat", "businessSanFrancisco",
     "WorldCalifornia", "NashaPhiladelphia", "philadelphiafriends", "Chat_Philadelphia_RusRek",
     "philadelpia_pennsylvania", "rentinPhiladelphiaChat", "businessPhiladelphia", "Philadelphiachat", "phillychat",
-    "chatinNJ", "BazMeetNewJersey", "businessNewJersey",
+    "chatinNJ", "BazMeetNewJersey", "businessNewJersey", "chicagoil", "chicagochatik", "russianlo", "los_angeles_ca",
+    "los_angeles_avito", "los_angeles_california_usa", "multinational_group", "los_angeles3", "LA_services",
+    "NashLosAngeles", "LAchatik", "NashMiami", "MIAMICHATRU", "CA_Miami_Chat", "MiamiChatik", "ChatNewYork1",
+    "NYchatik", "CALosAngeles", "NEWYORKCHATRU", "ads_new_york", "usagreen", "usaforuz", "forum_usa", "usa_360",
+    "chatamerika", "vatandoshimuzbus", "YagonadarchausaNY", "usb_mexico_usa", "telemarketus", "uzbeksinusalup",
+    "renthouselup", "CHchatUA", "phillychat", "NashaPhiladelphia", "Philadelphiachat", "ukrnewyorkgroup", "chatinNJ",
+    "movingSF", "chatinSF", "adaptationinsacramento", "sacramentocity", "adaptaciyaUSA", "ponaehali_USA",
+    "adaptaciya_UA_USA", "russian_seattle", "chatinSeattle", "NashNY", "Vatandoshim_uz", "USACHATRU",
+    "gofortravel_chat", "usarmenians", "nyjobsusa", "VATANDOSHIM_USA_50_state", "vatandoshlaa"
+)
+
+surname_data = [
+    "Ivanov", "Smirnov", "Kuznetsov", "Popov", "Vasiliev", "Petrov", "Sokolov", "Mikhailov", "Novikov", "Fedorov",
+    "Morozov", "Volkov", "Alekseev", "Lebedev", "Semenov", "Egorov", "Pavlov", "Kozlov", "Stepanov", "Nikolaev",
+    "Orlov", "Andreev", "Makarov", "Nikitin", "Zakharov", "Zaitsev", "Soloviev", "Borisov", "Yakovlev", "Grigoriev",
+    "Romanov", "Vorobiev", "Sergeev", "Kuzmin", "Frolov", "Alexandrov", "Dmitriev", "Korolev", "Gusev", "Kiselev",
+    "Ilyin", "Maximov", "Polyakov", "Sorokin", "Vinogradov", "Kovalev", "Belov", "Medvedev", "Antonov", "Tarasov",
+    "Zhukov", "Baranov", "Filippov", "Komarov", "Davydov", "Belyaev", "Gerasimov", "Bogdanov", "Osipov", "Sidorov",
+    "Matveev", "Titov", "Markov", "Mironov", "Krylov", "Kulikov", "Karpov", "Vlasov", "Melnikov", "Denisov", "Gavrilov",
+    "Tikhonov", "Kazakov", "Afanasiev", "Danilov", "Saveliev", "Timofeev", "Fomin", "Chernov", "Abramov", "Martynov",
+    "Efimov", "Fedotov", "Shcherbakov", "Nazarov", "Kalinin", "Isaev", "Chernyshev", "Bulls", "Maslov", "Rodionov",
+    "Konovalov", "Lazarev", "Voronin", "Klimov", "Filatov", "Ponomarev", "Golubev", "Kudryavtsev", "Prokhorov",
+    "Naumov", "Potapov", "Zhuravlev", "Ovchinnikov", "Trofimov", "Leonov", "Sobolev", "Ermakov", "Kolesnikov",
+    "Goncharov", "Yemelyanov", "Nikiforov", "Grachev", "Kotov", "Grishin", "Efremov", "Arkhipov", "Gromov", "Kirillov",
+    "Malyshev", "Panov", "Moiseev", "Rumyantsev", "Akimov", "Kondratiev", "Biryukov", "Gorbunov", "Anisimov", "Eremin",
+    "Tikhomirov", "Galkin", "Lukyanov", "Mikheev", "Skvortsov", "Yudin", "Belousov", "Nesterov", "Simonov", "Prokofiev",
+    "Kharitonov", "Knyazev", "Tsvetkov", "Levin", "Mitrofanov", "Voronov", "Aksenov", "Sofronov", "Maltsev", "Loginov",
+    "Gorshkov"
+
+]
+
+names_data = [
+    "Alexander", "Mikhail", "Kirill", "Aleksey", "Victor", "Denis", "Dmitry", "Daniel", "Matvey", "Gregory", "Ilya",
+    "Maxim", "Andrey ", "Yaroslav", "Vladimir", "Timofey", "Timur", "Eugene", "Vasily", "Sergei", "Platon", "Ivan",
+    "Arseny", "Damir", "Roman", "Artem", "Egor", "Lev", "Stepan", "Robert", "Bogdan", "Miron", "Erik", "Nikita", "Gleb",
+    "Stanislav", "Vladislav", "Arthur ", "Anton", "Igor", "Savely", "Mstislav", "Nazar", "Zakhar", "Leonid", "David",
+    "Gennady", "Elizar", "Konstantin", "Vsevolod"
 ]
