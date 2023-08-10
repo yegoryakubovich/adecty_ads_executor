@@ -42,6 +42,7 @@ def on_start_up():
     repo.sessions.not_work()
 
     loop = asyncio.get_event_loop()
+    all_functions = []
     all_functions = [{'fun': AssistantAction(), 'name': 'Assistant'}]
     all_functions.extend([
         {
@@ -67,8 +68,7 @@ async def hello():
             task_name = task.get_name()
             if task_name == 'Assistant' or task_name.split('_')[0] in ['Bot', 'BotAnswer']:
                 all_tasks.append(task_name)
-        logger.info(len(all_tasks))
-        logger.info(all_tasks)
+        logger.info(f"{len(all_tasks)}: {all_tasks}")
         await asyncio.sleep(60)
 
 

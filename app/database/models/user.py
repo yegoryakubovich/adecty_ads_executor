@@ -13,14 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from peewee import PrimaryKeyField, CharField
+from peewee import PrimaryKeyField, BigIntegerField, CharField
 
 from database.db import BaseModel
 
 
-class Tag(BaseModel):
+class User(BaseModel):
     id = PrimaryKeyField()
-    name = CharField(max_length=64)
+
+    phone = BigIntegerField(null=True)
+    tg_user_id = BigIntegerField(null=True)
+    username = CharField(max_length=128, null=True)
+    first_name = CharField(max_length=128, null=True)
+    last_name = CharField(max_length=128, null=True)
 
     class Meta:
-        db_table = 'tags'
+        db_table = 'users'

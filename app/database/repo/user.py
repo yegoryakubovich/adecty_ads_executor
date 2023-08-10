@@ -13,15 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from peewee import PrimaryKeyField, ForeignKeyField
-
-from .account import Account
-from database.db import BaseModel
+from database.base_repository import BaseRepository
+from database.models import User
 
 
-class Admin(BaseModel):
-    id = PrimaryKeyField()
-    account = ForeignKeyField(Account, to_field='id')
+class UserRepository(BaseRepository):
+    pass
 
-    class Meta:
-        db_table = 'admins'
+
+users = UserRepository(User)

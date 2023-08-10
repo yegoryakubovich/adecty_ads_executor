@@ -13,16 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from datetime import datetime
-
-from peewee import PrimaryKeyField, CharField, ForeignKeyField, DateTimeField, BigIntegerField
+from peewee import PrimaryKeyField, CharField, ForeignKeyField, BigIntegerField
 
 from database.db import BaseModel
-from . import Group, Order
-from .session import Session
+from . import Group, Order, User
+from .sessions import Session
 
 
 class MessageStates:
+    from_user = 'from_user'
+    to_user = 'to_user'
     waiting = 'waiting'
     fine = 'fine'
     deleted = 'deleted'
@@ -30,13 +30,15 @@ class MessageStates:
 
 class Message(BaseModel):
     id = PrimaryKeyField()
-    session = ForeignKeyField(Session, to_field='id')
+    session = ForeignKeyField(Session, to_field='id', null=True)
+    user = ForeignKeyField(User, to_field='id', null=True)
     order = ForeignKeyField(Order, to_field='id', null=True)
-    group = ForeignKeyField(Group, to_field='id')
-    state = CharField(max_length=64, default=MessageStates.waiting)
+    group = ForeignKeyField(Group, to_field='id', null=True)
 
     message_id = BigIntegerField()
     text = CharField(max_length=1024, null=True)
+
+    state = CharField(max_length=64, default=MessageStates.waiting)
 
     class Meta:
         db_table = 'messages'

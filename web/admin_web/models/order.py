@@ -9,6 +9,13 @@ class OrderStates:
     choices = ((waiting, waiting), (disable, disable), (stopped, stopped))
 
 
+class OrderTypes:
+    ads = "ads"
+    mailing = "mailing"
+
+    choices = ((ads, ads), (mailing, mailing))
+
+
 class Order(models.Model):
     class Meta:
         db_table = 'orders'
@@ -26,6 +33,8 @@ class Order(models.Model):
 
     state = models.CharField(max_length=32, default=OrderStates.waiting, choices=OrderStates.choices,
                              verbose_name="Состояние")
+    type = models.CharField(max_length=32, null=True, blank=True, choices=OrderTypes.choices, verbose_name="Тип")
+
     datetime_stop = models.DateTimeField()
 
     def __str__(self):

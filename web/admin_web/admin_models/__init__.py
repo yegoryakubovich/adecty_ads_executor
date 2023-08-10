@@ -4,4 +4,4 @@ def registration_load():
     from . import GroupAdmin
     from . import ShopAdmin, MessageAdmin
     from . import SleepAdmin
-    from . import PersonalAdmin
+    from . import PersonalAdmin, UserAdmin

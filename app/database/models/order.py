@@ -24,6 +24,11 @@ class OrderStates:
     stopped = "stopped"
 
 
+class OrderTypes:
+    waiting = "ads"
+    disable = "mailing"
+
+
 class Order(BaseModel):
     id = PrimaryKeyField()
     name = CharField(max_length=128)
@@ -33,6 +38,7 @@ class Order(BaseModel):
     image_link = CharField(max_length=256)
 
     state = CharField(max_length=32, default=OrderStates.waiting)
+    type = CharField(max_length=32, default=OrderTypes.waiting)
     datetime_stop = DateTimeField()
 
     class Meta:

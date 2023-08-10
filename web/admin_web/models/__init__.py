@@ -3,8 +3,9 @@
 # from .admin import Admin
 from .country import Country
 from .group import Group, GroupStates
-from .order import Order, OrderStates
+from .order import Order, OrderStates, OrderTypes
 # from .tag import Tag
+from .user import User
 from .personal import Personal
 from .shop import Shop
 

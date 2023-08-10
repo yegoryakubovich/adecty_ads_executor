@@ -6,7 +6,7 @@ from admin_web.models import Message
 
 @admin.register(Message, site=admin_site)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ("id", "session", "order", "group", "state", "message_id", "text", "created")
+    list_display = ("id", "session", "user", "order", "group", "state", "message_id", "text", "created")
     list_filter = ("state", "created")
     readonly_fields = ("id", "created")
     list_per_page = 1000

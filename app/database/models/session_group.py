@@ -18,7 +18,7 @@ from peewee import PrimaryKeyField, ForeignKeyField, CharField
 
 from database.db import BaseModel
 from .group import Group
-from .session import Session
+from .sessions import Session
 
 
 class SessionGroupState:

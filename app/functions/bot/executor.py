@@ -18,11 +18,9 @@ from typing import List
 
 from loguru import logger
 from pyrogram import Client, types, errors
-from pyrogram.errors import UsernameNotOccupied
-from pyrogram.types import User
 
 from database import repo
-from database.models import Session, SessionStates, SessionProxy, Group, SessionGroup, GroupStates
+from database.models import Session, SessionStates, SessionProxy, Group, SessionGroup, GroupStates, User
 from database.models.session_group import SessionGroupState
 from functions.base_executor import BaseExecutorAction
 
@@ -46,7 +44,7 @@ class BotExecutorAction(BaseExecutorAction):
             sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
             repo.sessions_groups.update(sg, state=SessionGroupState.banned)
             return "BanInGroup"
-        except UsernameNotOccupied:
+        except errors.UsernameNotOccupied:
             repo.groups.update(group, state=GroupStates.inactive)
             return "UsernameNotOccupied"
 
@@ -138,16 +136,33 @@ class BotExecutorAction(BaseExecutorAction):
 
         repo.sessions.update(self.session, state=SessionStates.banned)
 
-    async def update_user(self, user: User):
+    async def update_session(self, tg_user: types.User):
         updates = {}
-        if self.session.username != user.username:
-            updates['username'] = user.username
-        if self.session.first_name != user.first_name:
-            updates['first_name'] = user.first_name
-        if self.session.last_name != user.last_name:
-            updates['last_name'] = user.last_name
-        if self.session.tg_user_id != user.id:
-            updates['tg_user_id'] = user.id
+        if self.session.username != tg_user.username:
+            updates['username'] = tg_user.username
+        if self.session.first_name != tg_user.first_name:
+            updates['first_name'] = tg_user.first_name
+        if self.session.last_name != tg_user.last_name:
+            updates['last_name'] = tg_user.last_name
+        if self.session.tg_user_id != tg_user.id:
+            updates['tg_user_id'] = tg_user.id
 
         if updates:
             repo.sessions.update(self.session, **updates)
+
+    async def update_user(self, user: User, tg_user: types.User):
+        updates = {}
+
+        if not user.phone and user.phone != tg_user.phone_number:
+            updates['phone'] = tg_user.phone_number
+        if user.username != tg_user.username:
+            updates['username'] = tg_user.username
+        if user.first_name != tg_user.first_name:
+            updates['first_name'] = tg_user.first_name
+        if user.last_name != tg_user.last_name:
+            updates['last_name'] = tg_user.last_name
+        if user.tg_user_id != tg_user.id:
+            updates['tg_user_id'] = tg_user.id
+
+        if updates:
+            repo.users.update(user, **updates)

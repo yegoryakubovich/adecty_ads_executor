@@ -1,0 +1,17 @@
+.list-group-item {
+    z-index: 2;
+    color: #fff;
+    background-color: var(--darkened-bg);;
+    border-color: black;
+    font-size: 14px;
+}
+
+.list-group-item.active {
+    z-index: 2;
+    color: #fff;
+    background-color: var(--darkened-bg);;
+    border-color: black;
+    font-size: 14px;
+    font-weight: bold;
+}
+

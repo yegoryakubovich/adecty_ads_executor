@@ -17,7 +17,7 @@ from peewee import PrimaryKeyField, ForeignKeyField
 
 from database.db import BaseModel
 from .proxy import Proxy
-from .session import Session
+from .sessions import Session
 
 
 class SessionProxy(BaseModel):

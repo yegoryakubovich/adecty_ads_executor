@@ -24,7 +24,7 @@ from core.constants import SEND_MSG_DELAY_MSG, ASSISTANT_SLEEP_SEC, SPAM_MESSAGE
     SPAM_REPLY_ANSWERS, SPAM_FREE_MESSAGE, ANSWER_MESSAGE
 from database import repo
 from database.models import Session, SessionProxy, SessionTask, SessionStates, GroupStates, MessageStates, \
-    Order, Group, SessionGroup
+    Order, Group, SessionGroup, User
 from database.models.session_group import SessionGroupState
 from database.models.session_task import SessionTaskType, SessionTaskStates
 from functions.bot.executor import BotExecutorAction
@@ -226,7 +226,7 @@ class BotAction:
             return
 
         if msg.from_user:
-            await self.executor.update_user(msg.from_user)
+            await self.executor.update_session(msg.from_user)
 
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
         repo.messages.create(
@@ -265,7 +265,7 @@ class BotAction:
 
                     while my_tasks:
                         for task in my_tasks:
-                            # await self.start_answers()
+                            await self.start_answers()
                             await asyncio.sleep(await smart_sleep(self.session))
                             if task.type == SessionTaskType.join_group:
                                 await self.task_join_group(task)
@@ -297,10 +297,23 @@ class BotAction:
                     self.logger("InputUserDeactivated")
                     await self.stop_session()
             else:
-                self.logger("Not find task")
-                # await self.start_session()
-                # await self.start_answers()
-                # await self.stop_session()
+                try:
+                    self.logger("Not find task")
+                    await self.start_session()
+                    await self.start_answers()
+                    await self.stop_session()
+                except errors.UserDeactivatedBan:
+                    self.logger("UserDeactivatedBan")
+                    await self.executor.session_banned()
+                    return
+                except errors.AuthKeyDuplicated:
+                    self.logger("AuthKeyDuplicated")
+                    await self.executor.session_banned()
+                    return
+                except errors.InputUserDeactivated:
+                    self.logger("InputUserDeactivated")
+                    await self.stop_session()
+
             await asyncio.sleep(ASSISTANT_SLEEP_SEC)
 
     async def start_answers(self):
@@ -309,15 +322,27 @@ class BotAction:
                 if dialog.chat.type == ChatType.PRIVATE:
                     if dialog.chat.id in self.black_list:
                         continue
+
                     async for msg in self.client.get_chat_history(chat_id=dialog.chat.id, limit=1):
                         if msg.from_user.id == self.session.tg_user_id:
                             continue
+
+                        user: User = repo.users.create(tg_user_id=msg.from_user.id)
+                        await self.executor.update_user(user=user, tg_user=msg.from_user)
+
                         msg_send = await msg.reply("\n".join(ANSWER_MESSAGE), disable_web_page_preview=True)
                         if msg_send and not msg_send.empty:
                             if msg_send.from_user:
-                                await self.executor.update_user(msg_send.from_user)
+                                await self.executor.update_session(msg_send.from_user)
+
+                        repo.messages.create(
+                            user=user, message_id=msg.id, text=msg.text or msg.caption, state=MessageStates.from_user
+                        )
+                        repo.messages.create(
+                            user=user, message_id=msg_send.id, text=msg_send.text, state=MessageStates.to_user
+                        )
                         await self.executor.send_message_answer_log(
-                            session_id=self.session.id, username=msg.chat.username, user_id=msg.chat.id,
+                            session_id=self.session.id, username=msg.from_user.username, user_id=msg.from_user.id,
                             text=msg.text
                         )
         except errors.UserDeactivatedBan:

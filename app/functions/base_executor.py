@@ -34,7 +34,7 @@ class BaseExecutorAction:
 
     @staticmethod
     async def create_user_link(username, user_id):
-        return f"<a href='tg://openmessage?user_id={user_id}'>@{username}</a>"
+        return f"<a href='tg://user?id={user_id}'>@{username}</a>"
 
     async def proxy_disable_log(self, proxy_id: int,
                                 proxy_shop_id: int, proxy_shop_name: str):
@@ -97,9 +97,6 @@ class BaseExecutorAction:
         user_link = await self.create_user_link(username=username, user_id=user_id)
         return await self.send_log_message(text="\n".join([
             f"️✉️ Сессия #{session_id} направила ответ клиенту {user_link}",
-            f"",
-            f"Сообщение пользователя:",
-            f"{text}",
             f"",
             f"#send_answer #session_{session_id} #user_{user_id}"
         ]))

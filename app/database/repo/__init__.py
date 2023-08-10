@@ -28,3 +28,4 @@ from .session_proxy import sessions_proxies
 from .session_task import sessions_tasks
 from .shop import shops
 from .sleep import sleeps
+from .user import users
