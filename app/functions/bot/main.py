@@ -19,6 +19,7 @@ from typing import Optional
 from loguru import logger
 from pyrogram import Client, errors
 from pyrogram.enums import ChatType
+from pyrogram.types import Message
 
 from core.constants import SEND_MSG_DELAY_MSG, ASSISTANT_SLEEP_SEC, SPAM_MESSAGE_ANSWERS, SPAM_STOP_MESSAGE, \
     SPAM_REPLY_ANSWERS, SPAM_FREE_MESSAGE, ANSWER_MESSAGE
@@ -241,6 +242,47 @@ class BotAction:
             session_messages_count=len(repo.messages.get_all(session=self.session))
         )
 
+    async def task_send_by_mailing(self, task: SessionTask):
+        self.logger("task_send_by_mailing")
+        """
+            Задача отправки сообщения.
+        """
+        order: Order = repo.orders.get(id=task.order_id)
+        user: User = repo.users.get(id=task.user_id)
+
+        if not user.username:
+            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Username not found")
+            return
+
+        tg_user = await self.executor.get_users(user.username)
+        if tg_user:
+            await self.executor.update_user(user, tg_user)
+
+        msg: Message = await self.executor.send_message(
+            chat_id=user.username, text=order.message, photo=order.image_link
+        )
+
+        if isinstance(msg, str):
+            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)
+            return
+
+        if msg.empty:
+            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Empty")
+            return
+
+        if msg.from_user:
+            await self.executor.update_session(msg.from_user)
+
+        repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
+        repo.messages.create(
+            session=self.session, user=user, order=order, message_id=msg.id,
+            text=msg.caption if msg.caption else msg.text, state=MessageStates.fine
+        )
+
+        await self.executor.send_message_mailing_log(
+            session_id=self.session.id, user_id=user.id, username=user.username
+        )
+
     """
 
         MAIN FUNCTION
@@ -259,10 +301,7 @@ class BotAction:
             if my_tasks:
                 self.logger("Find task")
                 try:
-                    logger.info(1)
                     await self.start_session()
-                    logger.info(1)
-
                     while my_tasks:
                         for task in my_tasks:
                             await self.start_answers()
@@ -277,6 +316,9 @@ class BotAction:
                                 await self.task_check_message(task)
                             elif task.type == SessionTaskType.send_by_order:
                                 await self.task_send_by_order(task)
+                                await asyncio.sleep(await smart_create_sleep(self.session))
+                            elif task.type == SessionTaskType.send_by_mailing:
+                                await self.task_send_by_mailing(task)
                                 await asyncio.sleep(await smart_create_sleep(self.session))
                             else:
                                 self.logger(f"Task not found {task.type}")
@@ -329,6 +371,9 @@ class BotAction:
 
                         user: User = repo.users.create(tg_user_id=msg.from_user.id)
                         await self.executor.update_user(user=user, tg_user=msg.from_user)
+                        repo.messages.create(
+                            user=user, message_id=msg.id, text=msg.text or msg.caption, state=MessageStates.from_user
+                        )
 
                         msg_send = await msg.reply("\n".join(ANSWER_MESSAGE), disable_web_page_preview=True)
                         if msg_send and not msg_send.empty:
@@ -336,14 +381,10 @@ class BotAction:
                                 await self.executor.update_session(msg_send.from_user)
 
                         repo.messages.create(
-                            user=user, message_id=msg.id, text=msg.text or msg.caption, state=MessageStates.from_user
-                        )
-                        repo.messages.create(
                             user=user, message_id=msg_send.id, text=msg_send.text, state=MessageStates.to_user
                         )
                         await self.executor.send_message_answer_log(
-                            session_id=self.session.id, username=msg.from_user.username, user_id=msg.from_user.id,
-                            text=msg.text
+                            session_id=self.session.id, username=msg.from_user.username, user_id=user.id
                         )
         except errors.UserDeactivatedBan:
             self.logger("UserDeactivatedBan")

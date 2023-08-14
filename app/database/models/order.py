@@ -25,20 +25,20 @@ class OrderStates:
 
 
 class OrderTypes:
-    waiting = "ads"
-    disable = "mailing"
+    ads = "ads"
+    mailing = "mailing"
 
 
 class Order(BaseModel):
     id = PrimaryKeyField()
     name = CharField(max_length=128)
     message = CharField(max_length=512)
-    message_no_link = CharField(max_length=512)
-    message_short = CharField(max_length=256)
-    image_link = CharField(max_length=256)
+    message_no_link = CharField(max_length=512, null=True)
+    message_short = CharField(max_length=256, null=True)
+    image_link = CharField(max_length=256, null=True)
 
     state = CharField(max_length=32, default=OrderStates.waiting)
-    type = CharField(max_length=32, default=OrderTypes.waiting)
+    type = CharField(max_length=32)
     datetime_stop = DateTimeField()
 
     class Meta:

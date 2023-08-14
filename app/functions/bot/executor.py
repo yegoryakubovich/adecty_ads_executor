@@ -66,6 +66,9 @@ class BotExecutorAction(BaseExecutorAction):
             self.logger(f"Запрос в группу {group.name} отправлен от сессии #{self.session}")
             return "InviteRequestSent"
 
+    async def get_users(self, user_id: [str, int]) -> types.User:
+        return await self.client.get_users(user_ids=user_id)
+
     async def join_chat(self, chat_id: [str, int]) -> types.Chat:
         return await self.client.join_chat(chat_id=chat_id)
 
@@ -153,8 +156,6 @@ class BotExecutorAction(BaseExecutorAction):
     async def update_user(self, user: User, tg_user: types.User):
         updates = {}
 
-        if not user.phone and user.phone != tg_user.phone_number:
-            updates['phone'] = tg_user.phone_number
         if user.username != tg_user.username:
             updates['username'] = tg_user.username
         if user.first_name != tg_user.first_name:

@@ -31,10 +31,9 @@ class SessionProxyRepository(BaseRepository):
         proxies = []
         for country in repo.countries_links.get_link_country(session_country):
             for proxy in repo.proxies.get_all(state=ProxyStates.enable, country=country):
-                sessions = self.get_all(proxy=proxy)
-                if len(sessions) < proxy.max_link:
-                    proxies.append({'id': proxy.id, 'tasks': len(sessions)})
-                    return proxy
+                sps = self.get_all(proxy=proxy)
+                if len(sps) < proxy.max_link:
+                    proxies.append({'id': proxy.id, 'sessions': len(sps)})
 
         if proxies:
             logger.info(sorted(proxies, key=itemgetter('sessions')))

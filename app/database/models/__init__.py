@@ -16,7 +16,7 @@
 """FIRST"""
 from .country import Country
 from .group import Group, GroupStates
-from .order import Order, OrderStates
+from .order import Order, OrderStates, OrderTypes
 from .personal import Personal
 from .shop import Shop
 from .user import User
@@ -31,9 +31,9 @@ from .country_link import CountryLink
 """THREE"""
 from .sleep import Sleep, SleepStates
 from .message import Message, MessageStates
-from .session_group import SessionGroup
+from .session_group import SessionGroup, SessionGroupState
 from .session_proxy import SessionProxy
-from .session_task import SessionTask
+from .session_task import SessionTask, SessionTaskStates, SessionTaskType
 
 all_models = (
     Country, Group, Order, Shop, Personal, User,

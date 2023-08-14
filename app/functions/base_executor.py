@@ -93,10 +93,17 @@ class BaseExecutorAction:
             f"#send_message #session_{session_id} #group_{group_id} #order_{order_id}",
         ]))
 
-    async def send_message_answer_log(self, session_id: int, username: str, user_id: int, text: str):
+    async def send_message_answer_log(self, session_id: int, username: str, user_id: int):
         user_link = await self.create_user_link(username=username, user_id=user_id)
         return await self.send_log_message(text="\n".join([
             f"️✉️ Сессия #{session_id} направила ответ клиенту {user_link}",
+            f"",
+            f"#send_answer #session_{session_id} #user_{user_id}"
+        ]))
+    async def send_message_mailing_log(self, session_id: int, username: str, user_id: int):
+        user_link = await self.create_user_link(username=username, user_id=user_id)
+        return await self.send_log_message(text="\n".join([
+            f"️✉️ Сессия #{session_id} направила сообщение рассылки клиенту {user_link}",
             f"",
             f"#send_answer #session_{session_id} #user_{user_id}"
         ]))

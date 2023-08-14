@@ -16,19 +16,12 @@
 from django.contrib import admin
 
 from admin_web.admin import admin_site
-from admin_web.models import Message
+from admin_web.models import Order
 
 
-@admin.register(Message, site=admin_site)
-class MessageAdmin(admin.ModelAdmin):
-    list_display = ("id", "session", "user", "order", "group", "state", "message_id", "text", "created")
-    list_filter = ("state", "created")
+@admin.register(Order, site=admin_site)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ("name", "state", "type", "datetime_stop", "created")
+    list_filter = ("state", "type", "created")
     readonly_fields = ("id", "created")
     list_per_page = 1000
-
-    def has_add_permission(self, request):
-        return False
-
-    @admin.display(description="Сообщений")
-    def message_send_now(self, model: Message):
-        return "0"

@@ -22,9 +22,7 @@ from loguru import logger
 from core.constants import NEW_SESSION_SLEEP_SEC
 from database import repo
 from database.models import ProxyStates, SessionStates, GroupStates, MessageStates, Shop, ProxyTypes
-from database.models import SessionTask
-from database.models.order import OrderStates
-from database.models.session_task import SessionTaskType, SessionTaskStates
+from database.models import SessionTask, SessionTaskType, SessionTaskStates, OrderStates, OrderTypes
 from functions import BotAction
 from functions.other.executor import AssistantExecutorAction
 from modules import convert
@@ -201,7 +199,7 @@ class CheckerAction:
 
     async def wait_order_check(self):
         self.logger("wait_order_check")
-        for order in repo.orders.get_all(state=OrderStates.waiting):
+        for order in repo.orders.get_all(state=OrderStates.waiting, type=OrderTypes.ads):
             for od in repo.orders_groups.get_all(order=order):
                 group = repo.groups.get(od.group_id)
                 if group.state != GroupStates.active:
