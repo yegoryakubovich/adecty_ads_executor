@@ -4,3 +4,4 @@ loguru
 PyMySQL
 cryptography
 pydantic==1.*
+openpyxl

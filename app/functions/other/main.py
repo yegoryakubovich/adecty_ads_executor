@@ -48,6 +48,8 @@ class AssistantAction:
                 asyncio.create_task(coro=self.checker.wait_order_check(), name="assistant_wait_order_check")
             if "assistant_wait_sg_check" not in all_tasks_names:
                 asyncio.create_task(coro=self.checker.wait_session_group_check(), name="assistant_wait_sg_check")
+            if "assistant_personals_check" not in all_tasks_names:
+                asyncio.create_task(coro=self.checker.personals_check(), name="assistant_personals_check")
             await asyncio.sleep(ASSISTANT_OFTEN_SLEEP_SEC)
 
     # rarely

@@ -52,7 +52,7 @@ groups_list = (
     "gofortravel_chat", "usarmenians", "nyjobsusa", "VATANDOSHIM_USA_50_state", "vatandoshlaa"
 )
 
-surname_data = [
+surnames_man = [
     "Ivanov", "Smirnov", "Kuznetsov", "Popov", "Vasiliev", "Petrov", "Sokolov", "Mikhailov", "Novikov", "Fedorov",
     "Morozov", "Volkov", "Alekseev", "Lebedev", "Semenov", "Egorov", "Pavlov", "Kozlov", "Stepanov", "Nikolaev",
     "Orlov", "Andreev", "Makarov", "Nikitin", "Zakharov", "Zaitsev", "Soloviev", "Borisov", "Yakovlev", "Grigoriev",
@@ -71,11 +71,61 @@ surname_data = [
     "Gorshkov"
 
 ]
+surnames_woman = [
+    "Ivanova", "Smirnova", "Kuznetsova", "Popova", "Vasilieva", "Petrova", "Sokolova", "Mikhailovna", "Novikovna",
+    "Fedorova", "Morozova", "Volkova", "Alekseeva", "Lebedeva", "Semenova", "Egorova", "Pavlova", "Kozlova",
+    "Stepanova", "Nikolaeva", "Orlova", "Andreeva", "Makarova", "Nikitina", "Zakharova", "Zaitseva", "Solovieva",
+    "Borisova", "Yakovleva", "Grigorieva", "Romanova", "Vorobieva", "Sergeeva", "Kuzmina", "Frolova", "Alexandrova",
+    "Dmitrieva", "Koroleva", "Guseva", "Kiseleva", "Ilyina", "Maximova", "Polyakova", "Sorokina", "Vinogradova",
+    "Kovaleva", "Belova", "Medvedeva", "Antonova", "Tarasova", "Zhukova", "Baranov", "Filippov", "Komarov", "Davydov",
+    "Belyaev", "Gerasimov", "Bogdanov", "Osipov", "Sidorova", "Matveeva", "Titova", "Markova", "Mironova", "Krylova",
+    "Kulikova", "Karpova", "Vlasova", "Melnikova", "Denisova", "Gavrilova", "Tikhonova", "Kazakova", "Afanasieva",
+    "Danilova", "Savelieva", "Timofeeva", "Fomina", "Chernova", "Abramova", "Martynova", "Efimova", "Fedotova",
+    "Shcherbakova", "Nazarova", "Kalinina", "Isaeva", "Chernysheva", "Bullsa", "Maslova", "Rodionova", "Konovalova",
+    "Lazareva", "Voronina", "Klimova", "Filatova", "Ponomareva", "Golubeva", "Kudryavtseva", "Prokhorova", "Naumova",
+    "Potapova", "Zhuravleva", "Ovchinnikova", "Trofimova", "Leonova", "Soboleva", "Ermakova", "Kolesnikova",
+    "Goncharova", "Yemelyanova", "Nikiforova", "Gracheva", "Kotova", "Grishina", "Efremova", "Arkhipova", "Gromova",
+    "Kirillova", "Malysheva", "Panova", "Moiseeva", "Rumyantseva", "Akimova", "Kondratieva", "Biryukova", "Gorbunova",
+    "Anisimova", "Eremina", "Tikhomirova", "Galkina", "Lukyanova", "Mikheeva", "Skvortsova", "Yudina", "Belousova",
+    "Nesterova", "Simonova", "Prokofieva", "Kharitonova", "Knyazeva", "Tsvetkova", "Levina", "Mitrofanova", "Voronova",
+    "Aksenova", "Sofronova", "Maltseva", "Loginova", "Gorshkova"
+]
 
-names_data = [
+names_man = [
     "Alexander", "Mikhail", "Kirill", "Aleksey", "Victor", "Denis", "Dmitry", "Daniel", "Matvey", "Gregory", "Ilya",
     "Maxim", "Andrey ", "Yaroslav", "Vladimir", "Timofey", "Timur", "Eugene", "Vasily", "Sergei", "Platon", "Ivan",
     "Arseny", "Damir", "Roman", "Artem", "Egor", "Lev", "Stepan", "Robert", "Bogdan", "Miron", "Erik", "Nikita", "Gleb",
     "Stanislav", "Vladislav", "Arthur ", "Anton", "Igor", "Savely", "Mstislav", "Nazar", "Zakhar", "Leonid", "David",
     "Gennady", "Elizar", "Konstantin", "Vsevolod"
 ]
+names_woman = [
+    "Avdotya", "Agafya", "Aglaya", "Agnessa", "Agrafena", "Agripina", "Adelaida", "Aksinya", "Akulina", "Aleksandra",
+    "Aleksandrina", "Alena", "Alesha", "Alina", "Alisa", "Alla", "Albina", "Alma", "Anastasiya", "Anzhela", "Anzhelina",
+    "Anna", "Antonida", "Antonina", "Antoniya", "Anfisa", "Apollinariya", "Arina", "Astra", "Asya", "Afanasiya",
+    "Valeriya", "Varvara", "Vasilisa", "Vasya", "Velimira", "Vera", "Veronika", "Viktoriya", "Vilena", "Vitoslava",
+    "Vladilena", "Vladlena", "Vyacheslava", "Gavriila", "Gavrila", "Gala", "Galina", "Gena", "Gertrud", "Glafira",
+    "Gordeya", "Gorimira", "Gradimira", "Gradislava", "Granislava", "Grunya", "Grusha", "Gulya", "Darya", "Dekabrina",
+    "Denis", "Dima", "Dobrodeya", "Dobromila", "Dobromira", "Dobroslava", "Dolyana", "Dragomila", "Dragoslava", "Dunya",
+    "Eva", "Evgeniya", "Evdokiya", "Evpraksiya", "Ekaterina", "Elena", "Elizaveta", "Emelya", "Esfir", "Efimiya",
+    "Efrosinya", "Zhanna", "Zabava", "Zarina", "Zarya", "Zvenimira", "Zinaida", "Zoya", "Ivanna", "Izyaslava", "Inna",
+    "Iolanta", "Irina", "Isidora", "Iskra", "Kapeka", "Karina", "Katerina", "Katya", "Kim", "Kira", "Klavdiya", "Klara",
+    "Krasava", "Ksana", "Kseniya", "Kuksha", "Kupava", "Lana", "Larisa", "Lelya", "Lena", "Lenara", "Leniana", "Lenina",
+    "Lenya", "Leon", "Lidiya", "Liza", "Lizaveta", "Liliya", "Lora", "Lukeriya", "Lukerya", "Luchezara", "Lyubov",
+    "Lyudmila", "Magdalina", "Manya", "Margarita", "Marianna", "Marina", "Mariya", "Marlena", "Marfa", "Marya",
+    "Maryamna", "Matrena", "Matrona", "Masha", "Mina", "Nadezhda", "Nayda", "Nastasya", "Nastya", "Nataliya", "Nika",
+    "Nina", "Ninella", "Ninel", "Nona", "Nonna", "Oksana", "Oktyabrina", "Olelya", "Olga", "Olya", "Ostromira",
+    "Ostroslava", "Otrada", "Pelageya", "Polina", "Pravdina", "Praskovya", "Prekrasa", "Rada", "Radinka", "Radomira",
+    "Radoslava", "Raisa", "Ratimira", "Revmira", "Rimma", "Roza", "Roksana", "Rusya", "Rufina", "Sanya", "Sasha",
+    "Sveta", "Svetlana", "Svoboda", "Serafima", "Sivilla", "Slava", "Slaviya", "Smeyana", "Sofiya", "Sofya", "Stasya",
+    "Sudislava", "Syuzanna", "Taisiya", "Tamara", "Tatyana", "Tasha", "Tverdimira", "Tverdislava", "Tina", "Tosha",
+    "Ulyana", "Ustinya", "Faina", "Fekla", "Feklista", "Feodora", "Filippa", "Foka", "Shura", "Yuliana", "Yuliya",
+    "Yura", "Yustina", "Yan", "Yara", "Yarina", "Yaromira", "Yaroslava"
+]
+
+about_unisex = [
+    "TG: @fexps_obmen"
+]
+
+avatars_man = [f"man_{i + 1}.jpg" for i in range(26)]
+avatars_woman = [f"woman_{i + 1}.jpg" for i in range(34)]
+avatars_unisex = [f"woman_{i + 1}.jpg" for i in range(4)]

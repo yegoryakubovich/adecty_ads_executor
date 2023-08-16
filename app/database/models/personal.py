@@ -10,9 +10,16 @@ class PersonalTypes:
     about = 'about'
 
 
+class PersonalSex:
+    man = 'man'
+    woman = 'woman'
+    unisex = 'unisex'
+
+
 class Personal(BaseModel):
     id = PrimaryKeyField()
-    type = CharField(max_length=512)
+    type = CharField(max_length=64)
+    sex = CharField(max_length=64, default=PersonalSex.unisex)
     value = CharField(max_length=512)
 
     class Meta:

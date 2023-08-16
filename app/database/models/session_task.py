@@ -26,6 +26,8 @@ class SessionTaskType:
     send_by_order = 'send_by_order'
     send_by_mailing = 'send_by_mailing'
     check_message = 'check_message'
+    change_fi = 'change_fi'
+    change_avatar = 'change_avatar'
 
 
 class SessionTaskStates:
@@ -37,7 +39,7 @@ class SessionTaskStates:
 class SessionTask(BaseModel):
     id = PrimaryKeyField()
     session = ForeignKeyField(Session, to_field='id')
-    user = ForeignKeyField(User, to_field='id')
+    user = ForeignKeyField(User, to_field='id', null=True)
     group = ForeignKeyField(Group, to_field='id', null=True)
     order = ForeignKeyField(Order, to_field='id', null=True)
     message = ForeignKeyField(Message, to_field='id', null=True)

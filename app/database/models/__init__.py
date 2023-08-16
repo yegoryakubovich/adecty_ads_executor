@@ -15,9 +15,9 @@
 #
 """FIRST"""
 from .country import Country
-from .group import Group, GroupStates
+from .group import Group, GroupStates, GroupType
 from .order import Order, OrderStates, OrderTypes
-from .personal import Personal
+from .personal import Personal, PersonalTypes, PersonalSex
 from .shop import Shop
 from .user import User
 
@@ -34,9 +34,10 @@ from .message import Message, MessageStates
 from .session_group import SessionGroup, SessionGroupState
 from .session_proxy import SessionProxy
 from .session_task import SessionTask, SessionTaskStates, SessionTaskType
+from .sessions_personals import SessionPersonal
 
 all_models = (
     Country, Group, Order, Shop, Personal, User,
     Proxy, Session, GroupCountry, OrderGroup, CountryLink,
-    Sleep, Message, SessionGroup, SessionProxy, SessionTask,
+    Sleep, Message, SessionGroup, SessionProxy, SessionTask, SessionPersonal
 )

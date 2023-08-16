@@ -13,10 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from datetime import datetime
+
 from django.contrib import admin
+from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
+from django.http import HttpResponseRedirect
+from openpyxl.workbook import Workbook
+from openpyxl.worksheet.worksheet import Worksheet
 
 from admin_web.admin import admin_site
-from admin_web.models import Group, Message, MessageStates, SessionTask, GroupStates
+from admin_web.models import Group, Message, MessageStates, SessionTask, GroupStates, SessionGroup, SessionGroupState
 from admin_web.models.session_task import SessionTaskStates, SessionTaskType
 
 
@@ -60,6 +66,47 @@ def state_to_inactive(model_admin: admin.ModelAdmin, request, queryset):
         group.save()
 
 
+@admin.action(description="Активировать")
+def state_to_active(model_admin: admin.ModelAdmin, request, queryset):
+    for group in queryset:
+        group.state = GroupStates.active
+        group.save()
+
+
+@admin.action(description="Проверить")
+def state_to_waiting(model_admin: admin.ModelAdmin, request, queryset):
+    for group in queryset:
+        for task in SessionTask.objects.filter(group=group, state=SessionTaskStates.enable).all():
+            task.delete()
+        group.state = GroupStates.waiting
+        group.save()
+
+
+@admin.action(description="Выгрузить присутствие в группе")
+def export_presence(model_admin: admin.ModelAdmin, request, queryset):
+    all_data = [["ID", "Название", "Подписчиков", "Присутствие"]]
+    for group in Group.objects.filter(state=GroupStates.active).all():
+        messages_waiting = Message.objects.filter(group=group, state=MessageStates.waiting).all()
+        if messages_waiting:
+            all_data.append([group.id, f"@{group.name}", group.subscribers, "Да"])
+
+    wb = Workbook()
+    wb.remove(wb.active)
+    ws: Worksheet = wb.create_sheet("Выгрузка")
+    for data in all_data:
+        ws.append(data)
+    for column in ["A", "B", "C", "D", "E"]:
+        if column in ["A"]:
+            ws.column_dimensions[column].width = 5
+        elif column in ["B"]:
+            ws.column_dimensions[column].width = 40
+        else:
+            ws.column_dimensions[column].width = 20
+    filename = f"media/exports/groups_{datetime.now().strftime('%y_%m_%d_%H_%M')}"
+    wb.save(f"{filename}.xlsx")
+    return HttpResponseRedirect(f"/{filename}.xlsx")
+
+
 """
 MAIN
 """
@@ -67,17 +114,29 @@ MAIN
 
 @admin.register(Group, site=admin_site)
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "state", "subscribers", "created", "delete_count", "presence", "abortively_percent")
-    list_filter = ("state",)
+    list_display = (
+        "id", "name", "state", "subscribers", "can_image", "type", "created",
+        "delete_count", "presence", "abortively_percent", "sessions_count"
+    )
+    list_filter = ("state", "type", "created")
     readonly_fields = ("id", "created")
     inlines = [SessionTaskInline]
-    actions = [state_to_inactive]
+    actions = [state_to_inactive, state_to_active, state_to_waiting, export_presence]
     list_per_page = 1000
 
     def has_add_permission(self, request):
         return False
 
-    @admin.display(description="Удаленных сообщений")
+    @admin.display(description="Актив/Бан")
+    def sessions_count(self, model: Group):
+        active = SessionGroup.objects.filter(group=model, state=SessionGroupState.active).all()
+        banned = SessionGroup.objects.filter(group=model, state=SessionGroupState.banned).all()
+        a = len(active) if active else 0
+        b = len(banned) if banned else 0
+        return f"{a}/{b}"
+
+
+    @admin.display(description="Удалений")
     def delete_count(self, model: Group):
         messages_count = len(Message.objects.filter(group=model).all())
         delete_count = len(Message.objects.filter(group=model, state=MessageStates.deleted).all())
@@ -95,7 +154,7 @@ class GroupAdmin(admin.ModelAdmin):
             return PresenceState.wait
         return PresenceState.no
 
-    @admin.display(description="Вступления | Отправка")
+    @admin.display(description="Вступления/Отправка")
     def abortively_percent(self, model: Group):
         len_abortively_join = len(SessionTask.objects.filter(
             group=model, state=SessionTaskStates.abortively, type=SessionTaskType.join_group
@@ -120,6 +179,15 @@ class GroupAdmin(admin.ModelAdmin):
         math_send = round(len_abortively_send / len_all_send * 100, 2)
 
         return f"{math_join}% | {math_send}%"
+
+    def changelist_view(self, request, extra_context=None):
+        if 'action' in request.POST and request.POST['action'] == 'export_presence':
+            if not request.POST.getlist(ACTION_CHECKBOX_NAME):
+                post = request.POST.copy()
+                for u in Group.objects.all():
+                    post.update({ACTION_CHECKBOX_NAME: str(u.id)})
+                request._set_post(post)
+        return super(GroupAdmin, self).changelist_view(request, extra_context)
 
     def get_action_choices(self, request, *args, **kwargs):  # auto select action
         choices = super(GroupAdmin, self).get_action_choices(request)

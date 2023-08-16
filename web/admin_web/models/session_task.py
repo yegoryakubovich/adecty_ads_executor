@@ -21,16 +21,18 @@ from admin_web.models import Session, Group, Order, Message, User
 
 
 class SessionTaskType:
-    non_type = 'non_type'
     check_group = 'check_group'
     join_group = 'join_group'
     send_by_order = 'send_by_order'
     send_by_mailing = 'send_by_mailing'
     check_message = 'check_message'
+    change_fi = 'change_fi'
+    change_avatar = 'change_avatar'
 
     choices = (
-        (non_type, non_type), (check_group, check_group), (join_group, join_group), (send_by_order, send_by_order),
-        (send_by_mailing, send_by_mailing), (check_message, check_message),
+        (check_group, check_group), (join_group, join_group), (check_message, check_message),
+        (send_by_order, send_by_order), (send_by_mailing, send_by_mailing),
+        (change_fi, change_fi), (change_avatar, change_avatar)
     )
 
 
@@ -55,7 +57,8 @@ class SessionTask(models.Model):
                                 verbose_name="Сессия")
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="session_tasks_user",
                              verbose_name="Пользователь")
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True, related_name="session_tasks_group",
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True,
+                              related_name="session_tasks_group",
                               verbose_name="Группа")
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True,
                               related_name="session_tasks_order", verbose_name="Заказ")
@@ -66,8 +69,7 @@ class SessionTask(models.Model):
                              verbose_name="Состояние")
     state_description = models.CharField(max_length=64, null=True, blank=True, verbose_name="Описание")
 
-    type = models.CharField(max_length=32, default=SessionTaskType.non_type, choices=SessionTaskType.choices,
-                            verbose_name="Тип")
+    type = models.CharField(max_length=32, choices=SessionTaskType.choices, verbose_name="Тип")
 
     def __str__(self):
         return f"{self.id} ({self.state})"

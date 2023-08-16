@@ -36,6 +36,6 @@ from .session import Session, SessionStates
 """THREE"""
 from .sleep import Sleep, SleepStates
 from .message import Message, MessageStates
-# from .session_group import SessionGroup
+from .session_group import SessionGroup, SessionGroupState
 from .session_proxy import SessionProxy
 from .session_task import SessionTask, SessionTaskStates, SessionTaskType

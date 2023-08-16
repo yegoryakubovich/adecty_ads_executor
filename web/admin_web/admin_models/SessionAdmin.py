@@ -16,10 +16,10 @@
 from datetime import timedelta, datetime
 
 from django.contrib import admin
-from django.db.models import QuerySet
 
 from admin_web.admin import admin_site
-from admin_web.models import Session, Message, Sleep, SleepStates, SessionStates, SessionTask, SessionTaskStates
+from admin_web.models import Session, Message, Sleep, SleepStates, SessionStates, SessionTask, SessionTaskStates, \
+    SessionGroup, SessionGroupState
 
 
 @admin.action(description="В work")
@@ -66,8 +66,8 @@ class SessionTaskInline(admin.TabularInline):
 @admin.register(Session, site=admin_site)
 class SessionAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "phone", "username", "first_name", "last_name", "country", "shop", "tg_user_id", "state", "created",
-        "message_send_now", "sleep_now", "work"
+        "id", "phone", "username", "first_name", "last_name", "country", "shop", "state", "created",
+        "message_send_now", "sleep_now", "work", "groups_count"
     )
     list_filter = ("state", "work")
     readonly_fields = ("id", "phone", "username", "first_name", "last_name", "tg_user_id", "created")
@@ -89,3 +89,10 @@ class SessionAdmin(admin.ModelAdmin):
             delta = (sleep.created + timedelta(seconds=sleep.time_second)).replace(tzinfo=None) - datetime.utcnow()
             return f"{delta}"
         return f"Нет"
+
+    @admin.display(description="Групп")
+    def groups_count(self, model: Session):
+        groups = SessionGroup.objects.filter(session=model, state=SessionGroupState.active).all()
+        if groups:
+            return f"{len(groups)}"
+        return f"0"

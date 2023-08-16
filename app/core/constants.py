@@ -23,6 +23,7 @@ def hour2sec(hours: int):
 
 NEW_SESSION_SLEEP_SEC = min2sec(60)
 URL_FOR_TEST_PROXY = 'https://ifconfig.me/all.json'
+avatar_path = 'media/bot/personals/avatars/'
 
 BOT_SLEEP_MIN_SEC = min2sec(10)  # sleep min
 BOT_SLEEP_MAX_SEC = min2sec(15)  # sleep max

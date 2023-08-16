@@ -25,6 +25,16 @@ class GroupStates:
     choices = ((waiting, waiting), (active, active), (inactive, inactive))
 
 
+class GroupType:
+    link = 'link'
+    no_link = 'no_link'
+    short = 'short'
+    replace = 'replace'
+    inactive = 'inactive'
+
+    choices = ((link, link), (no_link, no_link), (short, short), (replace, replace), (inactive, inactive))
+
+
 class Group(models.Model):
     class Meta:
         db_table = 'groups'
@@ -39,11 +49,8 @@ class Group(models.Model):
                              verbose_name="Состояние")
     subscribers = models.IntegerField(verbose_name="Подписчиков")  # Количество подписчиков
 
-    can_image = models.BooleanField(default=True, verbose_name="Отправка картинки")
-    can_message = models.BooleanField(default=False, verbose_name="Отправка ссылок")
-    can_message_no_url = models.BooleanField(default=True, verbose_name="Отправка без ссылок")
-    can_message_short = models.BooleanField(default=True, verbose_name="Отправка короткого текста")
-
+    can_image = models.BooleanField(default=True, verbose_name="Картинки")
+    type = models.CharField(max_length=32, default=GroupType.link, choices=GroupType.choices, verbose_name="Тип")
     captcha_have = models.BooleanField(default=False, verbose_name="Капча")
     captcha_type = models.CharField(max_length=128, blank=True, verbose_name="Тип капчи")
     captcha_data = models.CharField(max_length=128, blank=True, verbose_name="Информация по капче")

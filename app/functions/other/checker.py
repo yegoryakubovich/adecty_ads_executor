@@ -21,7 +21,7 @@ from loguru import logger
 
 from core.constants import NEW_SESSION_SLEEP_SEC
 from database import repo
-from database.models import ProxyStates, SessionStates, GroupStates, MessageStates, Shop, ProxyTypes
+from database.models import ProxyStates, SessionStates, GroupStates, MessageStates, Shop, ProxyTypes, GroupType, Group
 from database.models import SessionTask, SessionTaskType, SessionTaskStates, OrderStates, OrderTypes
 from functions import BotAction
 from functions.other.executor import AssistantExecutorAction
@@ -126,7 +126,6 @@ class CheckerAction:
             await bot.all_connection()
             if await bot.check():
                 await bot.start_session()
-                await bot.change_profile()
                 await bot.stop_session()
                 repo.sleeps.create(session=session, time_second=NEW_SESSION_SLEEP_SEC)
                 asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
@@ -201,9 +200,15 @@ class CheckerAction:
         self.logger("wait_order_check")
         for order in repo.orders.get_all(state=OrderStates.waiting, type=OrderTypes.ads):
             for od in repo.orders_groups.get_all(order=order):
-                group = repo.groups.get(od.group_id)
+                group: Group = repo.groups.get(od.group_id)
                 if group.state != GroupStates.active:
                     continue
+                if group.type == GroupType.inactive:
+                    if not group.can_image:
+                        repo.groups.update(group, state=GroupStates.inactive)
+                        continue
+                    group = repo.groups.update(group, can_image=False, type=GroupType.link)
+
                 last_message = repo.messages.get_last(order=order, group=group)
                 if last_message:
                     self.logger(f"Group_{group.id}. Message {last_message} have state {last_message.state}")
@@ -228,3 +233,27 @@ class CheckerAction:
                                 session=session, group=group,
                                 type=SessionTaskType.join_group, state=SessionTaskStates.enable
                             )
+
+    # Personals Check
+
+    async def personals_check(self):
+        self.logger("personals_check")
+        for session in repo.sessions.get_all(state=SessionStates.free):
+            sp = repo.sessions_personals.get_all(session=session)
+            if len(sp) >= 4:  # All have
+                continue
+
+            if not sp:  # Not all
+                if repo.sessions_tasks.get_all(state=SessionTaskStates.enable, type=SessionTaskType.change_fi):
+                    continue
+                repo.sessions_tasks.create(
+                    session=session,
+                    type=SessionTaskType.change_fi, state=SessionTaskStates.enable
+                )
+            else:  # Not avatar
+                if repo.sessions_tasks.get_all(state=SessionTaskStates.enable, type=SessionTaskType.change_avatar):
+                    continue
+                repo.sessions_tasks.create(
+                    session=session,
+                    type=SessionTaskType.change_avatar, state=SessionTaskStates.enable
+                )

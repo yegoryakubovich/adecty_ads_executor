@@ -13,20 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from database import db_manager, repo
+from database.base_repository import BaseRepository
+from database.models import SessionPersonal, Session, PersonalSex
 
-from .country import countries
-from .country_link import countries_links
-from .group import groups
-from .message import messages
-from .order import orders
-from .order_group import orders_groups
-from .personals import personals
-from .proxy import proxies
-from .session import sessions
-from .session_group import sessions_groups
-from .session_proxy import sessions_proxies
-from .session_task import sessions_tasks
-from .sessions_personals import sessions_personals
-from .shop import shops
-from .sleep import sleeps
-from .user import users
+
+class SessionPersonalRepository(BaseRepository):
+    @db_manager
+    def get_sex(self, session: Session) -> PersonalSex:
+        sps = self.get_all(session=session)
+        for sp in sps:
+            personal = repo.personals.get(sp.personal_id)
+            if personal.sex == PersonalSex.unisex:
+                continue
+            return personal.sex
+
+
+sessions_personals = SessionPersonalRepository(SessionPersonal)

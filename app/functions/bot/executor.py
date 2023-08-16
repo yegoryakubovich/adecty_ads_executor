@@ -51,6 +51,9 @@ class BotExecutorAction(BaseExecutorAction):
     async def get_chat(self, chat_id: [str, int]) -> types.Chat:
         return await self.client.get_chat(chat_id=chat_id)
 
+    async def get_users(self, user_id: [str, int]) -> types.User:
+        return await self.client.get_users(user_ids=user_id)
+
     async def join_chat_by_group(self, group: Group) -> [types.Chat, str]:
         try:
             return await self.join_chat(chat_id=group.name)
@@ -65,11 +68,10 @@ class BotExecutorAction(BaseExecutorAction):
         except errors.InviteRequestSent:
             self.logger(f"Запрос в группу {group.name} отправлен от сессии #{self.session}")
             return "InviteRequestSent"
+        except errors.ChatInvalid:
+            return "ChatInvalid"
 
-    async def get_users(self, user_id: [str, int]) -> types.User:
-        return await self.client.get_users(user_ids=user_id)
-
-    async def join_chat(self, chat_id: [str, int]) -> types.Chat:
+    async def join_chat(self, chat_id: [str, int]) -> [types.Chat, str]:
         return await self.client.join_chat(chat_id=chat_id)
 
     async def get_messages(self, chat_id: [str, int], msg_id: int) -> types.Message:

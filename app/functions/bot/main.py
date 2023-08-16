@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 import asyncio
+from random import choice
 from typing import Optional
 
 from loguru import logger
@@ -25,7 +26,7 @@ from core.constants import SEND_MSG_DELAY_MSG, ASSISTANT_SLEEP_SEC, SPAM_MESSAGE
     SPAM_REPLY_ANSWERS, SPAM_FREE_MESSAGE, ANSWER_MESSAGE
 from database import repo
 from database.models import Session, SessionProxy, SessionTask, SessionStates, GroupStates, MessageStates, \
-    Order, Group, SessionGroup, User
+    Order, Group, SessionGroup, User, PersonalTypes, PersonalSex, GroupType
 from database.models.session_group import SessionGroupState
 from database.models.session_task import SessionTaskType, SessionTaskStates
 from functions.bot.executor import BotExecutorAction
@@ -82,15 +83,6 @@ class BotAction:
         except:
             await self.executor.session_banned()
             return False
-
-    async def change_profile(self):
-        self.logger("change_profile")
-        items = repo.personals.get_random_pack()
-        self.logger(items)
-        if items[0] or items[1] or items[2]:
-            await self.executor.update_profile(name=items[0], surname=items[1], about=items[2])
-        # if items[3]:
-        #     await self.executor.update_profile_photo(photo=items[3])
 
     async def spam_bot_check(self):
         try:
@@ -183,6 +175,7 @@ class BotAction:
         msg = await self.executor.get_messages(chat_id=group.name, msg_id=message.message_id)
         if msg.empty:
             repo.messages.update(message, state=MessageStates.deleted)
+            repo.groups.update_to_next_type(group)
         else:
             if message.message_id in chat_messages_ids:
                 return
@@ -206,25 +199,27 @@ class BotAction:
         repo.groups.update(group, subscribers=chat.members_count)
 
         image = order.image_link if group.can_image else None
-        if group.can_message:
+        if group.type == GroupType.link:
             text = order.message
-        elif group.can_message_no_url:
+        elif group.type == GroupType.no_link:
             text = order.message_no_link
-        elif group.can_message_short:
+        elif group.type == GroupType.short:
             text = order.message_short
-        else:
+        elif group.type == GroupType.replace:
             text = await self.executor.replace_text(order.message_short)
+        else:
+            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="No find text")
+            return
 
         msg = await self.executor.send_message(chat_id=group.name, text=text, photo=image)
 
         if isinstance(msg, str):
             repo.sessions_groups.update(sg, state=SessionGroupState.banned)
-            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)
-            return
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)
 
         if msg.empty:
-            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Empty")
-            return
+            repo.groups.update_to_next_type(group)
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Empty")
 
         if msg.from_user:
             await self.executor.update_session(msg.from_user)
@@ -251,8 +246,9 @@ class BotAction:
         user: User = repo.users.get(id=task.user_id)
 
         if not user.username:
-            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Username not found")
-            return
+            return repo.sessions_tasks.update(
+                task, state=SessionTaskStates.abortively, state_description="Username not found"
+            )
 
         tg_user = await self.executor.get_users(user.username)
         if tg_user:
@@ -263,12 +259,10 @@ class BotAction:
         )
 
         if isinstance(msg, str):
-            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)
-            return
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)
 
         if msg.empty:
-            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Empty")
-            return
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Empty")
 
         if msg.from_user:
             await self.executor.update_session(msg.from_user)
@@ -282,6 +276,34 @@ class BotAction:
         await self.executor.send_message_mailing_log(
             session_id=self.session.id, user_id=user.id, username=user.username
         )
+
+    async def task_change_fi(self, task: SessionTask):
+        self.logger("task_change_fi")
+        my_sex = choice([PersonalSex.man, PersonalSex.woman])
+
+        name = repo.personals.get_random(p_type=PersonalTypes.name, sex=my_sex)
+        surname = repo.personals.get_random(p_type=PersonalTypes.surname, sex=my_sex)
+        about = repo.personals.get_random(p_type=PersonalTypes.about, sex=my_sex)
+        if not name and not surname and not about:
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Not data")
+        await self.executor.update_profile(name=name.value, surname=surname.value, about=about.value)
+        if name:
+            repo.sessions_personals.create(session=self.session, personal=name, type=PersonalTypes.name)
+        if surname:
+            repo.sessions_personals.create(session=self.session, personal=surname, type=PersonalTypes.surname)
+        if about:
+            repo.sessions_personals.create(session=self.session, personal=about, type=PersonalTypes.about)
+        repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
+
+    async def task_change_avatar(self, task: SessionTask):
+        self.logger("task_change_avatar")
+        my_sex = repo.sessions_personals.get_sex(session=self.session)
+        avatar = repo.personals.get_random(p_type=PersonalTypes.avatar, sex=my_sex)
+        if not avatar:
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Not data")
+        await self.executor.update_profile_photo(photo=avatar.value)
+        repo.sessions_personals.create(session=self.session, personal=avatar, type=PersonalTypes.avatar)
+        repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
 
     """
 
@@ -306,20 +328,26 @@ class BotAction:
                         for task in my_tasks:
                             await self.start_answers()
                             await asyncio.sleep(await smart_sleep(self.session))
-                            if task.type == SessionTaskType.join_group:
+                            if task.type == SessionTaskType.join_group:  # JOIN GROUP
                                 await self.task_join_group(task)
                                 await asyncio.sleep(await smart_create_sleep(self.session))
-                            elif task.type == SessionTaskType.check_group:
+                            elif task.type == SessionTaskType.check_group:  # CHECK GROUP
                                 await self.task_check_group(task)
                                 await asyncio.sleep(await smart_create_sleep(self.session))
-                            elif task.type == SessionTaskType.check_message:
-                                await self.task_check_message(task)
-                            elif task.type == SessionTaskType.send_by_order:
+                            elif task.type == SessionTaskType.send_by_order:  # SEND BY ORDER
                                 await self.task_send_by_order(task)
                                 await asyncio.sleep(await smart_create_sleep(self.session))
-                            elif task.type == SessionTaskType.send_by_mailing:
+                            elif task.type == SessionTaskType.send_by_mailing:  # SEND BY MAILING
                                 await self.task_send_by_mailing(task)
                                 await asyncio.sleep(await smart_create_sleep(self.session))
+                            elif task.type == SessionTaskType.change_fi:  # CHANGE FI
+                                await self.task_change_fi(task)
+                                await asyncio.sleep(await smart_create_sleep(self.session))
+                            elif task.type == SessionTaskType.change_avatar:  # CHANGE AVATAR
+                                await self.task_change_avatar(task)
+                                await asyncio.sleep(await smart_create_sleep(self.session))
+                            elif task.type == SessionTaskType.check_message:  # CHECK MESSAGE
+                                await self.task_check_message(task)
                             else:
                                 self.logger(f"Task not found {task.type}")
                             my_tasks = repo.sessions_tasks.get_all(
@@ -388,11 +416,11 @@ class BotAction:
                         )
         except errors.UserDeactivatedBan:
             self.logger("UserDeactivatedBan")
-            await self.executor.session_banned()
-            return False
+            return await self.executor.session_banned()
         except errors.AuthKeyDuplicated:
             self.logger("AuthKeyDuplicated")
-            await self.executor.session_banned()
-            return
+            return await self.executor.session_banned()
+        except errors.ChannelPrivate:
+            self.logger("ChannelPrivate")
         except errors.InputUserDeactivated:
             self.logger("InputUserDeactivated")

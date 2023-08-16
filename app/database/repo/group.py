@@ -16,7 +16,7 @@
 from core.default_data import groups_list
 from database import db_manager
 from database.base_repository import BaseRepository
-from database.models import Group
+from database.models import Group, GroupType
 
 
 class GroupRepository(BaseRepository):
@@ -27,6 +27,22 @@ class GroupRepository(BaseRepository):
             if item.count("@"):
                 item = item[1:]
             self.model.get_or_create(name=item)
+
+    @db_manager
+    def update_to_next_type(self, group: Group):
+        g_type = None
+        if group.type == GroupType.link:
+            g_type = GroupType.no_link
+        elif group.type == GroupType.no_link:
+            g_type = GroupType.short
+        elif group.type == GroupType.short:
+            g_type = GroupType.replace
+        elif group.type == GroupType.replace:
+            g_type = GroupType.inactive
+
+        if g_type:
+            self.update(group, type=g_type)
+
 
 
 groups = GroupRepository(Group)

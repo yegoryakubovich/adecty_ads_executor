@@ -13,20 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from peewee import PrimaryKeyField, ForeignKeyField, CharField
 
-from .country import countries
-from .country_link import countries_links
-from .group import groups
-from .message import messages
-from .order import orders
-from .order_group import orders_groups
-from .personals import personals
-from .proxy import proxies
-from .session import sessions
-from .session_group import sessions_groups
-from .session_proxy import sessions_proxies
-from .session_task import sessions_tasks
-from .sessions_personals import sessions_personals
-from .shop import shops
-from .sleep import sleeps
-from .user import users
+from database.db import BaseModel
+from . import Personal
+from .sessions import Session
+
+
+class SessionPersonal(BaseModel):
+    id = PrimaryKeyField()
+
+    session = ForeignKeyField(Session, to_field='id')
+    personal = ForeignKeyField(Personal, to_field='id')
+
+    type = CharField(max_length=64)
+
+    class Meta:
+        db_table = 'sessions_personals'

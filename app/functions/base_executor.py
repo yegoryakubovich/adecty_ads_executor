@@ -100,10 +100,11 @@ class BaseExecutorAction:
             f"",
             f"#send_answer #session_{session_id} #user_{user_id}"
         ]))
+
     async def send_message_mailing_log(self, session_id: int, username: str, user_id: int):
         user_link = await self.create_user_link(username=username, user_id=user_id)
         return await self.send_log_message(text="\n".join([
             f"️✉️ Сессия #{session_id} направила сообщение рассылки клиенту {user_link}",
             f"",
-            f"#send_answer #session_{session_id} #user_{user_id}"
+            f"#send_mailing #session_{session_id} #user_{user_id}"
         ]))

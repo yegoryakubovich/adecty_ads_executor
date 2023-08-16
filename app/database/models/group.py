@@ -24,6 +24,14 @@ class GroupStates:
     inactive = 'inactive'
 
 
+class GroupType:
+    link = 'link'
+    no_link = 'no_link'
+    short = 'short'
+    replace = 'replace'
+    inactive = 'inactive'
+
+
 class Group(BaseModel):
     id = PrimaryKeyField()
     name = CharField(max_length=128)
@@ -31,10 +39,7 @@ class Group(BaseModel):
     subscribers = IntegerField()  # Количество подписчиков
 
     can_image = BooleanField(default=True)  # Отправка с картинками
-    can_message = BooleanField(default=False)  # Отправка ссылок
-    can_message_no_url = BooleanField(default=True)  # Отправки без ссылок
-    can_message_short = BooleanField(default=True)  # Отправки короткого текста / Если False, то замена символами
-
+    type = CharField(max_length=32, default=GroupType.link, null=True)  # Отправка ссылок
     captcha_have = BooleanField(default=False)
     captcha_type = CharField(max_length=128)
     captcha_data = CharField(max_length=128)

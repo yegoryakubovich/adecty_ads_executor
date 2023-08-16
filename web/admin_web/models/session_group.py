@@ -17,40 +17,30 @@ from datetime import datetime
 
 from django.db import models
 
-
-class PersonalTypes:
-    name = 'name'
-    surname = 'surname'
-    avatar = 'avatar'
-    about = 'about'
-
-    choices = (
-        (name, name), (surname, surname), (avatar, avatar), (about, about)
-    )
+from admin_web.models import Session, Group
 
 
-class PersonalSex:
-    man = 'man'
-    woman = 'woman'
-    unisex = 'unisex'
+class SessionGroupState:
+    active = 'active'
+    banned = 'banned'
 
-    choices = (
-        (man, man), (woman, woman), (unisex, unisex)
-    )
+    choices = ((active, active), (banned, banned))
 
 
-class Personal(models.Model):
+class SessionGroup(models.Model):
     class Meta:
-        db_table = 'personals'
-        verbose_name = 'Персонал'
-        verbose_name_plural = 'Персонали'
+        db_table = 'sessions_groups'
+        verbose_name = 'Связь групп'
+        verbose_name_plural = 'Связи групп'
 
     id = models.AutoField(primary_key=True)
     created = models.DateTimeField(default=datetime.utcnow, verbose_name="Время создания")
 
-    type = models.CharField(max_length=64, choices=PersonalTypes.choices, verbose_name="Тип")
-    value = models.CharField(max_length=256, verbose_name="Значение")
-    sex = models.CharField(max_length=256, choices=PersonalSex.choices, verbose_name="Пол")
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, verbose_name="Сессия",
+                                related_name="session_group_session")
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name="Группа",
+                              related_name="session_group_group")
+    state = models.CharField(max_length=64, choices=SessionGroupState.choices, verbose_name="Состояние")
 
     def __str__(self):
-        return f"{self.id} ({self.type}) - {self.value}"
+        return f"{self.session}-{self.group} ({self.state})"

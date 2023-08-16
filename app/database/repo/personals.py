@@ -15,38 +15,43 @@
 #
 from random import choice
 
-from core.default_data import surname_data, names_data
+from core.constants import avatar_path
+from core.default_data import names_man, names_woman, surnames_man, surnames_woman, avatars_man, avatars_woman, \
+    avatars_unisex, about_unisex
 from database import db_manager
 from database.base_repository import BaseRepository
-from database.models import Personal
-from database.models.personal import PersonalTypes
+from database.models import Personal, PersonalTypes, PersonalSex
 
 
 class PersonalRepository(BaseRepository):
 
     @db_manager
     def fill(self):
-        for name in names_data:
-            self.create(type=PersonalTypes.name, value=name)
+        for name in names_man:
+            self.create(type=PersonalTypes.name, value=name, sex=PersonalSex.man)
+        for name in names_woman:
+            self.create(type=PersonalTypes.name, value=name, sex=PersonalSex.woman)
 
-        for surname in surname_data:
-            self.create(type=PersonalTypes.surname, value=surname)
+        for surname in surnames_man:
+            self.create(type=PersonalTypes.surname, value=surname, sex=PersonalSex.man)
+        for surname in surnames_woman:
+            self.create(type=PersonalTypes.surname, value=surname, sex=PersonalSex.woman)
 
-        self.create(type=PersonalTypes.about, value="TG: @fexps_obmen")
-        self.create(type=PersonalTypes.avatar, value="media/bot/avatars/pBIZFD8NqDg.jpg")
+        for avatar_name in avatars_man:
+            self.create(type=PersonalTypes.avatar, value=f"{avatar_path}{avatar_name}", sex=PersonalSex.man)
+        for avatar_name in avatars_woman:
+            self.create(type=PersonalTypes.avatar, value=f"{avatar_path}{avatar_name}", sex=PersonalSex.woman)
+        for avatar_name in avatars_unisex:
+            self.create(type=PersonalTypes.avatar, value=f"{avatar_path}{avatar_name}", sex=PersonalSex.unisex)
+
+        for about in about_unisex:
+            self.create(type=PersonalTypes.about, value=about, sex=PersonalSex.unisex)
 
     @db_manager
-    def get_random_pack(self):
-        names = [item for item in self.get_all(type=PersonalTypes.name)]
-        name = choice(names).value if names else None
-        surnames = [item for item in self.get_all(type=PersonalTypes.surname)]
-        surname = choice(surnames).value if surnames else None
-        abouts = [item for item in self.get_all(type=PersonalTypes.about)]
-        about = choice(abouts).value if abouts else None
-        avatars = [item for item in self.get_all(type=PersonalTypes.avatar)]
-        avatar = choice(avatars).value if avatars else None
-
-        return name, surname, about, avatar
+    def get_random(self, p_type: PersonalTypes, sex: PersonalSex):
+        result = [item for item in self.get_all(type=p_type, sex=PersonalSex.unisex)]
+        result.extend([item for item in self.get_all(type=p_type, sex=sex)])
+        return choice(result) if result else None
 
 
 personals = PersonalRepository(Personal)
