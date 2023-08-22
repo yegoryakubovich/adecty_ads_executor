@@ -49,7 +49,26 @@ groups_list = (
     "renthouselup", "CHchatUA", "phillychat", "NashaPhiladelphia", "Philadelphiachat", "ukrnewyorkgroup", "chatinNJ",
     "movingSF", "chatinSF", "adaptationinsacramento", "sacramentocity", "adaptaciyaUSA", "ponaehali_USA",
     "adaptaciya_UA_USA", "russian_seattle", "chatinSeattle", "NashNY", "Vatandoshim_uz", "USACHATRU",
-    "gofortravel_chat", "usarmenians", "nyjobsusa", "VATANDOSHIM_USA_50_state", "vatandoshlaa"
+    "gofortravel_chat", "usarmenians", "nyjobsusa", "VATANDOSHIM_USA_50_state", "vatandoshlaa", "adaptaciya_ua_usa",
+    "adaptaciyausa", "adaptationinny", "adaptationinsacramento", "ads_california", "ads_new_york", "america_new_york",
+    "askomain", "avitomiami", "biznesdvigusa", "britishcolambia", "brooklynnewyorkjob", "bwfull", "ca_miami_chat",
+    "california_los_angeles1", "california_russian", "california123", "californiaads", "californiajob",
+    "californiarabota", "californiareklama", "calosangeles", "canada_work_life", "chatamerika", "chatinnj",
+    "chatinSeattle", "chatinsf", "chatnewyork1", "chchatua", "chicagochatik", "chicagoil", "creditmebel908203131",
+    "darom_ny", "dogbanusa", "forum_usa", "freeshipping", "gofortravel_chat", "horizont24", "housingnomad", "in_miami",
+    "jobinmoving", "jobs_usa24", "jobsinny", "kg_america", "la_california", "la_services", "lachatik", "liveintheusa",
+    "los_angeles_avito", "los_angeles_ca", "los_angeles_california_usa", "losangeles2021immigrants",
+    "mahallanewyorkjobs", "mayami_360", "mexicochatik", "mexicousa21", "mextous", "miamiarea", "miamiavito",
+    "miamichatik", "miamichatru", "miamihotchat", "movingsf", "multinational_group", "nashaphiladelphia", "nashchicago",
+    "nashlosangeles", "nashmiami", "nashny", "newyork_job", "newyorkchat24", "newyorkchatru", "newyorknash1",
+    "nomadsboston", "nomadschicago", "nomadsdc", "nomadsfamily", "nomadsfamilyla", "nomadsfamilyusa", "nomadsmiami",
+    "nomadssd", "nychatik", "nyjobs_usa", "nyjobsusa", "philadelphiachat", "phillychat", "ponaehali_usa",
+    "poputchiki_usa", "rent_miami_rusrek", "rentcarnomad", "renthouselup", "rusoenmexico", "russian_seattle",
+    "russianclassifieds", "russianlo", "sacramentocity", "sfnomad", "skyyogahollywoodfl", "teachbkusa", "telemarketus",
+    "trucker_cargo", "ukrnewyorkgroup", "usa_360", "usa_benefit", "usa_exchange", "usa_job_help", "usa_job_helper",
+    "usachatru", "usaforuz", "usagreen", "usamexico", "usarmenians", "usb_mexico_usa", "used21cars", "uzbeksinusalup",
+    "vatandoshim_usa_50_state", "vatandoshim_uz", "vatandoshimusa", "vatandoshimuzbus", "vhi7f", "vhi7fvhi7f",
+    "workersnomads", "yagonadarchausany"
 )
 
 surnames_man = [

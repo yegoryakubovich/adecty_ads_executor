@@ -16,8 +16,7 @@
 from peewee import PrimaryKeyField, ForeignKeyField, CharField
 
 from database.db import BaseModel
-from . import Personal
-from .sessions import Session
+from . import Personal, Session
 
 
 class SessionPersonal(BaseModel):

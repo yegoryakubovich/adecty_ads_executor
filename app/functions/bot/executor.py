@@ -20,7 +20,8 @@ from loguru import logger
 from pyrogram import Client, types, errors
 
 from database import repo
-from database.models import Session, SessionStates, SessionProxy, Group, SessionGroup, GroupStates, User
+from database.models import Session, SessionStates, SessionProxy, Group, SessionGroup, GroupStates, User, SessionTask, \
+    SessionTaskStates, SessionTaskType
 from database.models.session_group import SessionGroupState
 from functions.base_executor import BaseExecutorAction
 
@@ -70,6 +71,8 @@ class BotExecutorAction(BaseExecutorAction):
             return "InviteRequestSent"
         except errors.ChatInvalid:
             return "ChatInvalid"
+        except errors.ChannelInvalid:
+            return "ChannelInvalid"
 
     async def join_chat(self, chat_id: [str, int]) -> [types.Chat, str]:
         return await self.client.join_chat(chat_id=chat_id)
@@ -95,6 +98,8 @@ class BotExecutorAction(BaseExecutorAction):
             return "UserBannedInChannel"
         except errors.Forbidden:
             return "Forbidden"
+        except errors.PeerFlood:
+            return "PeerFlood"
 
     async def get_chat_history(self, chat_id: [str, int], limit: int = 0):
         try:
@@ -128,10 +133,15 @@ class BotExecutorAction(BaseExecutorAction):
                                           proxy_shop_id=proxy_shop.id if proxy else None,
                                           proxy_shop_name=proxy_shop.name,
                                           messages_send=messages_send)
-            repo.sessions.update(self.session, messages_send=messages_send)
 
         for st in repo.sessions_tasks.get_all(session=self.session):
-            repo.sessions_tasks.remove(st.id)
+            st: SessionTask
+            if st.type == SessionTaskType.send_by_mailing:
+                sessions = repo.sessions.get_all(state=SessionStates.free)
+                if sessions:
+                    repo.sessions_tasks.update(st, session=sessions[0])
+                else:
+                    repo.sessions_tasks.remove(st.id)
         for sp in repo.sessions_proxies.get_all(session=self.session):
             repo.sessions_proxies.remove(sp.id)
         for sg in repo.sessions_groups.get_all(session=self.session):
@@ -145,10 +155,6 @@ class BotExecutorAction(BaseExecutorAction):
         updates = {}
         if self.session.username != tg_user.username:
             updates['username'] = tg_user.username
-        if self.session.first_name != tg_user.first_name:
-            updates['first_name'] = tg_user.first_name
-        if self.session.last_name != tg_user.last_name:
-            updates['last_name'] = tg_user.last_name
         if self.session.tg_user_id != tg_user.id:
             updates['tg_user_id'] = tg_user.id
 

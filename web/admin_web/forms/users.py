@@ -17,11 +17,14 @@ from django import forms
 
 from admin_web.models import Order, OrderTypes
 
+def get_choice():
+    return [(order.id, f"{order.id} - {order.name}") for order in Order.objects.filter(type=OrderTypes.mailing).all()]
+
 
 class AddUsersForm(forms.Form):
     users = forms.CharField(widget=forms.Textarea, label="Пользователи через запятую", required=True)
 
 
 class MailingUsersForm(forms.Form):
-    choices = [(order.id, f"{order.id} - {order.name}") for order in Order.objects.filter(type=OrderTypes.mailing).all()]
-    order = forms.ChoiceField(choices=choices, label="Выбор ордера", required=True)
+    order = forms.ChoiceField(choices=get_choice, label="Выбор ордера", required=True)
+

@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from .country import countries
 from .country_link import countries_links
 from .group import groups

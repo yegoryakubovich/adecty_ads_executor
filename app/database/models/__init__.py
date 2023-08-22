@@ -37,7 +37,7 @@ from .session_task import SessionTask, SessionTaskStates, SessionTaskType
 from .sessions_personals import SessionPersonal
 
 all_models = (
-    Country, Group, Order, Shop, Personal, User,
+    Country, Group, Order, Personal, Shop, User,
     Proxy, Session, GroupCountry, OrderGroup, CountryLink,
     Sleep, Message, SessionGroup, SessionProxy, SessionTask, SessionPersonal
 )

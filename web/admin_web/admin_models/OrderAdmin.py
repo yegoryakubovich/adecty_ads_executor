@@ -16,12 +16,14 @@
 from django.contrib import admin
 
 from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
 from admin_web.models import Order
 
 
 @admin.register(Order, site=admin_site)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ("name", "state", "type", "datetime_stop", "created")
+    search_fields = ("id",)
     list_filter = ("state", "type", "created")
     readonly_fields = ("id", "created")
-    list_per_page = 1000
+    list_per_page = max_rows

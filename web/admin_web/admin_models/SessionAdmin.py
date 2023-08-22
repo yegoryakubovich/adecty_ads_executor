@@ -18,8 +18,9 @@ from datetime import timedelta, datetime
 from django.contrib import admin
 
 from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
 from admin_web.models import Session, Message, Sleep, SleepStates, SessionStates, SessionTask, SessionTaskStates, \
-    SessionGroup, SessionGroupState
+    SessionGroup, SessionGroupState, Personal, SessionPersonal, PersonalTypes
 
 
 @admin.action(description="В work")
@@ -66,17 +67,15 @@ class SessionTaskInline(admin.TabularInline):
 @admin.register(Session, site=admin_site)
 class SessionAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "phone", "username", "first_name", "last_name", "country", "shop", "state", "created",
+        "id", "phone", "username", "name", "surname", "country", "shop", "state", "created",
         "message_send_now", "sleep_now", "work", "groups_count"
     )
+    search_fields = ("id",)
     list_filter = ("state", "work")
-    readonly_fields = ("id", "phone", "username", "first_name", "last_name", "tg_user_id", "created")
+    readonly_fields = ("id", "phone", "username", "tg_user_id", "created", "work")
     actions = [to_in_work, to_free, to_wait]
     inlines = [SessionTaskInline]
-    list_per_page = 1000
-
-    def has_add_permission(self, request):
-        return False
+    list_per_page = max_rows
 
     @admin.display(description="Сообщений")
     def message_send_now(self, model: Session):
@@ -96,3 +95,19 @@ class SessionAdmin(admin.ModelAdmin):
         if groups:
             return f"{len(groups)}"
         return f"0"
+
+    @admin.display(description="Имя")
+    def name(self, model: Session):
+        sp = SessionPersonal.objects.filter(session=model, type=PersonalTypes.name).all()
+        if sp:
+            personal = Personal.objects.get(id=sp[0].personal_id)
+            return personal.value
+        return None
+
+    @admin.display(description="Фамилия")
+    def surname(self, model: Session):
+        sp = SessionPersonal.objects.filter(session=model, type=PersonalTypes.surname).all()
+        if sp:
+            personal = Personal.objects.get(id=sp[0].personal_id)
+            return personal.value
+        return None

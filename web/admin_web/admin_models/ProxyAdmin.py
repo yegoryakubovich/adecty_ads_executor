@@ -16,6 +16,7 @@
 from django.contrib import admin
 
 from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
 from admin_web.models import Proxy, SessionProxy, ProxyStates
 
 
@@ -29,10 +30,11 @@ def state_to_active(model_admin: admin.ModelAdmin, request, queryset):
 @admin.register(Proxy, site=admin_site)
 class ProxyAdmin(admin.ModelAdmin):
     list_display = ("id", "country", "ip_port", "user", "password", "type", "state", "created", "session_count")
+    search_fields = ("id",)
     list_filter = ("state", "type")
     readonly_fields = ("id", "created")
     actions = [state_to_active]
-    list_per_page = 1000
+    list_per_page = max_rows
 
     def has_add_permission(self, request):
         return False

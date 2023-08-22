@@ -16,6 +16,7 @@
 from django.contrib import admin
 
 from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
 from admin_web.models import SessionTask
 
 
@@ -24,9 +25,10 @@ class SessionTaskAdmin(admin.ModelAdmin):
     list_display = (
         "id", "session", "user", "group", "order", "message", "state", "state_description", "type", "created"
     )
+    search_fields = ("id",)
     list_filter = ("state", "type", "state_description", "created")
     readonly_fields = ("id", "created")
-    list_per_page = 1000
+    list_per_page = max_rows
 
     def has_add_permission(self, request):
         return False

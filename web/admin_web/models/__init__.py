@@ -14,14 +14,11 @@
 # limitations under the License.
 #
 """FIRST"""
-# from .account import Account
-# from .admin import Admin
 from .country import Country
 from .group import Group, GroupStates
 from .order import Order, OrderStates, OrderTypes
-from .personal import Personal
+from .personal import Personal, PersonalTypes, PersonalSex
 from .shop import Shop
-# from .tag import Tag
 from .user import User
 
 """SECOND"""
@@ -37,5 +34,6 @@ from .session import Session, SessionStates
 from .sleep import Sleep, SleepStates
 from .message import Message, MessageStates
 from .session_group import SessionGroup, SessionGroupState
+from .session_personal import SessionPersonal
 from .session_proxy import SessionProxy
 from .session_task import SessionTask, SessionTaskStates, SessionTaskType

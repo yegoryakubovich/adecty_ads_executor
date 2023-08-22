@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from peewee import PrimaryKeyField, BigIntegerField, CharField, ForeignKeyField, IntegerField, BooleanField
+from peewee import PrimaryKeyField, BigIntegerField, CharField, ForeignKeyField, BooleanField
 
 from database.db import BaseModel
 from . import Shop
@@ -41,13 +41,9 @@ class Session(BaseModel):
 
     tg_user_id = BigIntegerField()
     username = CharField(max_length=128, null=True)
-    first_name = CharField(max_length=128, null=True)
-    last_name = CharField(max_length=128, null=True)
 
     state = CharField(max_length=64, default=SessionStates.waiting)
-    state_description = CharField(max_length=2056, null=True)
     work = BooleanField(default=False)
-    messages_send = IntegerField()
 
     class Meta:
         db_table = 'sessions'

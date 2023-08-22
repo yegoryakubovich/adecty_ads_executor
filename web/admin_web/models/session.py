@@ -52,15 +52,10 @@ class Session(models.Model):
 
     tg_user_id = models.BigIntegerField(verbose_name="Телеграм ID")
     username = models.CharField(max_length=128, null=True, blank=True, verbose_name="USERNAME")
-    first_name = models.CharField(max_length=128, null=True, blank=True, verbose_name="Имя")
-    last_name = models.CharField(max_length=128, null=True, blank=True, verbose_name="Фамилия")
 
     state = models.CharField(max_length=64, default=SessionStates.waiting, choices=SessionStates.choices,
                              verbose_name="Состояние")
-    state_description = models.CharField(max_length=2056, null=True, blank=True, verbose_name="Описание состояния")
     work = models.BooleanField(default=False, verbose_name="Запущен")
-
-    messages_send = models.IntegerField(null=True, blank=True, verbose_name="Сообщений отправлено")
 
     def __str__(self):
         return f"{self.id} ({self.state})"

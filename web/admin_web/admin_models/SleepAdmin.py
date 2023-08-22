@@ -18,15 +18,17 @@ from datetime import timedelta, datetime
 from django.contrib import admin
 
 from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
 from admin_web.models import Sleep, SleepStates
 
 
 @admin.register(Sleep, site=admin_site)
 class SleepAdmin(admin.ModelAdmin):
     list_display = ("id", "session", "time_second", "state", "created", "sleep_now")
+    search_fields = ("id",)
     list_filter = ("state", "created")
     readonly_fields = ("id", "created")
-    list_per_page = 1000
+    list_per_page = max_rows
 
     def has_add_permission(self, request):
         return False

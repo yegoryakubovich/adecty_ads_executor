@@ -22,6 +22,7 @@ from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
 from admin_web.models import Group, Message, MessageStates, SessionTask, GroupStates, SessionGroup, SessionGroupState
 from admin_web.models.session_task import SessionTaskStates, SessionTaskType
 
@@ -119,10 +120,11 @@ class GroupAdmin(admin.ModelAdmin):
         "delete_count", "presence", "abortively_percent", "sessions_count"
     )
     list_filter = ("state", "type", "created")
+    search_fields = ("id",)
     readonly_fields = ("id", "created")
     inlines = [SessionTaskInline]
     actions = [state_to_inactive, state_to_active, state_to_waiting, export_presence]
-    list_per_page = 1000
+    list_per_page = max_rows
 
     def has_add_permission(self, request):
         return False

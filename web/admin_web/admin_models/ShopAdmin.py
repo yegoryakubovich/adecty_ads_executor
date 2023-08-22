@@ -16,14 +16,16 @@
 from django.contrib import admin
 
 from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
 from admin_web.models import Shop, Session, Proxy
 
 
 @admin.register(Shop, site=admin_site)
 class ShopAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "link", "created", "session_count", "proxy_count")
+    search_fields = ("id",)
     readonly_fields = ("id", "created")
-    list_per_page = 1000
+    list_per_page = max_rows
 
     def has_add_permission(self, request):
         return False

@@ -16,15 +16,17 @@
 from django.contrib import admin
 
 from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
 from admin_web.models import Message
 
 
 @admin.register(Message, site=admin_site)
 class MessageAdmin(admin.ModelAdmin):
     list_display = ("id", "session", "user", "order", "group", "state", "message_id", "text", "created")
+    search_fields = ("id",)
     list_filter = ("state", "created")
     readonly_fields = ("id", "created")
-    list_per_page = 1000
+    list_per_page = max_rows
 
     def has_add_permission(self, request):
         return False

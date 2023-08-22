@@ -240,17 +240,21 @@ class CheckerAction:
         self.logger("personals_check")
         for session in repo.sessions.get_all(state=SessionStates.free):
             sp = repo.sessions_personals.get_all(session=session)
-            if len(sp) >= 4:  # All have
-                continue
+            self.logger(sp)
 
             if not sp:  # Not all
+                self.logger(f"#{session.id} NOT ALL")
                 if repo.sessions_tasks.get_all(state=SessionTaskStates.enable, type=SessionTaskType.change_fi):
                     continue
                 repo.sessions_tasks.create(
                     session=session,
                     type=SessionTaskType.change_fi, state=SessionTaskStates.enable
                 )
+            elif len(sp) >= 4:
+                self.logger(f"#{session.id} ALL")
+                continue
             else:  # Not avatar
+                self.logger(f"#{session.id} AVATAR")
                 if repo.sessions_tasks.get_all(state=SessionTaskStates.enable, type=SessionTaskType.change_avatar):
                     continue
                 repo.sessions_tasks.create(

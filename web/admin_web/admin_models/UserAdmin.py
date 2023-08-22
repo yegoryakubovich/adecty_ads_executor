@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.http import HttpResponseRedirect
 
 from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
 from admin_web.models import User
 
 
@@ -30,10 +31,11 @@ def select_from_mailing(model_admin: admin.ModelAdmin, request, queryset):
 @admin.register(User, site=admin_site)
 class UserAdmin(admin.ModelAdmin):
     list_display = ("id", "tg_user_id", "username", "first_name", "last_name", "created")
+    search_fields = ("id",)
     list_filter = ("created",)
     readonly_fields = ("id", "created")
     actions = [select_from_mailing]
-    list_per_page = 1000
+    list_per_page = max_rows
 
     def has_add_permission(self, request):
         return False
