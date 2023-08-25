@@ -21,9 +21,9 @@ from pyrogram import Client, types, errors
 
 from database import repo
 from database.models import Session, SessionStates, SessionProxy, Group, SessionGroup, GroupStates, User, SessionTask, \
-    SessionTaskStates, SessionTaskType
-from database.models.session_group import SessionGroupState
-from functions.base_executor import BaseExecutorAction
+    SessionTaskType
+from database.models.sessions_groups import SessionGroupState
+from functions import BaseExecutorAction
 
 
 class BotExecutorAction(BaseExecutorAction):

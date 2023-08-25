@@ -14,5 +14,6 @@
 # limitations under the License.
 #
 
+from .base_executor import BaseExecutorAction
 from .bot import BotAction
 from .other import AssistantAction

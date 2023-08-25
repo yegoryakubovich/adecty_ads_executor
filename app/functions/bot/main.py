@@ -21,8 +21,8 @@ from pyrogram import Client, errors, enums
 
 from core.constants import ASSISTANT_SLEEP_SEC, ANSWER_MESSAGE
 from database import repo
-from database.models import Session, SessionProxy, SessionStates, MessageStates, User
-from database.models.session_task import SessionTaskType, SessionTaskStates
+from database.models import Session, SessionProxy, SessionStates, MessageStates, User, SessionTaskType, \
+    SessionTaskStates
 from functions.bot.executor import BotExecutorAction
 from functions.bot.simulator import SimulatorAction
 from functions.bot.tasker import BotTaskerAction

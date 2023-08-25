@@ -17,7 +17,7 @@ from peewee import PrimaryKeyField, BigIntegerField, CharField, ForeignKeyField,
 
 from database.db import BaseModel
 from . import Shop
-from .country import Country
+from .countries import Country
 
 
 class SessionStates:

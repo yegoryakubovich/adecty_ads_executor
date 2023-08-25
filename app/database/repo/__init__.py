@@ -13,18 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from .country import countries
-from .country_link import countries_links
-from .group import groups
-from .message import messages
-from .order import orders
+from .countries import countries
+from .countries_links import countries_links
+from .groups import groups
+from .messages import messages
 from .order_group import orders_groups
+from .orders import orders
+from .orders_personals import orders_personals
+from .orders_users import orders_users
 from .personals import personals
-from .proxy import proxies
-from .session import sessions
+from .proxies import proxies
 from .session_group import sessions_groups
 from .session_proxy import sessions_proxies
 from .session_task import sessions_tasks
+from .sessions import sessions
+from .sessions_orders import sessions_orders
 from .sessions_personals import sessions_personals
 from .shop import shops
 from .sleep import sleeps

@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from random import choice
 
 from aiogram import Bot
@@ -12,6 +13,8 @@ class BaseExecutorAction:
     def __init__(self):
         self.token = settings.TELEGRAM_TOKEN
         self.chat_id = settings.TELEGRAM_CHAT_ID
+        self.channel_id = settings.TELEGRAM_CHANNEL_ID
+        self.channel_msg_id = settings.TELEGRAM_CHANNEL_MSG_ID
 
     """COMMON"""
 
@@ -21,13 +24,6 @@ class BaseExecutorAction:
                 text = text.replace(latter, choice(LATTERS[latter]))
         return text
 
-    """LOGGING"""
-
-    async def send_log_message(self, text):
-        bot = Bot(token=self.token, parse_mode="HTML")
-        return await bot.send_message(chat_id=self.chat_id, text=text, disable_web_page_preview=True)
-        return logger.info(text)
-
     @staticmethod
     async def create_link(group_name, post_id):
         return f"<a href='https://t.me/{group_name}/{post_id}'>@{group_name}</a>"
@@ -35,6 +31,14 @@ class BaseExecutorAction:
     @staticmethod
     async def create_user_link(username, user_id):
         return f"<a href='tg://user?id={user_id}'>@{username}</a>"
+
+    """LOGGING"""
+
+    # SEND MESSAGE
+    async def send_log_message(self, text):
+        bot = Bot(token=self.token, parse_mode="HTML")
+        return await bot.send_message(chat_id=self.chat_id, text=text, disable_web_page_preview=True)
+        return logger.info(text)
 
     async def proxy_disable_log(self, proxy_id: int,
                                 proxy_shop_id: int, proxy_shop_name: str):
@@ -101,10 +105,21 @@ class BaseExecutorAction:
             f"#send_answer #session_{session_id} #user_{user_id}"
         ]))
 
-    async def send_message_mailing_log(self, session_id: int, username: str, user_id: int):
+    async def send_message_mailing_log(self, session_id: int, username: str, user_id: int, order_name: str):
         user_link = await self.create_user_link(username=username, user_id=user_id)
         return await self.send_log_message(text="\n".join([
-            f"️✉️ Сессия #{session_id} направила сообщение рассылки клиенту {user_link}",
+            f"️✉️ Сессия #{session_id} направила сообщение рассылки {order_name} клиенту {user_link}",
             f"",
             f"#send_mailing #session_{session_id} #user_{user_id}"
         ]))
+
+    # Change message
+
+    async def change_log_message(self, text: str, presence_count: int, all_count: int):
+        bot = Bot(token=self.token, parse_mode="HTML")
+        data = (datetime.utcnow() + timedelta(hours=3)).strftime("%d.%m.%y %H:%M")
+        return await bot.edit_message_text(
+            chat_id=self.channel_id, message_id=self.channel_msg_id, disable_web_page_preview=True,
+            text=f"\n".join([f"Отчет присутствия {presence_count}/{all_count}", f"Изменено: {data}",
+                             f"", text])
+        )

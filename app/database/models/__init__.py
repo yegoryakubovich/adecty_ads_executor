@@ -14,30 +14,36 @@
 # limitations under the License.
 #
 """FIRST"""
-from .country import Country
-from .group import Group, GroupStates, GroupType
-from .order import Order, OrderStates, OrderTypes
-from .personal import Personal, PersonalTypes, PersonalSex
-from .shop import Shop
-from .user import User
+from .countries import Country
+from .groups import Group, GroupStates, GroupType
+from .orders import Order, OrderStates, OrderTypes
+from .personals import Personal, PersonalTypes, PersonalSex
+from .shops import Shop
+from .users import User
 
 """SECOND"""
-from .proxy import Proxy, ProxyTypes, ProxyStates
+from .proxies import Proxy, ProxyTypes, ProxyStates
 from .sessions import Session, SessionStates
-from .group_country import GroupCountry
-from .order_group import OrderGroup
-from .country_link import CountryLink
+from .countries_links import CountryLink
 
 """THREE"""
-from .sleep import Sleep, SleepStates
-from .message import Message, MessageStates
-from .session_group import SessionGroup, SessionGroupState
-from .session_proxy import SessionProxy
-from .session_task import SessionTask, SessionTaskStates, SessionTaskType
+from .orders_groups import OrderGroup
+from .orders_users import OrderUser, OrderUserStates
+from .orders_personals import OrderPersonal
+from .groups_countries import GroupCountry
+from .sleeps import Sleep, SleepStates
+from .messages import Message, MessageStates
+from .sessions_groups import SessionGroup, SessionGroupState
+from .sessions_orders import SessionOrder
+from .sessions_proxies import SessionProxy
+from .sessions_tasks import SessionTask, SessionTaskStates, SessionTaskType
 from .sessions_personals import SessionPersonal
 
 all_models = (
     Country, Group, Order, Personal, Shop, User,
-    Proxy, Session, GroupCountry, OrderGroup, CountryLink,
-    Sleep, Message, SessionGroup, SessionProxy, SessionTask, SessionPersonal
+    Proxy, Session, CountryLink,
+    Sleep, Message,
+    GroupCountry,
+    OrderGroup, OrderUser, OrderPersonal,
+    SessionGroup, SessionOrder, SessionProxy, SessionTask, SessionPersonal
 )

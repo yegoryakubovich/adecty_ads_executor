@@ -1,0 +1,34 @@
+#
+# (c) 2023, Yegor Yakubovich, yegoryakubovich.com, personal@yegoryakybovich.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+from django.contrib import admin
+
+from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
+from admin_web.admin_models.GroupCountryAdmin.inlines import GroupCountryInline
+from admin_web.admin_models.ProxyAdmin.inlines import ProxyInline
+from admin_web.admin_models.SessionAdmin.inlines import SessionInline
+from admin_web.models import Country
+
+
+@admin.register(Country, site=admin_site)
+class CountryAdmin(admin.ModelAdmin):
+    list_display = ("id", "code", "name", "created")
+    list_filter = ("created",)
+    search_fields = ("id",)
+    readonly_fields = ("id", "created")
+    inlines = [SessionInline, ProxyInline, GroupCountryInline, ]
+    list_per_page = max_rows

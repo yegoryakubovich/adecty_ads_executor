@@ -18,7 +18,7 @@ from typing import List
 from database import db_manager
 from database.base_repository import BaseRepository
 from database.models import SessionTask, Session
-from database.models.session_task import SessionTaskStates
+from database.models.sessions_tasks import SessionTaskStates
 
 
 class SessionTaskRepository(BaseRepository):

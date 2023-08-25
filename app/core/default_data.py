@@ -87,7 +87,7 @@ surnames_man = [
     "Malyshev", "Panov", "Moiseev", "Rumyantsev", "Akimov", "Kondratiev", "Biryukov", "Gorbunov", "Anisimov", "Eremin",
     "Tikhomirov", "Galkin", "Lukyanov", "Mikheev", "Skvortsov", "Yudin", "Belousov", "Nesterov", "Simonov", "Prokofiev",
     "Kharitonov", "Knyazev", "Tsvetkov", "Levin", "Mitrofanov", "Voronov", "Aksenov", "Sofronov", "Maltsev", "Loginov",
-    "Gorshkov"
+    "Gorshkov", "Express"
 
 ]
 surnames_woman = [
@@ -107,7 +107,7 @@ surnames_woman = [
     "Kirillova", "Malysheva", "Panova", "Moiseeva", "Rumyantseva", "Akimova", "Kondratieva", "Biryukova", "Gorbunova",
     "Anisimova", "Eremina", "Tikhomirova", "Galkina", "Lukyanova", "Mikheeva", "Skvortsova", "Yudina", "Belousova",
     "Nesterova", "Simonova", "Prokofieva", "Kharitonova", "Knyazeva", "Tsvetkova", "Levina", "Mitrofanova", "Voronova",
-    "Aksenova", "Sofronova", "Maltseva", "Loginova", "Gorshkova"
+    "Aksenova", "Sofronova", "Maltseva", "Loginova", "Gorshkova", "Express"
 ]
 
 names_man = [
@@ -115,7 +115,7 @@ names_man = [
     "Maxim", "Andrey ", "Yaroslav", "Vladimir", "Timofey", "Timur", "Eugene", "Vasily", "Sergei", "Platon", "Ivan",
     "Arseny", "Damir", "Roman", "Artem", "Egor", "Lev", "Stepan", "Robert", "Bogdan", "Miron", "Erik", "Nikita", "Gleb",
     "Stanislav", "Vladislav", "Arthur ", "Anton", "Igor", "Savely", "Mstislav", "Nazar", "Zakhar", "Leonid", "David",
-    "Gennady", "Elizar", "Konstantin", "Vsevolod"
+    "Gennady", "Elizar", "Konstantin", "Vsevolod", "Finance"
 ]
 names_woman = [
     "Avdotya", "Agafya", "Aglaya", "Agnessa", "Agrafena", "Agripina", "Adelaida", "Aksinya", "Akulina", "Aleksandra",
@@ -138,13 +138,13 @@ names_woman = [
     "Sveta", "Svetlana", "Svoboda", "Serafima", "Sivilla", "Slava", "Slaviya", "Smeyana", "Sofiya", "Sofya", "Stasya",
     "Sudislava", "Syuzanna", "Taisiya", "Tamara", "Tatyana", "Tasha", "Tverdimira", "Tverdislava", "Tina", "Tosha",
     "Ulyana", "Ustinya", "Faina", "Fekla", "Feklista", "Feodora", "Filippa", "Foka", "Shura", "Yuliana", "Yuliya",
-    "Yura", "Yustina", "Yan", "Yara", "Yarina", "Yaromira", "Yaroslava"
+    "Yura", "Yustina", "Yan", "Yara", "Yarina", "Yaromira", "Yaroslava", "Finance"
 ]
 
 about_unisex = [
     "TG: @fexps_obmen"
 ]
 
-avatars_man = [f"man_{i + 1}.jpg" for i in range(26)]
-avatars_woman = [f"woman_{i + 1}.jpg" for i in range(34)]
-avatars_unisex = [f"woman_{i + 1}.jpg" for i in range(4)]
+avatars_man = [f"man_{i + 1}.jpg" for i in range(26)] + ["fexps.jpg"]
+avatars_woman = [f"woman_{i + 1}.jpg" for i in range(34)] + ["fexps.jpg"]
+avatars_unisex = [f"woman_{i + 1}.jpg" for i in range(4)] + ["fexps.jpg"]

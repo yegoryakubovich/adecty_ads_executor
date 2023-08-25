@@ -5,10 +5,10 @@ from loguru import logger
 
 from core.constants import URL_FOR_TEST_PROXY, MAX_TASKS_COUNT
 from database import repo
-from database.models import Proxy, ProxyStates, Shop, SessionGroup, Group, SessionStates
-from database.models.session_group import SessionGroupState
-from database.models.session_task import SessionTaskStates, SessionTaskType
-from functions.base_executor import BaseExecutorAction
+from database.models import Proxy, ProxyStates, Shop, SessionGroup, Group, SessionStates, Order
+from database.models.sessions_groups import SessionGroupState
+from database.models.sessions_tasks import SessionTaskStates, SessionTaskType
+from functions import BaseExecutorAction
 from utils.country import get_by_ip
 
 
@@ -62,6 +62,26 @@ class AssistantExecutorAction(BaseExecutorAction):
                     if len(tasks) >= MAX_TASKS_COUNT:
                         continue
                     maybe_sessions.append({'id': session.id, 'tasks': len(tasks)})
+        if maybe_sessions:
+            logger.info(sorted(maybe_sessions, key=itemgetter('tasks')))
+            return repo.sessions.get(sorted(maybe_sessions, key=itemgetter('tasks'))[0]['id'])
+
+    async def get_session_by_order(self, order: Order, spam: bool = False):
+        maybe_sessions = []
+        states = [SessionStates.free]
+        if spam:
+            states.append(SessionStates.spam_block)
+        for so in repo.sessions_orders.get_all(order=order):
+            session = repo.sessions.get(so.session_id)
+            if not session.state in states:
+                continue
+            tasks = []
+            for task in repo.sessions_tasks.get_all(session=session, state=SessionTaskStates.enable):
+                if not task.type == SessionTaskType.check_message:
+                    tasks.append(task)
+            if len(tasks) >= MAX_TASKS_COUNT:
+                continue
+            maybe_sessions.append({'id': session.id, 'tasks': len(tasks)})
         if maybe_sessions:
             logger.info(sorted(maybe_sessions, key=itemgetter('tasks')))
             return repo.sessions.get(sorted(maybe_sessions, key=itemgetter('tasks'))[0]['id'])

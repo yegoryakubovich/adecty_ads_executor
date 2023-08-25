@@ -29,18 +29,23 @@ class MyAdminSite(AdminSite):
         if app_list:
             new_app = {"name": "Основной", "app_label": "admin_web", "has_module_perms": True, "models": []}
 
-            category_1_app = {"name": "Категория 1", "has_module_perms": True, "models": []}
-            category_1_list = [""]
+            addon_app = {"name": "Побочный", "has_module_perms": True, "models": []}
+            addon_app_list = [
+                "SessionProxy", "SessionGroup", "SessionPersonal", "SessionOrder",
+                "GroupCountry",
+                "OrderGroup", "OrderPersonal", "OrderUser",
+                "CountryLink",
+            ]
 
             for app in app_list:
                 for model in app["models"]:
-                    if model["object_name"] in category_1_list:
-                        category_1_app["models"].append(app["models"][app["models"].index(model)])
+                    if model["object_name"] in addon_app_list:
+                        addon_app["models"].append(app["models"][app["models"].index(model)])
                     else:
                         new_app["models"].append(app["models"][app["models"].index(model)])
 
             app_list[0] = new_app
-            app_list.append(category_1_app) if category_1_app["models"] else None
+            app_list.append(addon_app) if addon_app["models"] else None
         return app_list
 
 

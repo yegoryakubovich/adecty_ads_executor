@@ -16,10 +16,14 @@
 from django.urls import path
 
 from admin_web.admin import admin_site
-from admin_web.views import AddUsersView, MailingUsersView
+from admin_web.admin_models.PersonalAdmin.views import LinkedPersonalOrderView, LinkedPersonalOrderURL
+from admin_web.admin_models.SessionAdmin.views import LinkedSessionOrderView, LinkedSessionOrderURL
+from admin_web.admin_models.UserAdmin.views import MailingUsersView, AddUsersView, MailingUsersURL, AddUsersURL
 
 urlpatterns = [
-    path("add_users", AddUsersView.as_view(), name="add_users"),
-    path("mailing_users", MailingUsersView.as_view(), name="mailing_users"),
+    path(AddUsersURL, AddUsersView.as_view(), name="AddUsers"),
+    path(MailingUsersURL, MailingUsersView.as_view(), name="MailingUsers"),
+    path(LinkedSessionOrderURL, LinkedSessionOrderView.as_view(), name="LinkedSessionOrder"),
+    path(LinkedPersonalOrderURL, LinkedPersonalOrderView.as_view(), name="LinkedPersonalOrder"),
     path('', admin_site.urls),
 ]

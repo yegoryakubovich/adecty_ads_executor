@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 from random import choice
+from typing import Any
 
 from loguru import logger
 from pyrogram import Client
@@ -21,11 +22,8 @@ from pyrogram.types import Message
 
 from core.constants import SEND_MSG_DELAY_MSG
 from database import repo
-from database.models import Session
-from database.models import SessionTask, GroupStates, MessageStates, Order, Group, SessionGroup, User, PersonalTypes, \
-    PersonalSex, GroupType
-from database.models.session_group import SessionGroupState
-from database.models.session_task import SessionTaskStates
+from database.models import Session, SessionTask, GroupStates, MessageStates, Order, Group, SessionGroup, User, \
+    PersonalTypes, PersonalSex, GroupType, SessionTaskStates, SessionGroupState, Personal
 from functions.bot.executor import BotExecutorAction
 
 
@@ -36,7 +34,7 @@ class BotTaskerAction:
         self.executor = executor
         self.prefix = f"[TASKER_{self.session.id}]"
 
-    def logger(self, text: str):
+    def logger(self, text: Any):
         logger.info(f"{self.prefix} {text}")
 
     async def join_group(self, task: SessionTask):
@@ -184,19 +182,38 @@ class BotTaskerAction:
         )
 
         await self.executor.send_message_mailing_log(
-            session_id=self.session.id, user_id=user.id, username=user.username
+            session_id=self.session.id, user_id=user.id, username=user.username, order_name=f"{order.id} - {order.name}"
         )
 
     async def change_fi(self, task: SessionTask):
         self.logger("change_fi")
         my_sex = choice([PersonalSex.man, PersonalSex.woman])
-
-        name = repo.personals.get_random(p_type=PersonalTypes.name, sex=my_sex)
-        surname = repo.personals.get_random(p_type=PersonalTypes.surname, sex=my_sex)
-        about = repo.personals.get_random(p_type=PersonalTypes.about, sex=my_sex)
-        if not name and not surname and not about:
+        names = []
+        surnames = []
+        abouts = []
+        for so in repo.sessions_orders.get_all(session=self.session):  # orders by session
+            for op in repo.orders_personals.get_all(order=so.order_id):  # personals by order
+                personal: Personal = repo.personals.get(op.personal_id)
+                if personal.sex in [my_sex, PersonalSex.unisex]:
+                    if personal.type == PersonalTypes.name:
+                        names.append(personal)
+                    elif personal.type == PersonalTypes.surname:
+                        surnames.append(personal)
+                    elif personal.type == PersonalTypes.about:
+                        abouts.append(personal)
+        self.logger(names)
+        self.logger(surnames)
+        self.logger(abouts)
+        if not names and not surnames and not abouts:
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Not data")
-        await self.executor.update_profile(name=name.value, surname=surname.value, about=about.value)
+        name = choice(names) if names else None
+        surname = choice(surnames) if surnames else None
+        about = choice(abouts) if abouts else None
+        await self.executor.update_profile(
+            name=name.value if name else None,
+            surname=surname.value if surname else None,
+            about=about.value if about else None
+        )
         if name:
             repo.sessions_personals.create(session=self.session, personal=name, type=PersonalTypes.name)
         if surname:
@@ -208,9 +225,18 @@ class BotTaskerAction:
     async def change_avatar(self, task: SessionTask):
         self.logger("change_avatar")
         my_sex = repo.sessions_personals.get_sex(session=self.session)
-        avatar = repo.personals.get_random(p_type=PersonalTypes.avatar, sex=my_sex)
-        if not avatar:
+        avatars = []
+        for so in repo.sessions_orders.get_all(session=self.session):  # orders by session
+            for op in repo.orders_personals.get_all(order=so.order_id):  # personals by order
+                personal: Personal = repo.personals.get(op.personal_id)
+                if personal.sex in [my_sex, PersonalSex.unisex]:
+                    if personal.type == PersonalTypes.avatar:
+                        avatars.append(personal)
+        if not avatars:
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Not data")
-        await self.executor.update_profile_photo(photo=avatar.value)
+        avatar = choice(avatars)
+        await self.executor.update_profile_photo(
+            photo=avatar.value if avatar else None
+        )
         repo.sessions_personals.create(session=self.session, personal=avatar, type=PersonalTypes.avatar)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
