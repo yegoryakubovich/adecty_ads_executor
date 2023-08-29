@@ -207,7 +207,7 @@ class CheckerAction:
                     if not group.can_image:
                         repo.groups.update(group, state=GroupStates.inactive)
                         continue
-                    group = repo.groups.update(group, can_image=False, type=GroupType.link)
+                    repo.groups.update(group, can_image=False, type=GroupType.link)
 
                 last_message = repo.messages.get_last(order=order, group=group)
                 if last_message:

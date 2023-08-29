@@ -20,7 +20,7 @@ from loguru import logger
 from pyrogram import Client
 from pyrogram.types import Message
 
-from core.constants import SEND_MSG_DELAY_MSG
+from core.constants import SEND_MSG_DELAY_MSG, KEY_WORDS
 from database import repo
 from database.models import Session, SessionTask, GroupStates, MessageStates, Order, Group, SessionGroup, User, \
     PersonalTypes, PersonalSex, GroupType, SessionTaskStates, SessionGroupState, Personal, OrderUserStates
@@ -79,7 +79,10 @@ class BotTaskerAction:
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
 
         repo.groups.update(group, subscribers=chat.members_count)
-        chat_messages_ids = await self.executor.get_all_messages_ids(group.name, limit=SEND_MSG_DELAY_MSG)
+        chat_messages = await self.executor.get_all_messages(group.name, limit=SEND_MSG_DELAY_MSG)
+        await self.executor.check_by_key_word(messages=chat_messages, key_words=KEY_WORDS)
+        chat_messages_ids = [chat_message.id for chat_message in chat_messages]
+
         msg = await self.executor.get_messages(chat_id=group.name, msg_id=message.message_id)
         if msg.empty:
             repo.messages.update(message, state=MessageStates.deleted)

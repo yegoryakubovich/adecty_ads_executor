@@ -36,6 +36,10 @@ MAX_TASKS_COUNT = 5  # max count tasks by one session
 SEND_MSG_DELAY_MSG = 30  # msg delay
 SEND_MSG_DELAY_SEC = min2sec(10)  # msg delay
 
+KEY_WORDS = [
+    "Обмен", "Обменник"
+]
+
 LATTERS = {
     "А": ["A"], "а": ["a"], "Б": [], "б": [],
     "В": ["B"], "в": [], "Г": [], "г": [],

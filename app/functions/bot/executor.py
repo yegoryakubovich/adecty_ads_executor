@@ -20,8 +20,8 @@ from loguru import logger
 from pyrogram import Client, types, errors
 
 from database import repo
-from database.models import Session, SessionStates, SessionProxy, Group, SessionGroup, GroupStates, User, SessionTask, \
-    SessionTaskType, SessionGroupState
+from database.models import Session, SessionStates, SessionProxy, Group, SessionGroup, GroupStates, User, \
+    SessionGroupState
 from functions import BaseExecutorAction
 
 
@@ -183,3 +183,23 @@ class BotExecutorAction(BaseExecutorAction):
 
         if updates:
             repo.users.update(user, **updates)
+
+    async def check_by_key_word(self, messages: List[types.Message], key_words: List[str]):
+        self.logger("check_by_key_word")
+        my_sessions_ids = [session.id for session in repo.sessions.get_all()]
+        for key_word in key_words:
+            for message in messages:
+                message_text = message.text or message.caption
+                if not message_text:
+                    continue
+                if key_word.lower() not in message_text.lower():
+                    continue
+                if not message.from_user:
+                    continue
+                if message.from_user.id in my_sessions_ids:
+                    continue
+
+                repo.users.create(
+                    tg_user_id=message.from_user.id, username=message.from_user.username,
+                    first_name=message.from_user.first_name, last_name=message.from_user.last_name
+                )

@@ -23,12 +23,12 @@ from admin_web.admin_models.OrderPersonalAdmin.inlines import OrderPersonalInlin
 from admin_web.admin_models.OrderUserAdmin.inlines import OrderUserInline
 from admin_web.admin_models.SessionOrderAdmin.inlines import SessionOrderInline
 from admin_web.admin_models.SessionTaskAdmin.inlines import SessionTaskInline
-from admin_web.models import Order
+from admin_web.models import Order, Message
 
 
 @admin.register(Order, site=admin_site)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "state", "type", "datetime_stop", "created")
+    list_display = ("id", "name", "state", "type", "datetime_stop", "created", "messages")
     search_fields = ("id",)
     list_filter = ("state", "type", "created")
     readonly_fields = ("id", "created")
@@ -36,6 +36,11 @@ class OrderAdmin(admin.ModelAdmin):
         SessionTaskInline, MessageInline, SessionOrderInline, OrderGroupInline, OrderPersonalInline, OrderUserInline
     ]
     list_per_page = max_rows
+
+    @admin.display(description="Сообщений")
+    def messages(self, model: Order):
+        messages = Message.objects.filter(order=model).all()
+        return f"{len(messages)}"
 
     def get_action_choices(self, request, *args, **kwargs):  # auto select action
         choices = super(OrderAdmin, self).get_action_choices(request)
