@@ -179,15 +179,19 @@ class BotAction:
                     await self.stop_session()
                 except errors.UserDeactivatedBan:
                     self.logger("UserDeactivatedBan")
-                    await self.executor.session_banned()
-                    return
+                    return await self.executor.session_banned()
                 except errors.AuthKeyDuplicated:
                     self.logger("AuthKeyDuplicated")
-                    await self.executor.session_banned()
-                    return
+                    return await self.executor.session_banned()
                 except errors.InputUserDeactivated:
                     self.logger("InputUserDeactivated")
                     await self.stop_session()
+                except errors.SessionRevoked:
+                    self.logger("SessionRevoked")
+                    return await self.executor.session_banned()
+                except errors.AuthKeyUnregistered:
+                    self.logger("AuthKeyUnregistered")
+                    return await self.executor.session_banned()
             else:
                 try:
                     self.logger("Not find task")
@@ -196,15 +200,19 @@ class BotAction:
                     await self.stop_session()
                 except errors.UserDeactivatedBan:
                     self.logger("UserDeactivatedBan")
-                    await self.executor.session_banned()
-                    return
+                    return await self.executor.session_banned()
                 except errors.AuthKeyDuplicated:
                     self.logger("AuthKeyDuplicated")
-                    await self.executor.session_banned()
-                    return
+                    return await self.executor.session_banned()
                 except errors.InputUserDeactivated:
                     self.logger("InputUserDeactivated")
                     await self.stop_session()
+                except errors.SessionRevoked:
+                    self.logger("SessionRevoked")
+                    return await self.executor.session_banned()
+                except errors.AuthKeyUnregistered:
+                    self.logger("AuthKeyUnregistered")
+                    return await self.executor.session_banned()
 
             await asyncio.sleep(ASSISTANT_SLEEP_SEC)
 

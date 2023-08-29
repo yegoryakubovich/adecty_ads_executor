@@ -27,3 +27,9 @@ class OrderUserAdmin(admin.ModelAdmin):
     list_filter = ("state", "state_description", "created")
     readonly_fields = ("id", "created")
     list_per_page = max_rows
+
+    def get_action_choices(self, request, *args, **kwargs):  # auto select action
+        choices = super(OrderUserAdmin, self).get_action_choices(request)
+        choices.pop(0)
+        choices.reverse()
+        return choices

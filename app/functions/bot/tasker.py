@@ -23,7 +23,7 @@ from pyrogram.types import Message
 from core.constants import SEND_MSG_DELAY_MSG
 from database import repo
 from database.models import Session, SessionTask, GroupStates, MessageStates, Order, Group, SessionGroup, User, \
-    PersonalTypes, PersonalSex, GroupType, SessionTaskStates, SessionGroupState, Personal
+    PersonalTypes, PersonalSex, GroupType, SessionTaskStates, SessionGroupState, Personal, OrderUserStates
 from functions.bot.executor import BotExecutorAction
 
 
@@ -83,7 +83,6 @@ class BotTaskerAction:
         msg = await self.executor.get_messages(chat_id=group.name, msg_id=message.message_id)
         if msg.empty:
             repo.messages.update(message, state=MessageStates.deleted)
-            repo.groups.update_to_next_type(group)
         else:
             if message.message_id in chat_messages_ids:
                 return
@@ -122,6 +121,8 @@ class BotTaskerAction:
         msg = await self.executor.send_message(chat_id=group.name, text=text, photo=image)
 
         if isinstance(msg, str):
+            if msg in ["Forbidden", "BadRequest"]:
+                repo.groups.update_to_next_type(group)
             repo.sessions_groups.update(sg, state=SessionGroupState.banned)
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)
 
@@ -159,7 +160,11 @@ class BotTaskerAction:
             )
 
         tg_user = await self.executor.get_users(user.username)
-        if tg_user:
+        if isinstance(tg_user, str):
+            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=tg_user)
+        elif not tg_user:
+            pass
+        else:
             await self.executor.update_user(user, tg_user)
 
         msg: Message = await self.executor.send_message(
@@ -175,7 +180,10 @@ class BotTaskerAction:
         if msg.from_user:
             await self.executor.update_session(msg.from_user)
 
+        ou = repo.orders_users.get_by(user=user, order=order)
+
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
+        repo.orders_users.update(ou, state=OrderUserStates.finish)
         repo.messages.create(
             session=self.session, user=user, order=order, message_id=msg.id,
             text=msg.caption if msg.caption else msg.text, state=MessageStates.fine

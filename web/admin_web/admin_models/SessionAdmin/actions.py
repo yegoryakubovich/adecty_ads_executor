@@ -41,9 +41,9 @@ def to_wait(model_admin: admin.ModelAdmin, request, queryset):
 
 
 @admin.action(description="Связать с заказом")
-def select_from_mailing(model_admin: admin.ModelAdmin, request, queryset):
+def select_link_order(model_admin: admin.ModelAdmin, request, queryset):
     sessions = ','.join([str(session.id) for session in queryset])
     return HttpResponseRedirect(f"/{LinkedSessionOrderURL}?sessions={sessions}")
 
 
-actions_list = [select_from_mailing, to_in_work, to_free, to_wait]
+actions_list = [select_link_order, to_in_work, to_free, to_wait]

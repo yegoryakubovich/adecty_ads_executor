@@ -13,16 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from django.contrib import admin
-from django.http import HttpResponseRedirect
+from django import forms
 
-from admin_web.admin_models.UserAdmin.views import MailingUsersURL
-
-
-@admin.action(description="Выбрать для рассылки")
-def select_link_order(model_admin: admin.ModelAdmin, request, queryset):
-    users = ','.join([str(user.id) for user in queryset])
-    return HttpResponseRedirect(f"/{MailingUsersURL}?users={users}")
+from admin_web.models import Order, OrderTypes
 
 
-actions_list = [select_link_order]
+def get_choice():
+    return [(order.id, f"{order.id} - {order.name}") for order in Order.objects.all()]
+
+
+class LinkedGroupOrderForm(forms.Form):
+    order = forms.ChoiceField(choices=get_choice, label="Выбор ордера", required=True)

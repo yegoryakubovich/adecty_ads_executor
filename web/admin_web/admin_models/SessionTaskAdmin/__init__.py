@@ -30,5 +30,8 @@ class SessionTaskAdmin(admin.ModelAdmin):
     readonly_fields = ("id", "created")
     list_per_page = max_rows
 
-    def has_add_permission(self, request):
-        return False
+    def get_action_choices(self, request, *args, **kwargs):  # auto select action
+        choices = super(SessionTaskAdmin, self).get_action_choices(request)
+        choices.pop(0)
+        choices.reverse()
+        return choices

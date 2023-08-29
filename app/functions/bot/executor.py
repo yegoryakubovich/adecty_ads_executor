@@ -21,8 +21,7 @@ from pyrogram import Client, types, errors
 
 from database import repo
 from database.models import Session, SessionStates, SessionProxy, Group, SessionGroup, GroupStates, User, SessionTask, \
-    SessionTaskType
-from database.models.sessions_groups import SessionGroupState
+    SessionTaskType, SessionGroupState
 from functions import BaseExecutorAction
 
 
@@ -52,8 +51,13 @@ class BotExecutorAction(BaseExecutorAction):
     async def get_chat(self, chat_id: [str, int]) -> types.Chat:
         return await self.client.get_chat(chat_id=chat_id)
 
-    async def get_users(self, user_id: [str, int]) -> types.User:
-        return await self.client.get_users(user_ids=user_id)
+    async def get_users(self, user_id: [str, int]) -> [types.User, None]:
+        try:
+            return await self.client.get_users(user_ids=user_id)
+        except errors.UsernameNotOccupied:
+            return
+        except errors.UsernameInvalid:
+            return
 
     async def join_chat_by_group(self, group: Group) -> [types.Chat, str]:
         try:
@@ -100,6 +104,10 @@ class BotExecutorAction(BaseExecutorAction):
             return "Forbidden"
         except errors.PeerFlood:
             return "PeerFlood"
+        except errors.UsernameNotOccupied:
+            return "UsernameNotOccupied"
+        except errors.BadRequest:
+            return "BadRequest"
 
     async def get_chat_history(self, chat_id: [str, int], limit: int = 0):
         try:
@@ -116,6 +124,7 @@ class BotExecutorAction(BaseExecutorAction):
     """OTHER"""
 
     async def session_banned(self, new=False):
+        self.logger("session_banned")
         session_shop = repo.shops.get(self.session.shop_id)
         if new:
             await self.new_session_banned_log(session_id=self.session.id,
@@ -134,24 +143,23 @@ class BotExecutorAction(BaseExecutorAction):
                                           proxy_shop_name=proxy_shop.name,
                                           messages_send=messages_send)
 
-        for st in repo.sessions_tasks.get_all(session=self.session):
-            st: SessionTask
-            if st.type == SessionTaskType.send_by_mailing:
-                sessions = repo.sessions.get_all(state=SessionStates.free)
-                if sessions:
-                    repo.sessions_tasks.update(st, session=sessions[0])
-                else:
-                    repo.sessions_tasks.remove(st.id)
-        for sp in repo.sessions_proxies.get_all(session=self.session):
-            repo.sessions_proxies.remove(sp.id)
-        for sg in repo.sessions_groups.get_all(session=self.session):
-            repo.sessions_groups.remove(sg.id)
+        for sgroup in repo.sessions_groups.get_all(session=self.session):
+            repo.sessions_groups.remove(sgroup.id)
+        for sorder in repo.sessions_orders.get_all(session=self.session):
+            repo.sessions_orders.remove(sorder.id)
+        for spersonal in repo.sessions_personals.get_all(session=self.session):
+            repo.sessions_personals.remove(spersonal.id)
+        for sproxy in repo.sessions_proxies.get_all(session=self.session):
+            repo.sessions_proxies.remove(sproxy.id)
+        for stask in repo.sessions_tasks.get_all(session=self.session):
+            repo.sessions_tasks.remove(stask.id)
         for sleep in repo.sleeps.get_all(session=self.session):
             repo.sleeps.remove(sleep.id)
 
         repo.sessions.update(self.session, state=SessionStates.banned)
 
     async def update_session(self, tg_user: types.User):
+        self.logger("update_session")
         updates = {}
         if self.session.username != tg_user.username:
             updates['username'] = tg_user.username
@@ -162,8 +170,8 @@ class BotExecutorAction(BaseExecutorAction):
             repo.sessions.update(self.session, **updates)
 
     async def update_user(self, user: User, tg_user: types.User):
+        self.logger("update_user")
         updates = {}
-
         if user.username != tg_user.username:
             updates['username'] = tg_user.username
         if user.first_name != tg_user.first_name:

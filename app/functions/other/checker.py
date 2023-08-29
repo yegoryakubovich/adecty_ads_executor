@@ -22,8 +22,7 @@ from loguru import logger
 from core.constants import NEW_SESSION_SLEEP_SEC
 from database import repo
 from database.models import ProxyStates, SessionStates, GroupStates, MessageStates, Shop, ProxyTypes, GroupType, Group, \
-    User, OrderUserStates
-from database.models import SessionTask, SessionTaskType, SessionTaskStates, OrderStates, OrderTypes
+    User, OrderUserStates, SessionTask, SessionTaskType, SessionTaskStates, OrderStates, OrderTypes
 from functions import BotAction
 from functions.other.executor import AssistantExecutorAction
 from modules import convert

@@ -32,3 +32,9 @@ class CountryAdmin(admin.ModelAdmin):
     readonly_fields = ("id", "created")
     inlines = [SessionInline, ProxyInline, GroupCountryInline, ]
     list_per_page = max_rows
+
+    def get_action_choices(self, request, *args, **kwargs):  # auto select action
+        choices = super(CountryAdmin, self).get_action_choices(request)
+        choices.pop(0)
+        choices.reverse()
+        return choices

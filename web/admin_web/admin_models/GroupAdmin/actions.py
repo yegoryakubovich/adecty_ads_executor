@@ -20,12 +20,15 @@ from django.http import HttpResponseRedirect
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from admin_web.models import Group, Message, MessageStates, GroupStates, SessionTask, SessionTaskStates
+from admin_web.admin_models.GroupAdmin.views import LinkedGroupOrderURL
+from admin_web.models import Group, Message, MessageStates, GroupStates, SessionTask, SessionTaskStates, GroupType
 
 
 @admin.action(description="Диактивировать")
 def state_to_inactive(model_admin: admin.ModelAdmin, request, queryset):
     for group in queryset:
+        for task in SessionTask.objects.filter(group=group, state=SessionTaskStates.enable).all():
+            task.delete()
         group.state = GroupStates.inactive
         group.save()
 
@@ -43,6 +46,8 @@ def state_to_waiting(model_admin: admin.ModelAdmin, request, queryset):
         for task in SessionTask.objects.filter(group=group, state=SessionTaskStates.enable).all():
             task.delete()
         group.state = GroupStates.waiting
+        group.can_image = True
+        group.type = GroupType.link
         group.save()
 
 
@@ -71,4 +76,10 @@ def export_presence(model_admin: admin.ModelAdmin, request, queryset):
     return HttpResponseRedirect(f"/{filename}.xlsx")
 
 
-actions_list = [state_to_inactive, state_to_active, state_to_waiting, export_presence]
+@admin.action(description="Связать с заказом")
+def select_link_order(model_admin: admin.ModelAdmin, request, queryset):
+    groups = ','.join([str(group.id) for group in queryset])
+    return HttpResponseRedirect(f"/{LinkedGroupOrderURL}?groups={groups}")
+
+
+actions_list = [select_link_order, state_to_inactive, state_to_active, state_to_waiting, export_presence]

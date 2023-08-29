@@ -28,3 +28,9 @@ class CountryLinkAdmin(admin.ModelAdmin):
     search_fields = ("id",)
     readonly_fields = ("id", "created")
     list_per_page = max_rows
+
+    def get_action_choices(self, request, *args, **kwargs):  # auto select action
+        choices = super(CountryLinkAdmin, self).get_action_choices(request)
+        choices.pop(0)
+        choices.reverse()
+        return choices

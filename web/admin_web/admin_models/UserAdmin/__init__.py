@@ -34,9 +34,6 @@ class UserAdmin(admin.ModelAdmin):
     inlines = [SessionTaskInline, MessageInline, OrderUserInline]
     list_per_page = max_rows
 
-    def has_add_permission(self, request):
-        return False
-
     def get_action_choices(self, request, *args, **kwargs):  # auto select action
         choices = super(UserAdmin, self).get_action_choices(request)
         choices.pop(0)

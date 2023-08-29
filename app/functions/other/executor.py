@@ -67,7 +67,7 @@ class AssistantExecutorAction(BaseExecutorAction):
             return repo.sessions.get(sorted(maybe_sessions, key=itemgetter('tasks'))[0]['id'])
 
     async def get_session_by_order(self, order: Order, spam: bool = False):
-        maybe_sessions = []
+        maybe_sessions_by_order = []
         states = [SessionStates.free]
         if spam:
             states.append(SessionStates.spam_block)
@@ -75,13 +75,13 @@ class AssistantExecutorAction(BaseExecutorAction):
             session = repo.sessions.get(so.session_id)
             if not session.state in states:
                 continue
-            tasks = []
+            tasks = 0
             for task in repo.sessions_tasks.get_all(session=session, state=SessionTaskStates.enable):
                 if not task.type == SessionTaskType.check_message:
-                    tasks.append(task)
-            if len(tasks) >= MAX_TASKS_COUNT:
+                    tasks += 1
+            if tasks >= MAX_TASKS_COUNT:
                 continue
-            maybe_sessions.append({'id': session.id, 'tasks': len(tasks)})
-        if maybe_sessions:
-            logger.info(sorted(maybe_sessions, key=itemgetter('tasks')))
-            return repo.sessions.get(sorted(maybe_sessions, key=itemgetter('tasks'))[0]['id'])
+            maybe_sessions_by_order.append({'id': session.id, 'tasks': tasks})
+        if maybe_sessions_by_order:
+            logger.info(sorted(maybe_sessions_by_order, key=itemgetter('tasks')))
+            return repo.sessions.get(sorted(maybe_sessions_by_order, key=itemgetter('tasks'))[0]['id'])

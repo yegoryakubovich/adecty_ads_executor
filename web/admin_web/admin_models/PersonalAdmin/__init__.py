@@ -32,3 +32,9 @@ class PersonalAdmin(admin.ModelAdmin):
     actions = actions_list
     inlines = [SessionPersonalInline, OrderPersonalInline]
     list_per_page = max_rows
+
+    def get_action_choices(self, request, *args, **kwargs):  # auto select action
+        choices = super(PersonalAdmin, self).get_action_choices(request)
+        choices.pop(0)
+        choices.reverse()
+        return choices

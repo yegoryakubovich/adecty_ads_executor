@@ -16,6 +16,7 @@
 from django.urls import path
 
 from admin_web.admin import admin_site
+from admin_web.admin_models.GroupAdmin.views import LinkedGroupOrderURL, LinkedGroupOrderView
 from admin_web.admin_models.PersonalAdmin.views import LinkedPersonalOrderView, LinkedPersonalOrderURL
 from admin_web.admin_models.SessionAdmin.views import LinkedSessionOrderView, LinkedSessionOrderURL
 from admin_web.admin_models.UserAdmin.views import MailingUsersView, AddUsersView, MailingUsersURL, AddUsersURL
@@ -25,5 +26,6 @@ urlpatterns = [
     path(MailingUsersURL, MailingUsersView.as_view(), name="MailingUsers"),
     path(LinkedSessionOrderURL, LinkedSessionOrderView.as_view(), name="LinkedSessionOrder"),
     path(LinkedPersonalOrderURL, LinkedPersonalOrderView.as_view(), name="LinkedPersonalOrder"),
+    path(LinkedGroupOrderURL, LinkedGroupOrderView.as_view(), name="LinkedGroupOrder"),
     path('', admin_site.urls),
 ]

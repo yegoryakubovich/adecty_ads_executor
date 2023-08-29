@@ -47,6 +47,12 @@ class SessionAdmin(admin.ModelAdmin):
     ]
     list_per_page = max_rows
 
+    def get_action_choices(self, request, *args, **kwargs):  # auto select action
+        choices = super(SessionAdmin, self).get_action_choices(request)
+        choices.pop(0)
+        choices.reverse()
+        return choices
+
     @admin.display(description="Сообщений")
     def message_send_now(self, model: Session):
         return len(Message.objects.filter(session=model).all())
