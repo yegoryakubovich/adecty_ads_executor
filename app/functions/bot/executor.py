@@ -186,7 +186,7 @@ class BotExecutorAction(BaseExecutorAction):
 
     async def check_by_key_word(self, messages: List[types.Message], key_words: List[str]):
         self.logger("check_by_key_word")
-        my_sessions_ids = [session.id for session in repo.sessions.get_all()]
+        my_sessions_ids = [session.tg_user_id for session in repo.sessions.get_all()]
         for key_word in key_words:
             for message in messages:
                 message_text = message.text or message.caption

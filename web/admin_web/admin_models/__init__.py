@@ -25,3 +25,4 @@ def registration_load():
 
 
 max_rows = 10
+max_rows_inline = 50
