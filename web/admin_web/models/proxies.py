@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 from datetime import datetime
+
 from django.db import models
 
 from admin_web.models import Country, Shop
@@ -30,8 +31,9 @@ class ProxyStates:
     wait = "wait"
     enable = "enable"
     disable = "disable"
+    stop = "stop"
 
-    choices = ((wait, wait), (enable, enable), (disable, disable))
+    choices = ((wait, wait), (enable, enable), (disable, disable), (stop, stop))
 
 
 class Proxy(models.Model):

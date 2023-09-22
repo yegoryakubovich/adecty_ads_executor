@@ -30,6 +30,7 @@ from .countries_links import CountryLink
 from .orders_groups import OrderGroup
 from .orders_users import OrderUser, OrderUserStates
 from .orders_personals import OrderPersonal
+from .orders_attachments import OrderAttachment, OrderAttachmentTypes
 from .groups_countries import GroupCountry
 from .sleeps import Sleep, SleepStates
 from .messages import Message, MessageStates

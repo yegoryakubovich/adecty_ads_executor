@@ -114,7 +114,7 @@ class AssistantAction:
             await self.executor.change_log_message(
                 text='\n'.join(text), presence_count=presence_count, all_count=all_count
             )
-            await asyncio.sleep(min2sec(1))
+            await asyncio.sleep(min2sec(5))
 
     @func_logger
     async def start(self):

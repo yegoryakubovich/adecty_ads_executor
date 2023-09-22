@@ -6,4 +6,4 @@ WORKDIR /src
 
 RUN pip install -r requiruments.txt
 
-ENTRYPOINT sleep 15; python run_bot.py
+ENTRYPOINT python run_bot.py

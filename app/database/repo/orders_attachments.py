@@ -13,28 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from django.contrib import admin
+from database import db_manager, repo
+from database.base_repository import BaseRepository
+from database.models import OrderAttachment
 
-from admin_web.admin_models import max_rows_inline
-from admin_web.models import OrderGroup
+model = OrderAttachment
 
 
-class OrderGroupInline(admin.TabularInline):
-    model = OrderGroup
-    extra = 0
-    fields = ("id", "order", "group", "created")
-    classes = ['collapse']
-    show_change_link = False
+class OrderAttachmentRepository(BaseRepository):
+    @db_manager
+    def fill(self):
+        for order in repo.orders.get_all():
+            for group in repo.groups.get_all():
+                self.model.get_or_create(order=order, group=group)
 
-    def has_change_permission(self, request, obj=None):
-        return False
 
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request, obj):
-        return False
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).order_by("-id")
-
+orders_attachments = OrderAttachmentRepository(OrderAttachment)

@@ -37,10 +37,10 @@ class PresenceState:
 @admin.register(Group, site=admin_site)
 class GroupAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "name_fix", "state", "subscribers", "can_image", "type", "created",
+        "id", "name_fix", "state", "subscribers", "can_image", "type", "join_request", "created",
         "delete_count", "abortively_percent", "sessions_count"
     )
-    list_filter = ("state", "can_image", "type", "created")
+    list_filter = ("state", "can_image", "type", "join_request", "created")
     search_fields = ("id",)
     readonly_fields = ("id", "created")
     actions = actions_list

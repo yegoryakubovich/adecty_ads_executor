@@ -44,13 +44,14 @@ class Group(models.Model):
     id = models.AutoField(primary_key=True)
     created = models.DateTimeField(default=datetime.utcnow, verbose_name="Время создания")
 
-    name = models.CharField(max_length=128, verbose_name="Название")
+    name = models.CharField(max_length=128,unique=True, verbose_name="Название")
     state = models.CharField(max_length=32, default=GroupStates.waiting, choices=GroupStates.choices,
                              verbose_name="Состояние")
     subscribers = models.IntegerField(verbose_name="Подписчиков")  # Количество подписчиков
 
     can_image = models.BooleanField(default=True, verbose_name="Картинки")
     type = models.CharField(max_length=32, default=GroupType.link, choices=GroupType.choices, verbose_name="Тип")
+    join_request = models.BooleanField(default=False, verbose_name="Запрос вступления")
     captcha_have = models.BooleanField(default=False, verbose_name="Капча")
     captcha_type = models.CharField(max_length=128, blank=True, verbose_name="Тип капчи")
     captcha_data = models.CharField(max_length=128, blank=True, verbose_name="Информация по капче")

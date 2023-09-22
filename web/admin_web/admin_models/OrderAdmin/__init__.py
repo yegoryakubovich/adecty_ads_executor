@@ -18,6 +18,7 @@ from django.contrib import admin
 from admin_web.admin import admin_site
 from admin_web.admin_models import max_rows
 from admin_web.admin_models.MessageAdmin.inlines import MessageInline
+from admin_web.admin_models.OrderAttachmentAdmin.inlines import OrderAttachmentInline
 from admin_web.admin_models.OrderGroupAdmin.inlines import OrderGroupInline
 from admin_web.admin_models.OrderPersonalAdmin.inlines import OrderPersonalInline
 from admin_web.admin_models.OrderUserAdmin.inlines import OrderUserInline
@@ -33,9 +34,11 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ("state", "type", "created")
     readonly_fields = ("id", "created")
     inlines = [
+        OrderAttachmentInline,
         SessionTaskInline, MessageInline, SessionOrderInline, OrderGroupInline, OrderPersonalInline, OrderUserInline
     ]
     list_per_page = max_rows
+    save_on_top = True
 
     @admin.display(description="Сообщений")
     def messages(self, model: Order):

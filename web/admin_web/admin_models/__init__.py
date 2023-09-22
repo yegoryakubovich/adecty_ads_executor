@@ -20,7 +20,7 @@ def registration_load():
     """addon"""
     from . import SessionProxyAdmin, SessionGroupAdmin, SessionPersonalAdmin, SessionOrderAdmin
     from . import GroupCountryAdmin
-    from . import OrderGroupAdmin, OrderPersonalAdmin, OrderUserAdmin
+    from . import OrderAttachmentAdmin, OrderGroupAdmin, OrderPersonalAdmin, OrderUserAdmin
     from . import CountryLinkAdmin
 
 

@@ -22,7 +22,7 @@ from admin_web.models import Proxy, ProxyStates
 class ProxyInline(admin.TabularInline):
     model = Proxy
     extra = 0
-    fields = ("id", "country", "ip_port", "user", "password", "type", "state", "created")
+    fields = ("id", "country", "host", "port", "user", "password", "type", "state", "created")
     classes = ['collapse']
     show_change_link = False
 
@@ -36,4 +36,5 @@ class ProxyInline(admin.TabularInline):
         return False
 
     def get_queryset(self, request):
-        return super().get_queryset(request).order_by("-id").all()[:max_rows_inline]
+        return super().get_queryset(request).order_by("-id")
+

@@ -26,6 +26,7 @@ from database.models import ProxyStates, SessionStates, GroupStates, MessageStat
 from functions import BotAction
 from functions.other.executor import AssistantExecutorAction
 from modules import convert
+from modules.tdata import tdata_converter
 from utils.country import get_by_phone
 from utils.new import new
 
@@ -75,24 +76,24 @@ class CheckerAction:
 
     async def wait_proxy_check(self):
         self.logger("wait_proxy_check")
+        self.logger(f"Проверяю {ProxyStates.wait} прокси")
         for proxy in repo.proxies.get_all(state=ProxyStates.wait):
             if await self.executor.check_proxy(proxy):
                 await self.executor.proxy_new(proxy)
             else:
                 await self.executor.proxy_disable(proxy)
-
+        self.logger(f"Проверяю {ProxyStates.enable} прокси")
         for proxy in repo.proxies.get_all(state=ProxyStates.enable):
             if await self.executor.check_proxy(proxy):
                 pass
             else:
                 await self.executor.proxy_disable(proxy)
-
-        if randint(1, 5) == 1:
-            for proxy in repo.proxies.get_all(state=ProxyStates.disable):
-                if await self.executor.check_proxy(proxy):
-                    pass
-                else:
-                    await self.executor.proxy_disable(proxy, log=False)
+        self.logger(f"Проверяю {ProxyStates.disable} прокси")
+        for proxy in repo.proxies.get_all(state=ProxyStates.disable):
+            if await self.executor.check_proxy(proxy):
+                await self.executor.proxy_enable(proxy, log=False)
+            else:
+                await self.executor.proxy_disable(proxy, log=False)
 
     """
     SESSION
@@ -113,8 +114,20 @@ class CheckerAction:
                     country = repo.countries.create(code=country_type.code, name=country_type.name)
                     repo.sessions.create(
                         phone=elem["phone"], string=elem["string_session"], tg_user_id=elem["user_id"],
-                        api_id=elem["api_id"], api_hash=elem["api_hash"],
-                        country=country, shop=shop
+                        api_id=elem["api_id"], api_hash=elem["api_hash"], country=country, shop=shop
+                    )
+        new_tdata_session = tdata_converter.start()
+        if new_tdata_session:
+            self.logger("Find new sessions")
+            for item in new_tdata_session:
+                shop = repo.shops.create(name=item['shop_name'])
+                for session in item['items']:
+                    elem = item['items'][session]
+                    country_type = get_by_phone(elem["session_name"])
+                    country = repo.countries.create(code=country_type.code, name=country_type.name)
+                    repo.sessions.create(
+                        phone=elem["session_name"], string=elem["string"], tg_user_id=elem["user_id"],
+                        api_id=elem["api_id"], api_hash=elem["api_hash"], country=country, shop=shop
                     )
 
     # WAIT SESSION CHECK
@@ -150,7 +163,7 @@ class CheckerAction:
 
     async def wait_session_group_check(self):
         self.logger("wait_session_group_check")
-        for group in repo.groups.get_all(state=GroupStates.waiting):
+        for group in repo.groups.get_all(state=GroupStates.waiting, join_request=False):
             st: SessionTask = repo.sessions_tasks.get_by(
                 group=group, type=SessionTaskType.check_group, state=SessionTaskStates.enable
             )
@@ -176,6 +189,8 @@ class CheckerAction:
         self.logger("wait_message_check")
         for message in repo.messages.get_all(state=MessageStates.waiting):
             group = repo.groups.get(message.group_id)
+            if group.state != GroupStates.active:
+                continue
             st: SessionTask = repo.sessions_tasks.get_by(
                 group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.enable,
             )
@@ -202,6 +217,8 @@ class CheckerAction:
             for od in repo.orders_groups.get_all(order=order):
                 group: Group = repo.groups.get(od.group_id)
                 if group.state != GroupStates.active:
+                    continue
+                if group.join_request:
                     continue
                 if group.type == GroupType.inactive:
                     if not group.can_image:
@@ -261,26 +278,24 @@ class CheckerAction:
 
     async def personals_check(self):
         self.logger("personals_check")
+        change_fi = repo.sessions_tasks.get_all(state=SessionTaskStates.enable, type=SessionTaskType.change_fi)
+        avatar = repo.sessions_tasks.get_all(state=SessionTaskStates.enable, type=SessionTaskType.change_avatar)
         for session in repo.sessions.get_all(state=SessionStates.free):
+            if avatar and change_fi:
+                return self.logger(f"#{session.id} ALL OKAY")
             sp = repo.sessions_personals.get_all(session=session)
-            self.logger(sp)
-
-            if not sp:  # Not all
-                self.logger(f"#{session.id} NOT ALL")
-                if repo.sessions_tasks.get_all(state=SessionTaskStates.enable, type=SessionTaskType.change_fi):
-                    continue
-                repo.sessions_tasks.create(
-                    session=session,
-                    type=SessionTaskType.change_fi, state=SessionTaskStates.enable
-                )
-            elif len(sp) >= 4:
-                self.logger(f"#{session.id} ALL")
-                continue
-            else:  # Not avatar
-                self.logger(f"#{session.id} AVATAR")
-                if repo.sessions_tasks.get_all(state=SessionTaskStates.enable, type=SessionTaskType.change_avatar):
-                    continue
-                repo.sessions_tasks.create(
-                    session=session,
-                    type=SessionTaskType.change_avatar, state=SessionTaskStates.enable
-                )
+            if not change_fi:
+                if not sp:
+                    self.logger(f"#{session.id} CHANGE FI")
+                    repo.sessions_tasks.create(
+                        session=session, type=SessionTaskType.change_fi, state=SessionTaskStates.enable
+                    )
+                    change_fi = True
+            if not avatar:
+                if len(sp) < 4:
+                    self.logger(f"#{session.id} AVATAR")
+                    repo.sessions_tasks.create(
+                        session=session,
+                        type=SessionTaskType.change_avatar, state=SessionTaskStates.enable
+                    )
+                    avatar = True

@@ -21,7 +21,7 @@ from admin_web.admin import admin_site
 from admin_web.admin_models import max_rows
 from admin_web.admin_models.SessionTaskAdmin.inlines import SessionTaskInline
 from admin_web.models import Session, Message, Sleep, SleepStates, SessionGroup, SessionGroupState, Personal, \
-    SessionPersonal, PersonalTypes
+    SessionPersonal, PersonalTypes, MessageStates
 from .actions import actions_list
 from ..MessageAdmin.inlines import MessageInline
 from ..SessionGroupAdmin.inlines import SessionGroupInline
@@ -34,8 +34,8 @@ from ..SleepAdmin.inlines import SleepInline
 @admin.register(Session, site=admin_site)
 class SessionAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "phone", "username", "name", "surname", "country", "shop", "state", "created",
-        "message_send_now", "sleep_now", "work", "groups_count"
+        "id", "work", "phone", "name", "surname", "country", "state", "created",
+        "message_send_now", "sleep_now", "groups_count"
     )
     search_fields = ("id",)
     list_filter = ("state", "work", "created")
@@ -55,14 +55,16 @@ class SessionAdmin(admin.ModelAdmin):
 
     @admin.display(description="Сообщений")
     def message_send_now(self, model: Session):
-        return len(Message.objects.filter(session=model).all())
+        msg_all_count = len(Message.objects.filter(session=model).all())
+        msg_for_count = len(Message.objects.filter(session=model, state=MessageStates.to_user).all())
+        return msg_all_count - msg_for_count
 
     @admin.display(description="Сон")
     def sleep_now(self, model: Session):
         sleep = Sleep.objects.filter(session=model, state=SleepStates.enable).first()
         if sleep:
-            delta = (sleep.created + timedelta(seconds=sleep.time_second)).replace(tzinfo=None) - datetime.utcnow()
-            return f"{delta}"
+            delta = str((sleep.created + timedelta(seconds=sleep.time_second)).replace(tzinfo=None) - datetime.utcnow())
+            return delta[:delta.index('.')]
         return f"Нет"
 
     @admin.display(description="Групп")

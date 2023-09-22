@@ -27,6 +27,7 @@ from .sessions import Session, SessionStates
 from .countries_links import CountryLink
 
 """THREE"""
+from .orders_attachments import OrderAttachment, OrderAttachmentTypes
 from .orders_groups import OrderGroup
 from .orders_users import OrderUser, OrderUserStates
 from .orders_personals import OrderPersonal
@@ -44,6 +45,6 @@ all_models = (
     Proxy, Session, CountryLink,
     Sleep, Message,
     GroupCountry,
-    OrderGroup, OrderUser, OrderPersonal,
+    OrderGroup, OrderUser, OrderPersonal, OrderAttachment,
     SessionGroup, SessionOrder, SessionProxy, SessionTask, SessionPersonal
 )

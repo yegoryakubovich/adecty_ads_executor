@@ -36,4 +36,5 @@ class OrderUserInline(admin.TabularInline):
         return False
 
     def get_queryset(self, request):
-        return super().get_queryset(request).order_by("-id").all()[:max_rows_inline]
+        return super().get_queryset(request).order_by("-id")
+

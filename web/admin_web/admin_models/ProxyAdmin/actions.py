@@ -25,4 +25,25 @@ def state_to_active(model_admin: admin.ModelAdmin, request, queryset):
         proxy.save()
 
 
-actions_list = [state_to_active]
+@admin.action(description="Стоп")
+def state_to_stop(model_admin: admin.ModelAdmin, request, queryset):
+    for proxy in queryset:
+        proxy.state = ProxyStates.stop
+        proxy.save()
+
+
+@admin.action(description="Диактивировать")
+def state_to_disable(model_admin: admin.ModelAdmin, request, queryset):
+    for proxy in queryset:
+        proxy.state = ProxyStates.disable
+        proxy.save()
+
+
+@admin.action(description="Ожидание")
+def state_to_wait(model_admin: admin.ModelAdmin, request, queryset):
+    for proxy in queryset:
+        proxy.state = ProxyStates.wait
+        proxy.save()
+
+
+actions_list = [state_to_active, state_to_disable, state_to_wait, state_to_stop]

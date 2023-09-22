@@ -13,28 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from django.contrib import admin
+from peewee import PrimaryKeyField, ForeignKeyField, CharField
 
-from admin_web.admin_models import max_rows_inline
-from admin_web.models import OrderGroup
+from database.db import BaseModel
+from . import Order
 
 
-class OrderGroupInline(admin.TabularInline):
-    model = OrderGroup
-    extra = 0
-    fields = ("id", "order", "group", "created")
-    classes = ['collapse']
-    show_change_link = False
+class OrderAttachmentTypes:
+    image_common = 'image_common'
+    text_common = 'text_common'
+    text_no_link = 'text_no_link'
+    text_short = 'text_short'
+    text_replace = 'text_replace'
 
-    def has_change_permission(self, request, obj=None):
-        return False
 
-    def has_delete_permission(self, request, obj=None):
-        return False
+class OrderAttachment(BaseModel):
+    id = PrimaryKeyField()
+    order = ForeignKeyField(Order, to_field='id')
+    type = CharField(max_length=128)
+    value = CharField(max_length=1024)
 
-    def has_add_permission(self, request, obj):
-        return False
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).order_by("-id")
-
+    class Meta:
+        db_table = 'orders_attachments'

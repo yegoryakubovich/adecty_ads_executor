@@ -230,7 +230,8 @@ class BotAction:
                         user: User = repo.users.create(tg_user_id=msg.from_user.id)
                         await self.executor.update_user(user=user, tg_user=msg.from_user)
                         repo.messages.create(
-                            user=user, message_id=msg.id, text=msg.text or msg.caption, state=MessageStates.from_user
+                            session=self.session, user=user, message_id=msg.id,
+                            text=msg.text or msg.caption, state=MessageStates.from_user
                         )
 
                         msg_send = await msg.reply("\n".join(ANSWER_MESSAGE), disable_web_page_preview=True)
@@ -239,11 +240,14 @@ class BotAction:
                                 await self.executor.update_session(msg_send.from_user)
 
                         repo.messages.create(
-                            user=user, message_id=msg_send.id, text=msg_send.text, state=MessageStates.to_user
+                            session=self.session, user=user, message_id=msg_send.id,
+                            text=msg_send.text, state=MessageStates.to_user
                         )
                         await self.executor.send_message_answer_log(
                             session_id=self.session.id, username=msg.from_user.username, user_id=user.id
                         )
+        except errors.PeerFlood:
+            self.logger("PeerFlood")
         except errors.UserDeactivatedBan:
             self.logger("UserDeactivatedBan")
             return await self.executor.session_banned()

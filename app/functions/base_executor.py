@@ -21,7 +21,8 @@ class BaseExecutorAction:
     async def replace_text(self, text: str):
         for latter in LATTERS:
             if LATTERS[latter]:
-                text = text.replace(latter, choice(LATTERS[latter]))
+                text = text.replace(latter.lower(), choice(LATTERS[latter]))
+                text = text.replace(latter.upper(), choice(LATTERS[latter]))
         return text
 
     @staticmethod

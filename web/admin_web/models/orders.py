@@ -44,11 +44,6 @@ class Order(models.Model):
     created = models.DateTimeField(default=datetime.utcnow, verbose_name="Время создания")
 
     name = models.CharField(max_length=128, verbose_name="Название")
-    message = models.TextField(verbose_name="Сообщение")
-    message_no_link = models.TextField(null=True, blank=True, verbose_name="Сообщение без ссылки")
-    message_short = models.TextField(null=True, blank=True, verbose_name="Сообщение короткое")
-    image_link = models.CharField(max_length=256, null=True, blank=True, verbose_name="Ссылка на картинку")
-
     state = models.CharField(max_length=32, default=OrderStates.waiting, choices=OrderStates.choices,
                              verbose_name="Состояние")
     type = models.CharField(max_length=32, null=True, blank=True, choices=OrderTypes.choices, verbose_name="Тип")

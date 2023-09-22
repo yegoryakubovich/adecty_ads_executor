@@ -33,7 +33,7 @@ class MyAdminSite(AdminSite):
             addon_app_list = [
                 "SessionProxy", "SessionGroup", "SessionPersonal", "SessionOrder",
                 "GroupCountry",
-                "OrderGroup", "OrderPersonal", "OrderUser",
+                "OrderAttachment", "OrderGroup", "OrderPersonal", "OrderUser",
                 "CountryLink",
             ]
 

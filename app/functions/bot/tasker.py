@@ -20,10 +20,11 @@ from loguru import logger
 from pyrogram import Client
 from pyrogram.types import Message
 
-from core.constants import SEND_MSG_DELAY_MSG, KEY_WORDS
+from core.constants import SEND_MSG_DELAY_MSG, KEY_WORDS, GROUPS_ORDERS_TEXT_TYPES
 from database import repo
 from database.models import Session, SessionTask, GroupStates, MessageStates, Order, Group, SessionGroup, User, \
-    PersonalTypes, PersonalSex, GroupType, SessionTaskStates, SessionGroupState, Personal, OrderUserStates
+    PersonalTypes, PersonalSex, SessionTaskStates, SessionGroupState, Personal, OrderUserStates, \
+    OrderAttachmentTypes, GroupType
 from functions.bot.executor import BotExecutorAction
 
 
@@ -108,18 +109,16 @@ class BotTaskerAction:
 
         repo.groups.update(group, subscribers=chat.members_count)
 
-        image = order.image_link if group.can_image else None
-        if group.type == GroupType.link:
-            text = order.message
-        elif group.type == GroupType.no_link:
-            text = order.message_no_link
-        elif group.type == GroupType.short:
-            text = order.message_short
-        elif group.type == GroupType.replace:
-            text = await self.executor.replace_text(order.message_short)
-        else:
+        text_attachment = repo.orders_attachments.get_all(order=order, type=GROUPS_ORDERS_TEXT_TYPES[group.type])
+        if not text_attachment:
             repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="No find text")
             return
+        text = choice(text_attachment).value
+        if group.type == GroupType.replace:
+            text = await self.executor.replace_text(text)
+
+        image_attachment = repo.orders_attachments.get_all(order=order, type=OrderAttachmentTypes.image_common)
+        image = choice(image_attachment).value if image_attachment else None
 
         msg = await self.executor.send_message(chat_id=group.name, text=text, photo=image)
 
@@ -170,9 +169,16 @@ class BotTaskerAction:
         else:
             await self.executor.update_user(user, tg_user)
 
-        msg: Message = await self.executor.send_message(
-            chat_id=user.username, text=order.message, photo=order.image_link
-        )
+        text_attachment = repo.orders_attachments.get_all(order=order, type=GROUPS_ORDERS_TEXT_TYPES[group.type])
+        if not text_attachment:
+            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="No find text")
+            return
+        text = choice(text_attachment).value
+
+        image_attachment = repo.orders_attachments.get_all(order=order, type=OrderAttachmentTypes.image_common)
+        image = choice(image_attachment).value if image_attachment else None
+
+        msg: Message = await self.executor.send_message(chat_id=user.username, text=text, photo=image)
 
         if isinstance(msg, str):
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)

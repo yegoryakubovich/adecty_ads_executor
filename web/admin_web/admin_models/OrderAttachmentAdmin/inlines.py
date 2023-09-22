@@ -16,25 +16,16 @@
 from django.contrib import admin
 
 from admin_web.admin_models import max_rows_inline
-from admin_web.models import OrderPersonal
+from admin_web.models import OrderAttachment
 
 
-class OrderPersonalInline(admin.TabularInline):
-    model = OrderPersonal
+class OrderAttachmentInline(admin.TabularInline):
+    model = OrderAttachment
     extra = 0
-    fields = ("id", "order", "personal", "created")
-    classes = ['collapse']
-    show_change_link = False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request, obj):
-        return False
+    fields = ("id", "order", "type", "value", "created")
+    readonly_fields = ("id", "created")
+    # classes = ['collapse']
 
     def get_queryset(self, request):
-        return super().get_queryset(request).order_by("-id")
-
+        ids = [e.id for e in super().get_queryset(request).order_by('type').all()][:max_rows_inline]
+        return OrderAttachment.objects.filter(pk__in=ids).order_by('-id')

@@ -40,6 +40,7 @@ class Group(BaseModel):
 
     can_image = BooleanField(default=True)  # Отправка с картинками
     type = CharField(max_length=32, default=GroupType.link, null=True)  # Отправка ссылок
+    join_request = BooleanField(default=False)
     captcha_have = BooleanField(default=False)
     captcha_type = CharField(max_length=128)
     captcha_data = CharField(max_length=128)

@@ -37,6 +37,14 @@ class AssistantExecutorAction(BaseExecutorAction):
                 proxy_id=proxy.id, proxy_shop_id=proxy_shop.id, proxy_shop_name=proxy_shop.name
             )
 
+    async def proxy_enable(self, proxy: Proxy, log: bool = True):
+        proxy_shop: Shop = repo.shops.get(proxy.shop_id)
+        repo.proxies.update(proxy, state=ProxyStates.enable)
+        if log:
+            await self.proxy_disable_log(
+                proxy_id=proxy.id, proxy_shop_id=proxy_shop.id, proxy_shop_name=proxy_shop.name
+            )
+
     async def proxy_new(self, proxy: Proxy):
         repo.proxies.update(proxy, state=ProxyStates.enable)
         proxy_shop: Shop = repo.shops.get(proxy.shop_id)
