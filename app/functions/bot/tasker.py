@@ -17,7 +17,8 @@ from random import choice
 from typing import Any
 
 from loguru import logger
-from pyrogram import Client
+from pyrogram import Client, raw, types
+from pyrogram.raw import types
 from pyrogram.types import Message
 
 from core.constants import SEND_MSG_DELAY_MSG, KEY_WORDS, GROUPS_ORDERS_TEXT_TYPES
@@ -45,26 +46,40 @@ class BotTaskerAction:
         """
         group = repo.groups.get(task.group_id)
 
-        chat = await self.executor.join_chat_by_group(group=group)
-
+        chat: types.Chat = await self.executor.join_chat_by_group(group=group)
         if isinstance(chat, str):
+            if chat in ["InviteRequestSent", "ChatInvalid", "ChannelInvalid", "UsernameNotOccupied"]:
+                repo.groups.update(group, state=GroupStates.inactive)
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
+        if not chat.permissions:
+            repo.groups.update(group, state=GroupStates.inactive)
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Channel")
+        if not chat.permissions.can_send_messages:
+            repo.groups.update(group, state=GroupStates.inactive)
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Not Chat")
+
+        chat = await self.executor.get_chat_by_group(group=group)
+        repo.groups.update(group, subscribers=chat.members_count,
+                           can_image=chat.permissions.can_send_media_messages, join_request=False,
+                           state=GroupStates.active)
         repo.sessions_groups.create(session=self.session, group=group)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
 
-    async def check_group(self, task: SessionTask):
-        self.logger("check_group")
-        """
-            Задача проверки группы.
-        """
-        group = repo.groups.get(task.group_id)
-
-        chat = await self.executor.get_chat_by_group(group)
-        if isinstance(chat, str):
-            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
-
-        repo.groups.update(group, subscribers=chat.members_count, state=GroupStates.active)
-        repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
+    # async def check_group(self, task: SessionTask):
+    #     self.logger("check_group")
+    #     """
+    #         Задача проверки группы.
+    #     """
+    #     group = repo.groups.get(task.group_id)
+    #
+    #     chat: types.Chat = await self.executor.get_chat_by_group(group)
+    #     if isinstance(chat, str):
+    #         return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
+    #
+    #     repo.groups.update(group, subscribers=chat.members_count,
+    #                        can_image=chat.permissions.can_send_media_messages,
+    #                        state=GroupStates.active)
+    #     repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
 
     async def check_message(self, task: SessionTask):
         self.logger("check_message")
@@ -77,6 +92,7 @@ class BotTaskerAction:
         chat = await self.executor.get_chat_by_group(group)
 
         if isinstance(chat, str):
+            repo.messages.update(message, state=MessageStates.fine)
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
 
         repo.groups.update(group, subscribers=chat.members_count)
@@ -109,13 +125,16 @@ class BotTaskerAction:
 
         repo.groups.update(group, subscribers=chat.members_count)
 
-        text_attachment = repo.orders_attachments.get_all(order=order, type=GROUPS_ORDERS_TEXT_TYPES[group.type])
-        if not text_attachment:
-            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="No find text")
-            return
-        text = choice(text_attachment).value
-        if group.type == GroupType.replace:
-            text = await self.executor.replace_text(text)
+        if group.type == GroupType.inactive:
+            text = None
+        else:
+            text_attachment = repo.orders_attachments.get_all(order=order, type=GROUPS_ORDERS_TEXT_TYPES[group.type])
+            if not text_attachment:
+                repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="No find text")
+                return
+            text = choice(text_attachment).value
+            if group.type == GroupType.replace:
+                text = await self.executor.replace_text(text)
 
         image_attachment = repo.orders_attachments.get_all(order=order, type=OrderAttachmentTypes.image_common)
         image = choice(image_attachment).value if image_attachment else None
@@ -123,8 +142,6 @@ class BotTaskerAction:
         msg = await self.executor.send_message(chat_id=group.name, text=text, photo=image)
 
         if isinstance(msg, str):
-            if msg in ["Forbidden", "BadRequest"]:
-                repo.groups.update_to_next_type(group)
             repo.sessions_groups.update(sg, state=SessionGroupState.banned)
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)
 
@@ -163,13 +180,15 @@ class BotTaskerAction:
 
         tg_user = await self.executor.get_users(user.username)
         if isinstance(tg_user, str):
-            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=tg_user)
+            for ou in repo.orders_users.get_all(order=order, user=user):
+                repo.orders_users.update(ou, state=OrderUserStates.abort, state_description=tg_user)
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=tg_user)
         elif not tg_user:
             pass
         else:
             await self.executor.update_user(user, tg_user)
 
-        text_attachment = repo.orders_attachments.get_all(order=order, type=GROUPS_ORDERS_TEXT_TYPES[group.type])
+        text_attachment = repo.orders_attachments.get_all(order=order, type=OrderAttachmentTypes.text_common)
         if not text_attachment:
             repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="No find text")
             return
@@ -181,6 +200,8 @@ class BotTaskerAction:
         msg: Message = await self.executor.send_message(chat_id=user.username, text=text, photo=image)
 
         if isinstance(msg, str):
+            for ou in repo.orders_users.get_all(order=order, user=user):
+                repo.orders_users.update(ou, state=OrderUserStates.abort, state_description=msg)
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)
 
         if msg.empty:

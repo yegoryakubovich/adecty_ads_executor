@@ -17,7 +17,7 @@ from django.http import HttpResponseRedirect
 from django.views.generic import FormView
 
 from admin_web.admin import admin_site
-from admin_web.models import SessionOrder
+from admin_web.models import SessionOrder, SessionPersonal
 from .forms import LinkedSessionOrderForm
 
 LinkedSessionOrderURL = 'link_session_order'
@@ -32,6 +32,10 @@ class LinkedSessionOrderView(FormView):
         sessions = self.request.GET.get("sessions").split(',')
 
         for session in sessions:
+            for so in SessionOrder.objects.filter(session_id=session).all():
+                so.delete()
+            for sp in SessionPersonal.objects.filter(session_id=session).all():
+                sp.delete()
             SessionOrder.objects.get_or_create(session_id=session, order_id=order_id)
         return HttpResponseRedirect("/admin_web/session/")
 

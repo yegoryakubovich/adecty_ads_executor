@@ -81,7 +81,9 @@ class AssistantExecutorAction(BaseExecutorAction):
             states.append(SessionStates.spam_block)
         for so in repo.sessions_orders.get_all(order=order):
             session = repo.sessions.get(so.session_id)
-            if not session.state in states:
+            if session.state not in states:
+                continue
+            if len(repo.sessions_personals.get_all(session=session)) < 4:
                 continue
             tasks = 0
             for task in repo.sessions_tasks.get_all(session=session, state=SessionTaskStates.enable):

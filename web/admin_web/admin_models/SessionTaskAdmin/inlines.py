@@ -38,6 +38,4 @@ class SessionTaskInline(admin.TabularInline):
         return False
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        ids = [e.id for e in queryset.order_by('-id').all()[:max_rows_inline]]
-        return SessionTask.objects.filter(pk__in=ids).order_by('-id')
+        return super().get_queryset(request).order_by('-id')

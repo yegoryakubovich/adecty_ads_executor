@@ -46,6 +46,10 @@ class AssistantAction:
                 asyncio.create_task(
                     coro=self.checker.wait_mailing_order_check(), name="assistant_wait_mailing_order_check"
                 )
+            if "assistant_wait_sg_check" not in all_tasks_names:
+                asyncio.create_task(
+                    coro=self.checker.wait_session_group_check(), name="assistant_wait_sg_check"
+                )
             if "assistant_all_task_check" not in all_tasks_names:
                 asyncio.create_task(
                     coro=self.checker.all_task_check(), name="assistant_all_task_check"
@@ -57,10 +61,6 @@ class AssistantAction:
             if "assistant_wait_ads_order_check" not in all_tasks_names:
                 asyncio.create_task(
                     coro=self.checker.wait_ads_order_check(), name="assistant_wait_ads_order_check"
-                )
-            if "assistant_wait_sg_check" not in all_tasks_names:
-                asyncio.create_task(
-                    coro=self.checker.wait_session_group_check(), name="assistant_wait_sg_check"
                 )
             if "assistant_personals_check" not in all_tasks_names:
                 asyncio.create_task(
@@ -77,22 +77,22 @@ class AssistantAction:
                 asyncio.create_task(
                     coro=self.checker.new_proxy_check(), name="assistant_new_proxy_check"
                 )
-            if "assistant_new_session_check" not in all_tasks_names:
-                asyncio.create_task(
-                    coro=self.checker.new_session_check(), name="assistant_new_session_check"
-                )
             if "assistant_wait_proxy_check" not in all_tasks_names:
                 asyncio.create_task(
                     coro=self.checker.wait_proxy_check(), name="assistant_wait_proxy_check"
+                )
+            if "assistant_new_session_check" not in all_tasks_names:
+                asyncio.create_task(
+                    coro=self.checker.new_session_check(), name="assistant_new_session_check"
                 )
             if "assistant_wait_session_check" not in all_tasks_names:
                 asyncio.create_task(
                     coro=self.checker.wait_session_check(), name="assistant_wait_session_check"
                 )
-            if "assistant_sb_session_check" not in all_tasks_names:
-                asyncio.create_task(
-                    coro=self.checker.spam_block_session_check(), name="assistant_sb_session_check"
-                )
+            # if "assistant_sb_session_check" not in all_tasks_names:
+            #     asyncio.create_task(
+            #         coro=self.checker.spam_block_session_check(), name="assistant_sb_session_check"
+            #     )
             await asyncio.sleep(ASSISTANT_RARELY_SLEEP_SEC)
 
     # group_presence

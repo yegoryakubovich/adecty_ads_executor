@@ -55,23 +55,25 @@ class BotExecutorAction(BaseExecutorAction):
         try:
             return await self.client.get_users(user_ids=user_id)
         except errors.UsernameNotOccupied:
-            return
+            return "UsernameNotOccupied"
         except errors.UsernameInvalid:
-            return
+            return "UsernameInvalid"
 
     async def join_chat_by_group(self, group: Group) -> [types.Chat, str]:
         try:
             return await self.join_chat(chat_id=group.name)
-        except KeyError:
+        except KeyError as e:
+            self.logger(str(e))
             sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
             if sg:
                 repo.sessions_groups.update(sg, state=SessionGroupState.banned)
+            else:
+                repo.sessions_groups.create(session=self.session, group=group, state=SessionGroupState.banned)
             return "BanInGroup"
         except errors.UsernameNotOccupied:
-            repo.groups.update(group, state=GroupStates.inactive)
             return "UsernameNotOccupied"
         except errors.InviteRequestSent:
-            self.logger(f"Запрос в группу {group.name} отправлен от сессии #{self.session}")
+            repo.groups.update(group, join_request=True)
             return "InviteRequestSent"
         except errors.ChatInvalid:
             return "ChatInvalid"

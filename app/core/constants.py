@@ -24,16 +24,16 @@ def hour2sec(hours: int):
     return min2sec(hours * 60)
 
 
-NEW_SESSION_SLEEP_SEC = min2sec(60)
+NEW_SESSION_SLEEP_SEC = min2sec(120)
 URL_FOR_TEST_PROXY = 'https://ifconfig.me/all.json'
 avatar_path = 'media/bot/personals/avatars/'
 
 BOT_SLEEP_MIN_SEC = min2sec(10)  # sleep min
 BOT_SLEEP_MAX_SEC = min2sec(15)  # sleep max
 BOT_SLEEP_ANSWER_SEC = min2sec(2)  # sleep max
-ASSISTANT_SLEEP_SEC = min2sec(1)  # assistant sleep
-ASSISTANT_RARELY_SLEEP_SEC = min2sec(30)  # assistant sleep
-ASSISTANT_OFTEN_SLEEP_SEC = min2sec(5)  # assistant sleep
+ASSISTANT_SLEEP_SEC = min2sec(15)  # assistant sleep
+ASSISTANT_RARELY_SLEEP_SEC = min2sec(60)  # assistant sleep
+ASSISTANT_OFTEN_SLEEP_SEC = min2sec(15)  # assistant sleep
 MAX_TASKS_COUNT = 5  # max count tasks by one session
 
 SEND_MSG_DELAY_MSG = 30  # msg delay

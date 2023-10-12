@@ -15,14 +15,13 @@
 #
 
 import asyncio
-from random import randint
 
 from loguru import logger
 
 from core.constants import NEW_SESSION_SLEEP_SEC
 from database import repo
 from database.models import ProxyStates, SessionStates, GroupStates, MessageStates, Shop, ProxyTypes, GroupType, Group, \
-    User, OrderUserStates, SessionTask, SessionTaskType, SessionTaskStates, OrderStates, OrderTypes
+    User, OrderUserStates, SessionTask, SessionTaskType, SessionTaskStates, OrderStates, OrderTypes, PersonalTypes
 from functions import BotAction
 from functions.other.executor import AssistantExecutorAction
 from modules import convert
@@ -149,39 +148,31 @@ class CheckerAction:
 
     # SPAM_BLOCK SESSION CHECK
 
-    async def spam_block_session_check(self):
-        self.logger("spam_block_session_check")
-        for session in repo.sessions.get_all(state=SessionStates.spam_block):
-            bot = BotAction(session=session)
-            await bot.all_connection()
-            if await bot.spam_bot_check():
-                repo.sleeps.create(session=session, time_second=NEW_SESSION_SLEEP_SEC)
-                repo.sessions.update(session, state=SessionStates.free)
-                asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
+    # async def spam_block_session_check(self):
+    #     self.logger("spam_block_session_check")
+    #     for session in repo.sessions.get_all(state=SessionStates.spam_block):
+    #         bot = BotAction(session=session)
+    #         await bot.all_connection()
+    #         if await bot.spam_bot_check():
+    #             repo.sleeps.create(session=session, time_second=NEW_SESSION_SLEEP_SEC)
+    #             repo.sessions.update(session, state=SessionStates.free)
+    #             asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
 
     # WAIT SESSION_GROUP CHECK
 
     async def wait_session_group_check(self):
         self.logger("wait_session_group_check")
-        for group in repo.groups.get_all(state=GroupStates.waiting, join_request=False):
+        for group in repo.groups.get_all(state=GroupStates.waiting):
             st: SessionTask = repo.sessions_tasks.get_by(
-                group=group, type=SessionTaskType.check_group, state=SessionTaskStates.enable
+                group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
             )
-
             if not st:
-                session = await self.executor.get_session_by_group(group=group)
+                session = repo.sessions.get_free(group=group)
                 if session:
                     repo.sessions_tasks.create(
                         session=session,
-                        group=group, type=SessionTaskType.check_group, state=SessionTaskStates.enable
+                        group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
                     )
-                else:
-                    session = repo.sessions.get_free(group=group)
-                    if session:
-                        repo.sessions_tasks.create(
-                            session=session,
-                            group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
-                        )
 
     # WAIT MESSAGE CHECK
 
@@ -219,12 +210,15 @@ class CheckerAction:
                 if group.state != GroupStates.active:
                     continue
                 if group.join_request:
+                    repo.groups.update(group, state=GroupStates.inactive)
+                    continue
+                if group.captcha_have:
+                    repo.groups.update(group, state=GroupStates.inactive)
                     continue
                 if group.type == GroupType.inactive:
                     if not group.can_image:
                         repo.groups.update(group, state=GroupStates.inactive)
                         continue
-                    repo.groups.update(group, can_image=False, type=GroupType.link)
 
                 last_message = repo.messages.get_last(order=order, group=group)
                 if last_message:
@@ -283,16 +277,16 @@ class CheckerAction:
         for session in repo.sessions.get_all(state=SessionStates.free):
             if avatar and change_fi:
                 return self.logger(f"#{session.id} ALL OKAY")
-            sp = repo.sessions_personals.get_all(session=session)
-            if not change_fi:
-                if not sp:
-                    self.logger(f"#{session.id} CHANGE FI")
-                    repo.sessions_tasks.create(
-                        session=session, type=SessionTaskType.change_fi, state=SessionTaskStates.enable
-                    )
-                    change_fi = True
+
+            sps = repo.sessions_personals.get_all(session=session)
+            if not sps and not change_fi:
+                self.logger(f"#{session.id} CHANGE FI")
+                repo.sessions_tasks.create(session=session, type=SessionTaskType.change_fi,
+                                           state=SessionTaskStates.enable)
+                change_fi = True
             if not avatar:
-                if len(sp) < 4:
+                personals_types = [repo.personals.get(sp.personal_id).type for sp in sps]
+                if PersonalTypes.avatar not in personals_types:
                     self.logger(f"#{session.id} AVATAR")
                     repo.sessions_tasks.create(
                         session=session,

@@ -21,7 +21,7 @@ from . import Session, Group, Order, Message, User
 
 class SessionTaskType:
     non_type = 'non_type'
-    check_group = 'check_group'
+    # check_group = 'check_group'
     join_group = 'join_group'
     send_by_order = 'send_by_order'
     send_by_mailing = 'send_by_mailing'

@@ -82,4 +82,20 @@ def select_link_order(model_admin: admin.ModelAdmin, request, queryset):
     return HttpResponseRedirect(f"/{LinkedGroupOrderURL}?groups={groups}")
 
 
-actions_list = [select_link_order, state_to_inactive, state_to_active, state_to_waiting, export_presence]
+@admin.action(description="Спустить на уровень")
+def next_group_type(model_admin: admin.ModelAdmin, request, queryset):
+    for group in queryset:
+        if group.type == GroupType.link:
+            group.type = GroupType.no_link
+        elif group.type == GroupType.no_link:
+            group.type = GroupType.short
+        elif group.type == GroupType.short:
+            group.type = GroupType.replace
+        elif group.type == GroupType.replace:
+            group.type = GroupType.inactive
+        group.save()
+
+
+actions_list = [
+    select_link_order, state_to_inactive, state_to_active, state_to_waiting, export_presence, next_group_type
+]

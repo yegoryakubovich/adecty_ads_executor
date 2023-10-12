@@ -27,5 +27,4 @@ class OrderAttachmentInline(admin.TabularInline):
     # classes = ['collapse']
 
     def get_queryset(self, request):
-        ids = [e.id for e in super().get_queryset(request).order_by('type').all()][:max_rows_inline]
-        return OrderAttachment.objects.filter(pk__in=ids).order_by('-id')
+        return super().get_queryset(request).order_by('type')
