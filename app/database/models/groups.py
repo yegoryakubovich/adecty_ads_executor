@@ -32,6 +32,11 @@ class GroupType:
     inactive = 'inactive'
 
 
+class GroupCaptionType:
+    join_group = "join_group"
+    click_button = "click_button"
+
+
 class Group(BaseModel):
     id = PrimaryKeyField()
     name = CharField(max_length=128)
@@ -42,8 +47,8 @@ class Group(BaseModel):
     type = CharField(max_length=32, default=GroupType.link, null=True)  # Отправка ссылок
     join_request = BooleanField(default=False)
     captcha_have = BooleanField(default=False)
-    captcha_type = CharField(max_length=128)
-    captcha_data = CharField(max_length=128)
+    captcha_type = CharField(max_length=128, null=True)
+    captcha_data = CharField(max_length=128, null=True)
 
     class Meta:
         db_table = 'groups'

@@ -26,10 +26,11 @@ class OrderAttachmentTypes:
     text_no_link = 'text_no_link'
     text_short = 'text_short'
     text_replace = 'text_replace'
+    text_answer = 'text_answer'
 
     choices = (
         (image_common, image_common), (text_common, text_common), (text_no_link, text_no_link),
-        (text_short, text_short), (text_replace, text_replace)
+        (text_short, text_short), (text_replace, text_replace), (text_answer, text_answer)
     )
 
 

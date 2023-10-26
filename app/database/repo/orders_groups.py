@@ -21,11 +21,7 @@ model = OrderGroup
 
 
 class OrderGroupRepository(BaseRepository):
-    @db_manager
-    def fill(self):
-        for order in repo.orders.get_all():
-            for group in repo.groups.get_all():
-                self.model.get_or_create(order=order, group=group)
+    pass
 
 
 orders_groups = OrderGroupRepository(OrderGroup)

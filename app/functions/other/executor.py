@@ -52,13 +52,16 @@ class AssistantExecutorAction(BaseExecutorAction):
             proxy_id=proxy.id, proxy_shop_id=proxy_shop.id, proxy_shop_name=proxy_shop.name
         )
 
-    async def get_session_by_group(self, group: Group, spam: bool = False):
+    async def get_session_by_group(self, group: Group, order: Order, spam: bool = False):
         maybe_sessions = []
         states = [SessionStates.free]
         if spam:
             states.append(SessionStates.spam_block)
+        good_sessions_ids = [so.session_id for so in repo.sessions_orders.get_all(order_id=order.id)]
         for state in states:
             for session in repo.sessions.get_all(state=state):
+                if session.id not in good_sessions_ids:
+                    continue
                 sg: SessionGroup = repo.sessions_groups.get_by(session=session, group=group)
                 if sg:
                     if sg.state == SessionGroupState.banned:

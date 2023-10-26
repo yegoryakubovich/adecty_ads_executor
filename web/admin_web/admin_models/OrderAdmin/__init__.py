@@ -27,7 +27,7 @@ from admin_web.models import Order, Message
 
 @admin.register(Order, site=admin_site)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "state", "type", "datetime_stop", "created", "messages")
+    list_display = ("id", "name", "state", "type", "datetime_stop", "presence_data", "created", "messages")
     search_fields = ("id",)
     list_filter = ("state", "type", "created")
     readonly_fields = ("id", "created")

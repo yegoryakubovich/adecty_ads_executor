@@ -36,6 +36,7 @@ class Order(BaseModel):
     state = CharField(max_length=32, default=OrderStates.waiting)
     type = CharField(max_length=32)
     datetime_stop = DateTimeField()
+    presence_data = CharField(max_length=128, null=True)
 
     class Meta:
         db_table = 'orders'

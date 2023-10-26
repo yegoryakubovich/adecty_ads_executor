@@ -15,12 +15,13 @@
 #
 
 import asyncio
+from datetime import datetime, timedelta
 
 from loguru import logger
 
 from core.constants import ASSISTANT_SLEEP_SEC, ASSISTANT_OFTEN_SLEEP_SEC, ASSISTANT_RARELY_SLEEP_SEC, min2sec
 from database import repo
-from database.models import GroupStates, MessageStates
+from database.models import GroupStates, MessageStates, OrderTypes, Order, Message
 from functions.other.checker import CheckerAction
 from functions.other.executor import AssistantExecutorAction
 from functions.other.innovation import InnovationAction
@@ -100,20 +101,36 @@ class AssistantAction:
     async def group_presence(self):
         while True:
             self.logger("group_presence")
-            text = []
-            presence_count, all_count = 0, 0
-            for group in repo.groups.get_all(state=GroupStates.active):
-                messages_waiting = repo.messages.get_last(group=group, state=MessageStates.waiting)
-                if messages_waiting:
-                    link = await self.executor.create_link(group_name=group.name, post_id=messages_waiting.message_id)
-                    text.append(f"🟢 {link}")
-                    presence_count += 1
-                else:
-                    text.append(f"🔴 @{group.name}")
-                all_count += 1
-            await self.executor.change_log_message(
-                text='\n'.join(text), presence_count=presence_count, all_count=all_count
-            )
+            date_24_hour = datetime.utcnow() - timedelta(hours=24)
+            for order in repo.orders.get_all(type=OrderTypes.ads):
+                if not order.presence_data:
+                    continue
+                chat_split = order.presence_data.split('/')
+                text = []
+                msg_count = 0
+                presence_count, all_count = 0, 0
+                for og in repo.orders_groups.get_all(order=order):
+                    group = repo.groups.get(id=og.group_id)
+                    if group.state != GroupStates.active:
+                        continue
+                    messages_waiting = repo.messages.get_last(group=group, state=MessageStates.waiting)
+                    if messages_waiting:
+                        link = await self.executor.create_link(group_name=group.name,
+                                                               post_id=messages_waiting.message_id)
+                        text.append(f"🟢 {link}")
+                        presence_count += 1
+                    else:
+                        text.append(f"🔴 @{group.name}")
+                    all_count += 1
+                for msg in repo.messages.get_all(order=order)[::-1]:
+                    if msg.created < date_24_hour:
+                        break
+                    msg_count += 1
+                await self.executor.change_log_message(
+                    order_name=order.name, chat_id=int(chat_split[0]), message_id=int(chat_split[1]),
+                    text='\n'.join(text), presence_count=presence_count, all_count=all_count, msg_count=msg_count
+                )
+                await asyncio.sleep(5)
             await asyncio.sleep(min2sec(5))
 
     @func_logger

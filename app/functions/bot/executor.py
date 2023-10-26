@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from typing import List
 
 from loguru import logger
@@ -58,6 +57,8 @@ class BotExecutorAction(BaseExecutorAction):
             return "UsernameNotOccupied"
         except errors.UsernameInvalid:
             return "UsernameInvalid"
+        except IndexError:
+            return "IndexError"
 
     async def join_chat_by_group(self, group: Group) -> [types.Chat, str]:
         try:
@@ -79,6 +80,28 @@ class BotExecutorAction(BaseExecutorAction):
             return "ChatInvalid"
         except errors.ChannelInvalid:
             return "ChannelInvalid"
+        except errors.UsernameInvalid:
+            return "UsernameInvalid"
+
+    async def join_chat_by_username(self, username: str) -> [types.Chat, str]:
+        try:
+            return await self.join_chat(chat_id=username)
+        except KeyError as e:
+            self.logger(str(e))
+            sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
+            if sg:
+                repo.sessions_groups.update(sg, state=SessionGroupState.banned)
+            else:
+                repo.sessions_groups.create(session=self.session, group=group, state=SessionGroupState.banned)
+            return "BanInGroup"
+        except errors.UsernameNotOccupied:
+            return "UsernameNotOccupied"
+        except errors.InviteRequestSent:
+            return "InviteRequestSent"
+        except errors.ChatInvalid:
+            return "ChatInvalid"
+        except errors.ChannelInvalid:
+            return "ChannelInvalid"
 
     async def join_chat(self, chat_id: [str, int]) -> [types.Chat, str]:
         return await self.client.join_chat(chat_id=chat_id)
@@ -92,7 +115,7 @@ class BotExecutorAction(BaseExecutorAction):
     async def get_all_messages_ids(self, chat_id: [str, int], limit: int = 0) -> List[int]:
         return [message.id async for message in self.client.get_chat_history(chat_id=chat_id, limit=limit)]
 
-    async def send_message(self, chat_id: [str, int], text: str, photo: str = None) -> [types.Message, str]:
+    async def send_message(self, chat_id: [str, int], text: str = None, photo: str = None) -> [types.Message, str]:
         try:
             if photo:
                 return await self.client.send_photo(chat_id=chat_id, photo=photo, caption=text)

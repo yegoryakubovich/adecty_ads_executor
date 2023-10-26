@@ -15,7 +15,7 @@
 #
 """FIRST"""
 from .countries import Country
-from .groups import Group, GroupStates, GroupType
+from .groups import Group, GroupStates, GroupType, GroupCaptionType
 from .orders import Order, OrderStates, OrderTypes
 from .personals import Personal, PersonalTypes, PersonalSex
 from .shops import Shop

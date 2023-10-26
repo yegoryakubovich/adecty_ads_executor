@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 from datetime import datetime
-from datetime import datetime
 
 from django.db import models
 
@@ -47,8 +46,8 @@ class Order(models.Model):
     state = models.CharField(max_length=32, default=OrderStates.waiting, choices=OrderStates.choices,
                              verbose_name="Состояние")
     type = models.CharField(max_length=32, null=True, blank=True, choices=OrderTypes.choices, verbose_name="Тип")
-
     datetime_stop = models.DateTimeField()
+    presence_data = models.CharField(max_length=128, null=True, blank=True, verbose_name="Данные присутствия")
 
     def __str__(self):
         return f"{self.id} - {self.name} ({self.state})"

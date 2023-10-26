@@ -35,14 +35,12 @@ def on_start_up():
     """temporary"""
     repo.shops.fill()
     repo.groups.fill()
-    repo.orders_groups.fill()
     repo.personals.fill()
     """temporary"""
 
     repo.sessions.not_work()
 
     loop = asyncio.get_event_loop()
-    all_functions = []
     all_functions = [{'fun': AssistantAction(), 'name': 'Assistant'}]
     all_functions.extend([
         {
@@ -62,7 +60,6 @@ def on_start_up():
 
 async def hello():
     while True:
-        # logger.info([{'name': task.get_name(), 'func': task.get_coro()} for task in asyncio.all_tasks()])
         all_tasks = []
         for task in asyncio.all_tasks():
             task_name = task.get_name()

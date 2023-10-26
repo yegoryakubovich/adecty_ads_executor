@@ -68,7 +68,24 @@ groups_list = (
     "trucker_cargo", "ukrnewyorkgroup", "usa_360", "usa_benefit", "usa_exchange", "usa_job_help", "usa_job_helper",
     "usachatru", "usaforuz", "usagreen", "usamexico", "usarmenians", "usb_mexico_usa", "used21cars", "uzbeksinusalup",
     "vatandoshim_usa_50_state", "vatandoshim_uz", "vatandoshimusa", "vatandoshimuzbus", "vhi7f", "vhi7fvhi7f",
-    "workersnomads", "yagonadarchausany"
+    "workersnomads", "yagonadarchausany",
+
+    "avtorynok_moskva", "avtorynok_rossias", "perekupavtoRF", "avtoprov", "tatarstan_avtorynok", "avtozapret_avito_net",
+    "avtourala", "avtobazar_dnepr", "avtorynok_ekaterinburg", "auto_irkutska", "autobmg", "avtomobili_nn",
+    "vadimavtopodborr", "zherdesh", "avto_kurs_chat", "easycartatarstan", "autozapchasti_ru", "avtomobili_russia",
+    "avtobaraholkaa", "autorynokkzn", "autotrade77", "phuket_arenda", "columbchat", "avtorynok_omsk_55",
+    "avtorynok_omska", "dorogachat", "pattaya_arenda", "avto_iz_germanii_gtk", "kznavto16", "zapchasti_chat1",
+    "avtorynok_Russian", "megadriveru", "avtoxak42", "avtotemaav", "dpsoblava", "avtopomoshlnr", "rf_avtorinok",
+    "auto_mrpl", "logistics_avto", "avtorynok_kg_iqro", "spectehno", "autobykzn", "avtosalerussia", "telega_cart",
+
+    "chinaforbiz", "enmotor", "wbchat_wb", "deliveryland", "yabaolu", "x_delivery", "cargochinachat", "mpgroup_china",
+    "china_russia_ff", "expresschina28", "sellerkellerfulf", "logistics_china", "cargo1one", "kargoh", "milafbruchat",
+    "kargo352", "businesswithchina2022", "quicktao_cargo1", "antmineropt", "marketroi", "dostavkakargo",
+    "avaslogistics", "cargo5566", "china_zakup", "russian1688", "milafbruchat2", "chinamocow", "magneskitay",
+    "logistics_china_kz", "flgchina", "el_motorscom", "fulfilment4", "Batareyka125rus", "joycity_chat",
+    "cargo8866dostavkaot10kg", "cargoizchina", "tovarka_kitay_chat", "getabox_china_chat", "travel_chat_rus1",
+    "aaalogistics_chat", "cargo889_leva", "unclemaochat", "dalex_chat", "cargogroup", "topcar_chat", "miner_bros",
+
 )
 
 surnames_man = [

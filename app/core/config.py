@@ -25,8 +25,6 @@ class Settings(BaseSettings):
 
     TELEGRAM_TOKEN: str
     TELEGRAM_CHAT_ID: str
-    TELEGRAM_CHANNEL_ID: str
-    TELEGRAM_CHANNEL_MSG_ID: str
 
     class Config:
         env_file = ".env"

@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 from datetime import datetime
+
 from django.db import models
 
 
@@ -35,6 +36,13 @@ class GroupType:
     choices = ((link, link), (no_link, no_link), (short, short), (replace, replace), (inactive, inactive))
 
 
+class GroupCaptionType:
+    join_group = "join_group"
+    click_button = "click_button"
+
+    choices = ((join_group, join_group), (click_button, click_button),)
+
+
 class Group(models.Model):
     class Meta:
         db_table = 'groups'
@@ -44,7 +52,7 @@ class Group(models.Model):
     id = models.AutoField(primary_key=True)
     created = models.DateTimeField(default=datetime.utcnow, verbose_name="Время создания")
 
-    name = models.CharField(max_length=128,unique=True, verbose_name="Название")
+    name = models.CharField(max_length=128, unique=True, verbose_name="Название")
     state = models.CharField(max_length=32, default=GroupStates.waiting, choices=GroupStates.choices,
                              verbose_name="Состояние")
     subscribers = models.IntegerField(verbose_name="Подписчиков")  # Количество подписчиков
@@ -53,8 +61,9 @@ class Group(models.Model):
     type = models.CharField(max_length=32, default=GroupType.link, choices=GroupType.choices, verbose_name="Тип")
     join_request = models.BooleanField(default=False, verbose_name="Запрос вступления")
     captcha_have = models.BooleanField(default=False, verbose_name="Капча")
-    captcha_type = models.CharField(max_length=128, blank=True, verbose_name="Тип капчи")
-    captcha_data = models.CharField(max_length=128, blank=True, verbose_name="Информация по капче")
+    captcha_type = models.CharField(max_length=128, null=True, blank=True, choices=GroupCaptionType.choices,
+                                    verbose_name="Тип капчи")
+    captcha_data = models.CharField(max_length=128, null=True, blank=True, verbose_name="Информация капчи")
 
     def __str__(self):
         return f"{self.id} - {self.name}  ({self.state})"

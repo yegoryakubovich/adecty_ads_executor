@@ -13,10 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from operator import itemgetter
+from typing import List
+
+from loguru import logger
+
 from core.constants import MAX_TASKS_COUNT
 from database import repo, db_manager
 from database.base_repository import BaseRepository
-from database.models import Session, SessionStates, Group
+from database.models import Session, SessionStates, Group, Order
 from database.models.sessions_tasks import SessionTaskType, SessionTaskStates
 
 
@@ -35,8 +40,14 @@ class SessionRepository(BaseRepository):
     #         )
 
     @db_manager
-    def get_free(self, group: Group = None) -> Session:
+    def get_free(self, orders: List[Order], group: Group = None) -> Session:
+        maybe_sessions = []
+        good_sessions_ids = []
+        for order in orders:
+            good_sessions_ids.extend([so.session_id for so in repo.sessions_orders.get_all(order_id=order.id)])
         for session in self.get_all(state=SessionStates.free):
+            if session.id not in good_sessions_ids:
+                continue
             if group:
                 if repo.sessions_groups.get_by(session=session, group=group):
                     continue
@@ -46,7 +57,11 @@ class SessionRepository(BaseRepository):
                     tasks.append(task)
             if len(tasks) >= MAX_TASKS_COUNT:
                 continue
-            return session
+            maybe_sessions.append({'id': session.id, 'tasks': len(tasks)})
+
+        if maybe_sessions:
+            logger.info(sorted(maybe_sessions, key=itemgetter('tasks')))
+            return repo.sessions.get(sorted(maybe_sessions, key=itemgetter('tasks'))[0]['id'])
 
     def to_check(self, session: Session):
         session.state = SessionStates.waiting

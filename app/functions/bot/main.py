@@ -19,10 +19,10 @@ from typing import Optional
 from loguru import logger
 from pyrogram import Client, errors, enums
 
-from core.constants import ASSISTANT_SLEEP_SEC, ANSWER_MESSAGE
+from core.constants import ASSISTANT_SLEEP_SEC
 from database import repo
 from database.models import Session, SessionProxy, SessionStates, MessageStates, User, SessionTaskType, \
-    SessionTaskStates
+    SessionTaskStates, OrderAttachmentTypes, OrderAttachment
 from functions.bot.executor import BotExecutorAction
 from functions.bot.simulator import SimulatorAction
 from functions.bot.tasker import BotTaskerAction
@@ -161,10 +161,6 @@ class BotAction:
                             await self.tasker.join_group(task)
                             await self.stop_session()
                             await asyncio.sleep(await smart_create_sleep(self.session))
-                        # elif task.type == SessionTaskType.check_group:  # CHECK GROUP
-                        #     await self.tasker.check_group(task)
-                        #     await self.stop_session()
-                        #     await asyncio.sleep(await smart_create_sleep(self.session))
                         elif task.type == SessionTaskType.send_by_order:  # SEND BY ORDER
                             await self.tasker.send_by_order(task)
                             await self.stop_session()
@@ -197,6 +193,14 @@ class BotAction:
             await asyncio.sleep(ASSISTANT_SLEEP_SEC)
 
     async def start_answers(self):
+        so = repo.sessions_orders.get_by(session_id=self.session.id)
+        if not so:
+            return
+        order = repo.orders.get(so.order_id)
+        order_attachment = repo.orders_attachments.get_by(order_id=order.id, type=OrderAttachmentTypes.text_answer)
+        if not order_attachment:
+            return
+
         await self.start_session()
         try:
             async for dialog in self.client.get_dialogs(limit=100):
@@ -212,7 +216,7 @@ class BotAction:
                             session=self.session, user=user, message_id=msg.id,
                             text=msg.text or msg.caption, state=MessageStates.from_user
                         )
-                        msg_send = await msg.reply("\n".join(ANSWER_MESSAGE), disable_web_page_preview=True)
+                        msg_send = await msg.reply(order_attachment.value, disable_web_page_preview=True)
                         if msg_send and not msg_send.empty:
                             if msg_send.from_user:
                                 await self.executor.update_session(msg_send.from_user)

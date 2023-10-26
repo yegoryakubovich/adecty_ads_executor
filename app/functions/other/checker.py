@@ -15,13 +15,15 @@
 #
 
 import asyncio
+from datetime import datetime
 
 from loguru import logger
 
 from core.constants import NEW_SESSION_SLEEP_SEC
 from database import repo
 from database.models import ProxyStates, SessionStates, GroupStates, MessageStates, Shop, ProxyTypes, GroupType, Group, \
-    User, OrderUserStates, SessionTask, SessionTaskType, SessionTaskStates, OrderStates, OrderTypes, PersonalTypes
+    User, OrderUserStates, SessionTask, SessionTaskType, SessionTaskStates, OrderStates, OrderTypes, PersonalTypes, \
+    Order
 from functions import BotAction
 from functions.other.executor import AssistantExecutorAction
 from modules import convert
@@ -167,7 +169,10 @@ class CheckerAction:
                 group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
             )
             if not st:
-                session = repo.sessions.get_free(group=group)
+                orders = []
+                for og in repo.orders_groups.get_all(group=group):
+                    orders.append(repo.orders.get(id=og.order_id))
+                session = repo.sessions.get_free(orders=orders, group=group)
                 if session:
                     repo.sessions_tasks.create(
                         session=session,
@@ -186,14 +191,18 @@ class CheckerAction:
                 group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.enable,
             )
             if not st:
-                session = await self.executor.get_session_by_group(group=group, spam=True)
+                order = repo.orders.get(message.order_id)
+                session = await self.executor.get_session_by_group(group=group, spam=True, order=order)
                 if session:
                     repo.sessions_tasks.create(
                         session=session,
                         group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.enable
                     )
                 else:
-                    session = repo.sessions.get_free(group=group)
+                    orders = []
+                    for og in repo.orders_groups.get_all(group=group):
+                        orders.append(repo.orders.get(id=og.order_id))
+                    session = repo.sessions.get_free(orders=orders, group=group)
                     if session:
                         repo.sessions_tasks.create(
                             session=session,
@@ -204,15 +213,17 @@ class CheckerAction:
 
     async def wait_ads_order_check(self):
         self.logger("wait_ads_order_check")
+        date_now = datetime.utcnow()
         for order in repo.orders.get_all(state=OrderStates.waiting, type=OrderTypes.ads):
+            order: Order
+            if order.datetime_stop <= date_now:
+                repo.orders.update(order, state=OrderStates.stopped)
+                continue
             for od in repo.orders_groups.get_all(order=order):
                 group: Group = repo.groups.get(od.group_id)
                 if group.state != GroupStates.active:
                     continue
                 if group.join_request:
-                    repo.groups.update(group, state=GroupStates.inactive)
-                    continue
-                if group.captcha_have:
                     repo.groups.update(group, state=GroupStates.inactive)
                     continue
                 if group.type == GroupType.inactive:
@@ -228,28 +239,33 @@ class CheckerAction:
                 st: SessionTask = repo.sessions_tasks.get_all(
                     order=order, group=group, type=SessionTaskType.send_by_order, state=SessionTaskStates.enable
                 )
-                if not st:
-                    self.logger(f"Group_{group.id}. Task not found")
-                    session = await self.executor.get_session_by_group(group=group)
+                if st:
+                    continue
+                self.logger(f"Group_{group.id}. Task not found")
+                session = await self.executor.get_session_by_group(group=group, order=order)
+                if session:
+                    self.logger(f"Group_{group.id}. Found linked session")
+                    repo.sessions_tasks.create(
+                        session=session, group=group, order=order,
+                        type=SessionTaskType.send_by_order, state=SessionTaskStates.enable
+                    )
+                else:
+                    self.logger(f"Group_{group.id}. Not found linked session")
+                    session = repo.sessions.get_free(orders=[order], group=group)
                     if session:
-                        self.logger(f"Group_{group.id}. Found linked session")
+                        self.logger(f"Group_{group.id}. Found session for link")
                         repo.sessions_tasks.create(
-                            session=session, group=group, order=order,
-                            type=SessionTaskType.send_by_order, state=SessionTaskStates.enable
+                            session=session, group=group,
+                            type=SessionTaskType.join_group, state=SessionTaskStates.enable
                         )
-                    else:
-                        self.logger(f"Group_{group.id}. Not found linked session")
-                        session = repo.sessions.get_free(group=group)
-                        if session:
-                            self.logger(f"Group_{group.id}. Found session for link")
-                            repo.sessions_tasks.create(
-                                session=session, group=group,
-                                type=SessionTaskType.join_group, state=SessionTaskStates.enable
-                            )
 
     async def wait_mailing_order_check(self):
         self.logger("wait_order_check")
+        date_now = datetime.utcnow()
         for order in repo.orders.get_all(state=OrderStates.waiting, type=OrderTypes.mailing):
+            if order.datetime_stop <= date_now:
+                repo.orders.update(order, state=OrderStates.stopped)
+                continue
             for ou in repo.orders_users.get_all(order=order, state=OrderUserStates.active):
                 user: User = repo.users.get(ou.user_id)
                 if not user.username:
@@ -258,15 +274,16 @@ class CheckerAction:
                 st: SessionTask = repo.sessions_tasks.get_all(
                     order=order, user=user, type=SessionTaskType.send_by_mailing, state=SessionTaskStates.enable
                 )
-                if not st:
-                    session = await self.executor.get_session_by_order(order=order)
-                    if not session:
-                        self.logger("Not find free session to mailing")
-                        continue
-                    repo.sessions_tasks.create(
-                        session=session, user=user, order=order,
-                        type=SessionTaskType.send_by_mailing, state=SessionTaskStates.enable
-                    )
+                if st:
+                    continue
+                session = await self.executor.get_session_by_order(order=order)
+                if not session:
+                    self.logger("Not find free session to mailing")
+                    return
+                repo.sessions_tasks.create(
+                    session=session, user=user, order=order,
+                    type=SessionTaskType.send_by_mailing, state=SessionTaskStates.enable
+                )
 
     # Personals Check
 

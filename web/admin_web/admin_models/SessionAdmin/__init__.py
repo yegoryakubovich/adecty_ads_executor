@@ -59,7 +59,7 @@ class SessionAdmin(admin.ModelAdmin):
         msg_for_count = len(Message.objects.filter(session=model, state=MessageStates.to_user).all())
         return msg_all_count - msg_for_count
 
-    @admin.display(description="Сообщений")
+    @admin.display(description="Сегодня")
     def message_send_day(self, model: Session):
         msg_all = []
         for msg in Message.objects.filter(session=model).all():

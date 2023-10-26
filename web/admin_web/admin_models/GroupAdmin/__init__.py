@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from datetime import datetime, timedelta
 
 from django.contrib import admin
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
@@ -38,7 +39,7 @@ class PresenceState:
 class GroupAdmin(admin.ModelAdmin):
     list_display = (
         "id", "name_fix", "state", "subscribers", "can_image", "type", "join_request", "created",
-        "delete_count", "abortively_percent", "sessions_count"
+        "delete_count", "delete_count_today", "abortively_percent", "sessions_count"
     )
     list_filter = ("state", "can_image", "type", "join_request", "created")
     search_fields = ("id",)
@@ -59,6 +60,20 @@ class GroupAdmin(admin.ModelAdmin):
     def delete_count(self, model: Group):
         messages_count = len(Message.objects.filter(group=model).all())
         delete_count = len(Message.objects.filter(group=model, state=MessageStates.deleted).all())
+        return f"{delete_count}/{messages_count}"
+
+    @admin.display(description="Сегодня")
+    def delete_count_today(self, model: Group):
+        messages_count = 0
+        delete_count = 0
+        for msg in Message.objects.filter(group=model).all():
+            if msg.state == MessageStates.to_user:
+                continue
+            if msg.created.timestamp() < (datetime.utcnow() - timedelta(hours=24)).timestamp():
+                continue
+            messages_count += 1
+            if msg.state == MessageStates.deleted:
+                delete_count += 1
         return f"{delete_count}/{messages_count}"
 
     @admin.display(description="Название")

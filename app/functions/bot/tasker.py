@@ -13,20 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import asyncio
 from random import choice
 from typing import Any
 
 from loguru import logger
-from pyrogram import Client, raw, types
+from pyrogram import Client, types
 from pyrogram.raw import types
 from pyrogram.types import Message
 
-from core.constants import SEND_MSG_DELAY_MSG, KEY_WORDS, GROUPS_ORDERS_TEXT_TYPES
+from core.constants import SEND_MSG_DELAY_MSG, KEY_WORDS, GROUPS_ORDERS_TEXT_TYPES, min2sec
 from database import repo
 from database.models import Session, SessionTask, GroupStates, MessageStates, Order, Group, SessionGroup, User, \
     PersonalTypes, PersonalSex, SessionTaskStates, SessionGroupState, Personal, OrderUserStates, \
-    OrderAttachmentTypes, GroupType
+    OrderAttachmentTypes, GroupType, GroupCaptionType
 from functions.bot.executor import BotExecutorAction
+from utils.helpers import smart_create_sleep
 
 
 class BotTaskerAction:
@@ -46,9 +48,26 @@ class BotTaskerAction:
         """
         group = repo.groups.get(task.group_id)
 
+        if group.captcha_have:
+            if group.captcha_type == GroupCaptionType.join_group:
+                captcha_chat = await self.executor.join_chat_by_username(username=group.captcha_data)
+                if isinstance(captcha_chat, str):
+                    return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively,
+                                                      state_description=captcha_chat)
+            elif group.captcha_type == GroupCaptionType.click_button:
+                for i in range(5):
+                    for msg in await self.executor.get_chat_history(chat_id=group.name, limit=10):
+                        if msg.reply_markup:
+                            await self.executor.client.request_callback_answer(
+                                chat_id=msg.chat.id, message_id=msg.id,
+                                callback_data=msg.reply_markup[0][0].callback_data
+                            )
+                            break
+                    await asyncio.sleep(10)
+
         chat: types.Chat = await self.executor.join_chat_by_group(group=group)
         if isinstance(chat, str):
-            if chat in ["InviteRequestSent", "ChatInvalid", "ChannelInvalid", "UsernameNotOccupied"]:
+            if chat in ["InviteRequestSent", "ChatInvalid", "ChannelInvalid", "UsernameInvalid", "UsernameNotOccupied"]:
                 repo.groups.update(group, state=GroupStates.inactive)
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
         if not chat.permissions:
@@ -64,22 +83,6 @@ class BotTaskerAction:
                            state=GroupStates.active)
         repo.sessions_groups.create(session=self.session, group=group)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
-
-    # async def check_group(self, task: SessionTask):
-    #     self.logger("check_group")
-    #     """
-    #         Задача проверки группы.
-    #     """
-    #     group = repo.groups.get(task.group_id)
-    #
-    #     chat: types.Chat = await self.executor.get_chat_by_group(group)
-    #     if isinstance(chat, str):
-    #         return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
-    #
-    #     repo.groups.update(group, subscribers=chat.members_count,
-    #                        can_image=chat.permissions.can_send_media_messages,
-    #                        state=GroupStates.active)
-    #     repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
 
     async def check_message(self, task: SessionTask):
         self.logger("check_message")
@@ -197,12 +200,15 @@ class BotTaskerAction:
         image_attachment = repo.orders_attachments.get_all(order=order, type=OrderAttachmentTypes.image_common)
         image = choice(image_attachment).value if image_attachment else None
 
-        msg: Message = await self.executor.send_message(chat_id=user.username, text=text, photo=image)
+        await self.executor.send_message(chat_id=user.username, photo=image)
+        msg: Message = await self.executor.send_message(chat_id=user.username, text=text)
 
         if isinstance(msg, str):
             for ou in repo.orders_users.get_all(order=order, user=user):
                 repo.orders_users.update(ou, state=OrderUserStates.abort, state_description=msg)
-            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)
+            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)
+            await asyncio.sleep(await smart_create_sleep(self.session, mi=min2sec(45), ma=min2sec(60)))
+            return
 
         if msg.empty:
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Empty")
@@ -220,7 +226,8 @@ class BotTaskerAction:
         )
 
         await self.executor.send_message_mailing_log(
-            session_id=self.session.id, user_id=user.id, username=user.username, order_name=f"{order.id} - {order.name}"
+            session_id=self.session.id, user_id=user.id, username=user.username,
+            order_id=order.id, order_name=order.name
         )
 
     async def change_fi(self, task: SessionTask):

@@ -25,6 +25,7 @@ class OrderAttachmentTypes:
     text_no_link = 'text_no_link'
     text_short = 'text_short'
     text_replace = 'text_replace'
+    text_answer = 'text_answer'
 
 
 class OrderAttachment(BaseModel):
