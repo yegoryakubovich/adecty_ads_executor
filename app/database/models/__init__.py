@@ -14,10 +14,12 @@
 # limitations under the License.
 #
 """FIRST"""
+from .answers import Answer
 from .countries import Country
 from .groups import Group, GroupStates, GroupType, GroupCaptionType
 from .orders import Order, OrderStates, OrderTypes
 from .personals import Personal, PersonalTypes, PersonalSex
+from .settings import Setting, SettingTypes
 from .shops import Shop
 from .users import User
 
@@ -41,10 +43,8 @@ from .sessions_tasks import SessionTask, SessionTaskStates, SessionTaskType
 from .sessions_personals import SessionPersonal
 
 all_models = (
-    Country, Group, Order, Personal, Shop, User,
-    Proxy, Session, CountryLink,
-    Sleep, Message,
-    GroupCountry,
-    OrderGroup, OrderUser, OrderPersonal, OrderAttachment,
+    Answer, Country, Group, Order, Personal, Setting, Shop, User,
+    Proxy, Session, CountryLink, Sleep, Message,
+    GroupCountry, OrderGroup, OrderUser, OrderPersonal, OrderAttachment,
     SessionGroup, SessionOrder, SessionProxy, SessionTask, SessionPersonal
 )

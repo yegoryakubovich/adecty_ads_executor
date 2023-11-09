@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from .answers import answers
 from .countries import countries
 from .countries_links import countries_links
 from .groups import groups
@@ -30,6 +31,7 @@ from .sessions_orders import sessions_orders
 from .sessions_personals import sessions_personals
 from .sessions_proxies import sessions_proxies
 from .sessions_tasks import sessions_tasks
+from .settings import settings
 from .shops import shops
 from .sleeps import sleeps
 from .users import users

@@ -13,14 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from core.default_data import groups_list
+from core.default_data import settings_list
 from database import db_manager
 from database.base_repository import BaseRepository
-from database.models import OrderUser
+from database.models import Setting
 
 
-class OrderUserRepository(BaseRepository):
-    pass
+class SettingRepository(BaseRepository):
+    @db_manager
+    def fill(self):
+        for item in settings_list:
+            if self.get_by(key=item['key']):
+                continue
+            self.model.create(**item)
 
 
-orders_users = OrderUserRepository(OrderUser)
+settings = SettingRepository(Setting)

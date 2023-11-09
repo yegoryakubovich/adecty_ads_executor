@@ -1,4 +1,52 @@
+from database.models import SettingTypes
+
 shops_list = [{'name': 'no name'}]
+
+settings_list = [
+    {
+        'name': 'URL для тестирования прокси', 'key': 'proxy_check_url',
+        'type': SettingTypes.string, 'value': 'https://ifconfig.me/all.json'
+    },
+    {
+        'name': 'Сон новой сессии (сек)', 'key': 'new_session_sleep',
+        'type': SettingTypes.num, 'value': '3600'},
+    {
+        'name': 'Минимальный сон между задачами (сек)', 'key': 'session_sleep_min',
+        'type': SettingTypes.num, 'value': '600'
+    },
+    {
+        'name': 'Максимальный сон между задачами (сек)', 'key': 'session_sleep_max',
+        'type': SettingTypes.num, 'value': '900'
+    },
+    {
+        'name': 'Сон между проверкой сообщений (сек)', 'key': 'session_answer_sleep',
+        'type': SettingTypes.num, 'value': '300'
+    },
+    {
+        'name': 'Сон ассистента долгий (сек)', 'key': 'assistant_sleep',
+        'type': SettingTypes.num, 'value': '900'
+    },
+    {
+        'name': 'Сон ассистента долгий (сек)', 'key': 'assistant_sleep_rarely',
+        'type': SettingTypes.num, 'value': '3600'
+    },
+    {
+        'name': 'Максимальное количество задач', 'key': 'session_task_max',
+        'type': SettingTypes.num, 'value': '15'
+    },
+    {
+        'name': 'Количество сообщений между постами', 'key': 'send_message_delay',
+        'type': SettingTypes.num, 'value': '30'
+    },
+    {
+        'name': 'Ключевые слова для добавления пользователей (запятая)', 'key': 'user_save_key_word',
+        'type': SettingTypes.list, 'value': 'обмен,обменник'
+    },
+    {
+        'name': 'Обновление статистики присутствия (сек)', 'key': 'group_presence_delay',
+        'type': SettingTypes.num, 'value': '300'
+    },
+]
 
 groups_list = (
     "kekajangroup", "adaptaciyausa", "adaptaciya_ua_usa", "ads_new_york", "calosangeles", "ca_miami_chat",

@@ -3,12 +3,11 @@ from random import randint
 
 from loguru import logger
 
-from core.constants import BOT_SLEEP_MIN_SEC, BOT_SLEEP_MAX_SEC
 from database import repo
 from database.models import SleepStates, Session
 
 
-async def smart_create_sleep(session: Session, mi=BOT_SLEEP_MIN_SEC, ma=BOT_SLEEP_MAX_SEC):
+async def smart_create_sleep(session: Session, mi: int, ma: int):
     logger.info("smart_create_sleep")
     for sleep in repo.sleeps.get_all(session=session, state=SleepStates.enable):
         logger.info(f"Sleep #{sleep.id} (session_{session.id}) disabled by smart_create_sleep")
@@ -32,4 +31,3 @@ async def smart_sleep(session: Session):
             return 0
         logger.info(f"[SLEEP #{sleep.id}] Session #{session.id} {delta}")
         return delta_sec
-

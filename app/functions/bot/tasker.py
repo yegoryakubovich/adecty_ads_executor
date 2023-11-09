@@ -22,11 +22,11 @@ from pyrogram import Client, types
 from pyrogram.raw import types
 from pyrogram.types import Message
 
-from core.constants import SEND_MSG_DELAY_MSG, KEY_WORDS, GROUPS_ORDERS_TEXT_TYPES, min2sec
+from core.constants import GROUPS_ORDERS_TEXT_TYPES, min2sec
 from database import repo
 from database.models import Session, SessionTask, GroupStates, MessageStates, Order, Group, SessionGroup, User, \
     PersonalTypes, PersonalSex, SessionTaskStates, SessionGroupState, Personal, OrderUserStates, \
-    OrderAttachmentTypes, GroupType, GroupCaptionType
+    OrderAttachmentTypes, GroupType, GroupCaptionType, SessionStates, Setting, SettingTypes
 from functions.bot.executor import BotExecutorAction
 from utils.helpers import smart_create_sleep
 
@@ -91,6 +91,8 @@ class BotTaskerAction:
         """
         message = repo.messages.get(id=task.message_id)
         group = repo.groups.get(id=message.group_id)
+        setting_msg: Setting = repo.settings.get_by(key="assistant_sleep")
+        setting_words: Setting = repo.settings.get_by(key="assistant_sleep")
 
         chat = await self.executor.get_chat_by_group(group)
 
@@ -99,8 +101,10 @@ class BotTaskerAction:
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
 
         repo.groups.update(group, subscribers=chat.members_count)
-        chat_messages = await self.executor.get_all_messages(group.name, limit=SEND_MSG_DELAY_MSG)
-        await self.executor.check_by_key_word(messages=chat_messages, key_words=KEY_WORDS)
+        chat_messages = await self.executor.get_all_messages(
+            group.name, limit=int(setting_msg.value) if setting_msg.type == SettingTypes.num else setting_msg.value
+        )
+        await self.executor.check_by_key_word(messages=chat_messages, key_words=setting_words.value.split(','))
         chat_messages_ids = [chat_message.id for chat_message in chat_messages]
 
         msg = await self.executor.get_messages(chat_id=group.name, msg_id=message.message_id)
@@ -230,6 +234,28 @@ class BotTaskerAction:
             order_id=order.id, order_name=order.name
         )
 
+    async def check_spamblock(self, task: SessionTask):
+        self.logger("check_spamblock")
+        good_words = ["no limits", "свободен"]
+        await self.executor.send_message(chat_id="SpamBot", text="/start")
+        await asyncio.sleep(30)
+        messages = await self.executor.get_chat_history(chat_id="SpamBot", limit=2)
+        if not messages:
+            repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Not message")
+        good_bool = False
+        for message in messages:
+            for word in good_words:
+                if word in message.text:
+                    good_bool = True
+
+        if good_bool:
+            repo.sessions.update(self.session, state=SessionStates.free)
+        else:
+            for task in repo.sessions_tasks.get_all(session=self.session, state=SessionTaskStates.enable):
+                repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="SpamBlock")
+            repo.sessions.update(self.session, state=SessionStates.spam_block)
+        repo.sessions_tasks.update(task, state=SessionTaskStates.finished, state_description=messages[0].text)
+
     async def change_fi(self, task: SessionTask):
         self.logger("change_fi")
         my_sex = choice([PersonalSex.man, PersonalSex.woman])
@@ -246,9 +272,6 @@ class BotTaskerAction:
                         surnames.append(personal)
                     elif personal.type == PersonalTypes.about:
                         abouts.append(personal)
-        self.logger(names)
-        self.logger(surnames)
-        self.logger(abouts)
         if not names and not surnames and not abouts:
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Not data")
         name = choice(names) if names else None
@@ -280,8 +303,6 @@ class BotTaskerAction:
         if not avatars:
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="Not data")
         avatar = choice(avatars)
-        await self.executor.update_profile_photo(
-            photo=avatar.value if avatar else None
-        )
+        await self.executor.update_profile_photo(photo=avatar.value if avatar else None)
         repo.sessions_personals.create(session=self.session, personal=avatar, type=PersonalTypes.avatar)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)

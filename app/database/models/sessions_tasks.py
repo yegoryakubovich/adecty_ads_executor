@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from peewee import PrimaryKeyField, ForeignKeyField, CharField
+from peewee import PrimaryKeyField, ForeignKeyField, CharField, TextField
 
 from database.db import BaseModel
 from . import Session, Group, Order, Message, User
@@ -21,11 +21,11 @@ from . import Session, Group, Order, Message, User
 
 class SessionTaskType:
     non_type = 'non_type'
-    # check_group = 'check_group'
     join_group = 'join_group'
     send_by_order = 'send_by_order'
     send_by_mailing = 'send_by_mailing'
     check_message = 'check_message'
+    check_spamblock = 'check_spamblock'
     change_fi = 'change_fi'
     change_avatar = 'change_avatar'
 
@@ -46,7 +46,7 @@ class SessionTask(BaseModel):
 
     type = CharField(max_length=32, default=SessionTaskType.non_type)
     state = CharField(max_length=32, default=SessionTaskStates.enable)
-    state_description = CharField(max_length=64, null=True)
+    state_description = TextField(null=True)
 
     class Meta:
         db_table = 'sessions_tasks'

@@ -19,9 +19,8 @@ from datetime import datetime, timedelta
 
 from loguru import logger
 
-from core.constants import ASSISTANT_SLEEP_SEC, ASSISTANT_OFTEN_SLEEP_SEC, ASSISTANT_RARELY_SLEEP_SEC, min2sec
 from database import repo
-from database.models import GroupStates, MessageStates, OrderTypes, Order, Message
+from database.models import GroupStates, MessageStates, OrderTypes, Setting, SettingTypes
 from functions.other.checker import CheckerAction
 from functions.other.executor import AssistantExecutorAction
 from functions.other.innovation import InnovationAction
@@ -42,6 +41,7 @@ class AssistantAction:
     @func_logger
     async def often(self):
         while True:
+            setting: Setting = repo.settings.get_by(key="assistant_sleep")
             all_tasks_names = [task.get_name() for task in asyncio.all_tasks()]
             if "assistant_wait_mailing_order_check" not in all_tasks_names:
                 asyncio.create_task(
@@ -67,12 +67,13 @@ class AssistantAction:
                 asyncio.create_task(
                     coro=self.checker.personals_check(), name="assistant_personals_check"
                 )
-            await asyncio.sleep(ASSISTANT_OFTEN_SLEEP_SEC)
+            await asyncio.sleep(int(setting.value) if setting.type == SettingTypes.num else setting.value)
 
     # rarely
     @func_logger
     async def rarely(self):
         while True:
+            setting: Setting = repo.settings.get_by(key="assistant_sleep_rarely")
             all_tasks_names = [task.get_name() for task in asyncio.all_tasks()]
             if "assistant_new_proxy_check" not in all_tasks_names:
                 asyncio.create_task(
@@ -90,16 +91,17 @@ class AssistantAction:
                 asyncio.create_task(
                     coro=self.checker.wait_session_check(), name="assistant_wait_session_check"
                 )
-            # if "assistant_sb_session_check" not in all_tasks_names:
-            #     asyncio.create_task(
-            #         coro=self.checker.spam_block_session_check(), name="assistant_sb_session_check"
-            #     )
-            await asyncio.sleep(ASSISTANT_RARELY_SLEEP_SEC)
+            if "assistant_sb_session_check" not in all_tasks_names:
+                asyncio.create_task(
+                    coro=self.checker.session_spam_block_check(), name="assistant_sb_session_check"
+                )
+            await asyncio.sleep(int(setting.value) if setting.type == SettingTypes.num else setting.value)
 
     # group_presence
     @func_logger
     async def group_presence(self):
         while True:
+            setting: Setting = repo.settings.get_by(key="group_presence_delay")
             self.logger("group_presence")
             date_24_hour = datetime.utcnow() - timedelta(hours=24)
             for order in repo.orders.get_all(type=OrderTypes.ads):
@@ -130,12 +132,13 @@ class AssistantAction:
                     order_name=order.name, chat_id=int(chat_split[0]), message_id=int(chat_split[1]),
                     text='\n'.join(text), presence_count=presence_count, all_count=all_count, msg_count=msg_count
                 )
-                await asyncio.sleep(5)
-            await asyncio.sleep(min2sec(5))
+                await asyncio.sleep(15)
+            await asyncio.sleep(int(setting.value) if setting.type == SettingTypes.num else setting.value)
 
     @func_logger
     async def start(self):
         while True:
+            setting: Setting = repo.settings.get_by(key="assistant_sleep")
             all_tasks_names = [task.get_name() for task in asyncio.all_tasks()]
             if "assistant_often" not in all_tasks_names:
                 asyncio.create_task(coro=self.often(), name="assistant_often")
@@ -143,4 +146,4 @@ class AssistantAction:
                 asyncio.create_task(coro=self.rarely(), name="assistant_rarely")
             if "assistant_group_presence" not in all_tasks_names:
                 asyncio.create_task(coro=self.group_presence(), name="assistant_group_presence")
-            await asyncio.sleep(ASSISTANT_SLEEP_SEC)
+            await asyncio.sleep(int(setting.value) if setting.type == SettingTypes.num else setting.value)

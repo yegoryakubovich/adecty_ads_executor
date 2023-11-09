@@ -36,6 +36,7 @@ def on_start_up():
     repo.shops.fill()
     repo.groups.fill()
     repo.personals.fill()
+    repo.settings.fill()
     """temporary"""
 
     repo.sessions.not_work()
@@ -46,6 +47,11 @@ def on_start_up():
         {
             'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
         } for session in repo.sessions.get_all(state=SessionStates.free)
+    ])
+    all_functions.extend([
+        {
+            'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
+        } for session in repo.sessions.get_all(state=SessionStates.spam_block)
     ])
 
     all_tasks = [loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions]

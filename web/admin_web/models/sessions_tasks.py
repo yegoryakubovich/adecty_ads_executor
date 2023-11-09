@@ -26,12 +26,13 @@ class SessionTaskType:
     send_by_order = 'send_by_order'
     send_by_mailing = 'send_by_mailing'
     check_message = 'check_message'
+    check_spamblock = 'check_spamblock'
     change_fi = 'change_fi'
     change_avatar = 'change_avatar'
 
     choices = (
         (check_group, check_group), (join_group, join_group), (check_message, check_message),
-        (send_by_order, send_by_order), (send_by_mailing, send_by_mailing),
+        (send_by_order, send_by_order), (send_by_mailing, send_by_mailing),(check_spamblock, check_spamblock),
         (change_fi, change_fi), (change_avatar, change_avatar)
     )
 
@@ -67,7 +68,7 @@ class SessionTask(models.Model):
     type = models.CharField(max_length=32, choices=SessionTaskType.choices, verbose_name="Тип")
     state = models.CharField(max_length=32, default=SessionTaskStates.enable, choices=SessionTaskStates.choices,
                              verbose_name="Состояние")
-    state_description = models.CharField(max_length=64, null=True, blank=True, verbose_name="Описание")
+    state_description = models.TextField(null=True, blank=True, verbose_name="Описание")
 
     def __str__(self):
         return f"{self.id} ({self.state})"

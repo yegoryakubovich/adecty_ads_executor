@@ -18,10 +18,9 @@ from typing import List
 
 from loguru import logger
 
-from core.constants import MAX_TASKS_COUNT
 from database import repo, db_manager
 from database.base_repository import BaseRepository
-from database.models import Session, SessionStates, Group, Order
+from database.models import Session, SessionStates, Group, Order, Setting, SettingTypes
 from database.models.sessions_tasks import SessionTaskType, SessionTaskStates
 
 
@@ -41,6 +40,8 @@ class SessionRepository(BaseRepository):
 
     @db_manager
     def get_free(self, orders: List[Order], group: Group = None) -> Session:
+        setting: Setting = repo.settings.get_by(key="session_task_max")
+        max_task = int(setting.value) if setting.type == SettingTypes.num else setting.value
         maybe_sessions = []
         good_sessions_ids = []
         for order in orders:
@@ -55,7 +56,7 @@ class SessionRepository(BaseRepository):
             for task in repo.sessions_tasks.get_all(session=session, state=SessionTaskStates.enable):
                 if not task.type == SessionTaskType.check_message:
                     tasks.append(task)
-            if len(tasks) >= MAX_TASKS_COUNT:
+            if len(tasks) >= max_task:
                 continue
             maybe_sessions.append({'id': session.id, 'tasks': len(tasks)})
 

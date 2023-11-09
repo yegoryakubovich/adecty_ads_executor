@@ -16,6 +16,7 @@
 def registration_load():
     from . import SessionAdmin, UserAdmin, GroupAdmin, OrderAdmin, ProxyAdmin, PersonalAdmin
     from . import SessionTaskAdmin, MessageAdmin, SleepAdmin, ShopAdmin, CounryAdmin
+    from . import AnswerAdmin, SettingAdmin
 
     """addon"""
     from . import SessionProxyAdmin, SessionGroupAdmin, SessionPersonalAdmin, SessionOrderAdmin
@@ -24,5 +25,5 @@ def registration_load():
     from . import CountryLinkAdmin
 
 
-max_rows = 10
+max_rows = 1000
 max_rows_inline = 50

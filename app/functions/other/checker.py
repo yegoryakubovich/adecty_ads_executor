@@ -19,11 +19,11 @@ from datetime import datetime
 
 from loguru import logger
 
-from core.constants import NEW_SESSION_SLEEP_SEC
+from core.constants import hour2sec
 from database import repo
 from database.models import ProxyStates, SessionStates, GroupStates, MessageStates, Shop, ProxyTypes, GroupType, Group, \
     User, OrderUserStates, SessionTask, SessionTaskType, SessionTaskStates, OrderStates, OrderTypes, PersonalTypes, \
-    Order
+    Order, Setting, SettingTypes
 from functions import BotAction
 from functions.other.executor import AssistantExecutorAction
 from modules import convert
@@ -43,13 +43,14 @@ class CheckerAction:
     """INSIDE"""
 
     async def all_task_check(self):
-        for session in repo.sessions.get_all(state=SessionStates.free):
-            if f"Bot_{session.id}" not in [task.get_name() for task in asyncio.all_tasks()]:
-                self.logger(f"Повторный запуск Bot_{session.id}")
-                repo.sessions.update(session, work=False)
-                asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
-            else:
-                repo.sessions.update(session, work=True)
+        for state in [SessionStates.free, SessionStates.spam_block]:
+            for session in repo.sessions.get_all(state=state):
+                if f"Bot_{session.id}" not in [task.get_name() for task in asyncio.all_tasks()]:
+                    self.logger(f"Повторный запуск Bot_{session.id}")
+                    repo.sessions.update(session, work=False)
+                    asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
+                else:
+                    repo.sessions.update(session, work=True)
 
     """
     PROXY
@@ -135,13 +136,17 @@ class CheckerAction:
 
     async def wait_session_check(self):
         self.logger("wait_session_check")
+        setting: Setting = repo.settings.get_by(key="assistant_sleep")
         for session in repo.sessions.get_all(state=SessionStates.waiting):
             bot = BotAction(session=session)
             await bot.all_connection()
             if await bot.check():
                 await bot.start_session()
                 await bot.stop_session()
-                repo.sleeps.create(session=session, time_second=NEW_SESSION_SLEEP_SEC)
+                repo.sleeps.create(
+                    session=session,
+                    time_second=int(setting.value) if setting.type == SettingTypes.num else setting.value
+                )
                 asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
                 session_shop: Shop = repo.shops.get(session.shop_id)
                 await self.executor.session_added_log(
@@ -150,15 +155,19 @@ class CheckerAction:
 
     # SPAM_BLOCK SESSION CHECK
 
-    # async def spam_block_session_check(self):
-    #     self.logger("spam_block_session_check")
-    #     for session in repo.sessions.get_all(state=SessionStates.spam_block):
-    #         bot = BotAction(session=session)
-    #         await bot.all_connection()
-    #         if await bot.spam_bot_check():
-    #             repo.sleeps.create(session=session, time_second=NEW_SESSION_SLEEP_SEC)
-    #             repo.sessions.update(session, state=SessionStates.free)
-    #             asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
+    async def session_spam_block_check(self):
+        self.logger("session_spam_block_check")
+        for state in [SessionStates.free, SessionStates.spam_block]:
+            for session in repo.sessions.get_all(state=state):
+                st = repo.sessions_tasks.get_by(
+                    session=session, type=SessionTaskType.check_spamblock, state=SessionTaskStates.enable
+                )
+                if st:
+                    continue
+                repo.sessions_tasks.create(
+                    session=session, type=SessionTaskType.check_spamblock, state=SessionTaskStates.enable
+                )
+        await asyncio.sleep(hour2sec(12))
 
     # WAIT SESSION_GROUP CHECK
 
@@ -168,16 +177,17 @@ class CheckerAction:
             st: SessionTask = repo.sessions_tasks.get_by(
                 group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
             )
-            if not st:
-                orders = []
-                for og in repo.orders_groups.get_all(group=group):
-                    orders.append(repo.orders.get(id=og.order_id))
-                session = repo.sessions.get_free(orders=orders, group=group)
-                if session:
-                    repo.sessions_tasks.create(
-                        session=session,
-                        group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
-                    )
+            if st:
+                continue
+            orders = []
+            for og in repo.orders_groups.get_all(group=group):
+                orders.append(repo.orders.get(id=og.order_id))
+            session = repo.sessions.get_free(orders=orders, group=group)
+            if session:
+                repo.sessions_tasks.create(
+                    session=session,
+                    group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
+                )
 
     # WAIT MESSAGE CHECK
 
@@ -190,24 +200,25 @@ class CheckerAction:
             st: SessionTask = repo.sessions_tasks.get_by(
                 group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.enable,
             )
-            if not st:
-                order = repo.orders.get(message.order_id)
-                session = await self.executor.get_session_by_group(group=group, spam=True, order=order)
+            if st:
+                continue
+            order = repo.orders.get(message.order_id)
+            session = await self.executor.get_session_by_group(group=group, spam=True, order=order)
+            if session:
+                repo.sessions_tasks.create(
+                    session=session,
+                    group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.enable
+                )
+            else:
+                orders = []
+                for og in repo.orders_groups.get_all(group=group):
+                    orders.append(repo.orders.get(id=og.order_id))
+                session = repo.sessions.get_free(orders=orders, group=group)
                 if session:
                     repo.sessions_tasks.create(
                         session=session,
-                        group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.enable
+                        group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
                     )
-                else:
-                    orders = []
-                    for og in repo.orders_groups.get_all(group=group):
-                        orders.append(repo.orders.get(id=og.order_id))
-                    session = repo.sessions.get_free(orders=orders, group=group)
-                    if session:
-                        repo.sessions_tasks.create(
-                            session=session,
-                            group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
-                        )
 
     # WAIT ORDER CHECK
 

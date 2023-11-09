@@ -13,14 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from core.default_data import groups_list
-from database import db_manager
-from database.base_repository import BaseRepository
-from database.models import OrderUser
+
+from django.contrib import admin
+
+from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
+from admin_web.models import Answer
 
 
-class OrderUserRepository(BaseRepository):
-    pass
-
-
-orders_users = OrderUserRepository(OrderUser)
+@admin.register(Answer, site=admin_site)
+class AnswerAdmin(admin.ModelAdmin):
+    list_display = ("id", "text_from", "text_to", "created")
+    search_fields = ("id", "text_from", "text_to",)
+    readonly_fields = ("id", "created")
+    list_per_page = max_rows

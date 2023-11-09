@@ -13,14 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from core.default_data import groups_list
-from database import db_manager
-from database.base_repository import BaseRepository
-from database.models import OrderUser
+from peewee import PrimaryKeyField, CharField, TextField
+
+from database.db import BaseModel
 
 
-class OrderUserRepository(BaseRepository):
-    pass
+class Answer(BaseModel):
+    id = PrimaryKeyField()
+    text_from = TextField()
+    text_to = TextField()
 
-
-orders_users = OrderUserRepository(OrderUser)
+    class Meta:
+        db_table = 'answers'

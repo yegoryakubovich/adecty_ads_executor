@@ -88,11 +88,6 @@ class BotExecutorAction(BaseExecutorAction):
             return await self.join_chat(chat_id=username)
         except KeyError as e:
             self.logger(str(e))
-            sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
-            if sg:
-                repo.sessions_groups.update(sg, state=SessionGroupState.banned)
-            else:
-                repo.sessions_groups.create(session=self.session, group=group, state=SessionGroupState.banned)
             return "BanInGroup"
         except errors.UsernameNotOccupied:
             return "UsernameNotOccupied"
@@ -134,7 +129,7 @@ class BotExecutorAction(BaseExecutorAction):
         except errors.BadRequest:
             return "BadRequest"
 
-    async def get_chat_history(self, chat_id: [str, int], limit: int = 0):
+    async def get_chat_history(self, chat_id: [str, int], limit: int = 0) -> list:
         try:
             return [msg async for msg in self.client.get_chat_history(chat_id=chat_id, limit=limit)]
         except Exception as e:
@@ -165,7 +160,7 @@ class BotExecutorAction(BaseExecutorAction):
             await self.session_banned_log(session_id=self.session.id, proxy_id=proxy.id if proxy else None,
                                           session_shop_id=session_shop.id, session_shop_name=session_shop.name,
                                           proxy_shop_id=proxy_shop.id if proxy else None,
-                                          proxy_shop_name=proxy_shop.name,
+                                          proxy_shop_name=proxy_shop.name if proxy else None,
                                           messages_send=messages_send)
 
         for sgroup in repo.sessions_groups.get_all(session=self.session):

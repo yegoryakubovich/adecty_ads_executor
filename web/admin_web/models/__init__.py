@@ -14,10 +14,12 @@
 # limitations under the License.
 #
 """FIRST"""
+from .answers import Answer
 from .countries import Country
 from .groups import Group, GroupStates, GroupType
 from .orders import Order, OrderStates, OrderTypes
 from .personals import Personal, PersonalTypes, PersonalSex
+from .settings import Setting, SettingTypes
 from .shops import Shop
 from .users import User
 

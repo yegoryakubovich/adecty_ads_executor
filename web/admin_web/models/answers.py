@@ -13,14 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from core.default_data import groups_list
-from database import db_manager
-from database.base_repository import BaseRepository
-from database.models import OrderUser
+from datetime import datetime
+from django.db import models
 
 
-class OrderUserRepository(BaseRepository):
-    pass
+class Answer(models.Model):
+    class Meta:
+        db_table = 'answers'
+        verbose_name = 'Ответ'
+        verbose_name_plural = 'Ответы'
 
+    id = models.AutoField(primary_key=True)
+    created = models.DateTimeField(default=datetime.utcnow, verbose_name="Время создания")
 
-orders_users = OrderUserRepository(OrderUser)
+    text_from = models.TextField(max_length=128, unique=True, verbose_name="Сообщение от")
+    text_to = models.TextField(max_length=128, verbose_name="Сообщение для")
+
+    def __str__(self):
+        return f"{self.text_from} ({self.id})"

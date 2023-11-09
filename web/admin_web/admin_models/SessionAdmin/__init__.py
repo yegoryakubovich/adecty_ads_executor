@@ -21,20 +21,19 @@ from admin_web.admin import admin_site
 from admin_web.admin_models import max_rows
 from admin_web.admin_models.SessionTaskAdmin.inlines import SessionTaskInline
 from admin_web.models import Session, Message, Sleep, SleepStates, SessionGroup, SessionGroupState, Personal, \
-    SessionPersonal, PersonalTypes, MessageStates, SessionTask, SessionTaskStates, SessionTaskType
+    SessionPersonal, PersonalTypes, MessageStates, SessionTask, SessionTaskStates, SessionTaskType, SessionOrder
 from .actions import actions_list
 from ..MessageAdmin.inlines import MessageInline
 from ..SessionGroupAdmin.inlines import SessionGroupInline
 from ..SessionOrderAdmin.inlines import SessionOrderInline
 from ..SessionPersonalAdmin.inlines import SessionPersonalInline
 from ..SessionProxyAdmin.inlines import SessionProxyInline
-from ..SleepAdmin.inlines import SleepInline
 
 
 @admin.register(Session, site=admin_site)
 class SessionAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "work", "phone", "name", "surname", "state", "created",
+        "id", "work", "phone", "name", "surname", "state", "order", "created",
         "message_send_now", "message_send_day", "sleep_now", "groups_count", "tasks_count"
     )
     search_fields = ("id",)
@@ -53,6 +52,13 @@ class SessionAdmin(admin.ModelAdmin):
         choices.reverse()
         return choices
 
+    @admin.display(description="Заказ")
+    def order(self, model: Session):
+        so = SessionOrder.objects.filter(session=model).all()
+        if not so:
+            return "Нет"
+        return so[0].order.name
+
     @admin.display(description="Сообщений")
     def message_send_now(self, model: Session):
         msg_all_count = len(Message.objects.filter(session=model).all())
@@ -68,7 +74,6 @@ class SessionAdmin(admin.ModelAdmin):
             if msg.created.timestamp() < (datetime.utcnow() - timedelta(hours=24)).timestamp():
                 continue
             msg_all.append(msg)
-
         return len(msg_all)
 
     @admin.display(description="Сон")

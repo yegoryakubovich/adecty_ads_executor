@@ -128,9 +128,8 @@ class BaseExecutorAction:
         return await bot.edit_message_text(
             chat_id=chat_id, message_id=message_id, disable_web_page_preview=True,
             text=f"\n".join([
-                f"Заказ: <b>{order_name}</b>",
+                f"Заказ: <b>{order_name}</b> ({presence_count}/{all_count})",
                 f"Сообщений за 24ч: {msg_count}",
-                f"Отчет присутствия {presence_count}/{all_count}",
                 f"Изменено: {data}",
                 f"",
                 text

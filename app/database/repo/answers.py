@@ -13,14 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from core.default_data import groups_list
-from database import db_manager
 from database.base_repository import BaseRepository
-from database.models import OrderUser
+from database.models import Answer
 
 
-class OrderUserRepository(BaseRepository):
+class AnswerRepository(BaseRepository):
     pass
 
 
-orders_users = OrderUserRepository(OrderUser)
+answers = AnswerRepository(Answer)

@@ -3,9 +3,8 @@ from operator import itemgetter
 import httpx
 from loguru import logger
 
-from core.constants import URL_FOR_TEST_PROXY, MAX_TASKS_COUNT
 from database import repo
-from database.models import Proxy, ProxyStates, Shop, SessionGroup, Group, SessionStates, Order
+from database.models import Proxy, ProxyStates, Shop, SessionGroup, Group, SessionStates, Order, Setting, SettingTypes
 from database.models.sessions_groups import SessionGroupState
 from database.models.sessions_tasks import SessionTaskStates, SessionTaskType
 from functions import BaseExecutorAction
@@ -15,8 +14,9 @@ from utils.country import get_by_ip
 class AssistantExecutorAction(BaseExecutorAction):
 
     async def check_proxy(self, proxy: Proxy) -> bool:
+        setting: Setting = repo.settings.get_by(key="proxy_check_url")
         try:
-            r = httpx.get(url=URL_FOR_TEST_PROXY, timeout=10,
+            r = httpx.get(url=int(setting.value) if setting.type == SettingTypes.num else setting.value, timeout=10,
                           proxies=f'{proxy.type}://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}')
             if r.status_code == 200:
                 country_type = get_by_ip(r.json()['ip_addr'])
@@ -53,6 +53,8 @@ class AssistantExecutorAction(BaseExecutorAction):
         )
 
     async def get_session_by_group(self, group: Group, order: Order, spam: bool = False):
+        setting: Setting = repo.settings.get_by(key="session_task_max")
+        max_task = int(setting.value) if setting.type == SettingTypes.num else setting.value
         maybe_sessions = []
         states = [SessionStates.free]
         if spam:
@@ -70,7 +72,7 @@ class AssistantExecutorAction(BaseExecutorAction):
                     for task in repo.sessions_tasks.get_all(session=session, state=SessionTaskStates.enable):
                         if not task.type == SessionTaskType.check_message:
                             tasks.append(task)
-                    if len(tasks) >= MAX_TASKS_COUNT:
+                    if len(tasks) >= max_task:
                         continue
                     maybe_sessions.append({'id': session.id, 'tasks': len(tasks)})
         if maybe_sessions:
@@ -78,6 +80,8 @@ class AssistantExecutorAction(BaseExecutorAction):
             return repo.sessions.get(sorted(maybe_sessions, key=itemgetter('tasks'))[0]['id'])
 
     async def get_session_by_order(self, order: Order, spam: bool = False):
+        setting: Setting = repo.settings.get_by(key="session_task_max")
+        max_task = int(setting.value) if setting.type == SettingTypes.num else setting.value
         maybe_sessions_by_order = []
         states = [SessionStates.free]
         if spam:
@@ -92,7 +96,7 @@ class AssistantExecutorAction(BaseExecutorAction):
             for task in repo.sessions_tasks.get_all(session=session, state=SessionTaskStates.enable):
                 if not task.type == SessionTaskType.check_message:
                     tasks += 1
-            if tasks >= MAX_TASKS_COUNT:
+            if tasks >= max_task:
                 continue
             maybe_sessions_by_order.append({'id': session.id, 'tasks': tasks})
         if maybe_sessions_by_order:

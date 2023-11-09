@@ -13,14 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from core.default_data import groups_list
-from database import db_manager
-from database.base_repository import BaseRepository
-from database.models import OrderUser
+from peewee import PrimaryKeyField, CharField, BooleanField
+
+from database.db import BaseModel
 
 
-class OrderUserRepository(BaseRepository):
-    pass
+class SettingTypes:
+    num = "num"
+    string = "string"
+    list = "list"
+    dict = "dict"
 
 
-orders_users = OrderUserRepository(OrderUser)
+class Setting(BaseModel):
+    id = PrimaryKeyField()
+
+    name = CharField(max_length=128)
+    key = CharField(max_length=128)
+    type = CharField(max_length=128)
+    value = CharField(max_length=128)
+
+    class Meta:
+        db_table = 'settings'
