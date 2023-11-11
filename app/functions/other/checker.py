@@ -302,22 +302,23 @@ class CheckerAction:
         self.logger("personals_check")
         change_fi = repo.sessions_tasks.get_all(state=SessionTaskStates.enable, type=SessionTaskType.change_fi)
         avatar = repo.sessions_tasks.get_all(state=SessionTaskStates.enable, type=SessionTaskType.change_avatar)
-        for session in repo.sessions.get_all(state=SessionStates.free):
-            if avatar and change_fi:
-                return self.logger(f"#{session.id} ALL OKAY")
+        for state in [SessionStates.free, SessionStates.spam_block]:
+            for session in repo.sessions.get_all(state=state):
+                if avatar and change_fi:
+                    return self.logger(f"#{session.id} ALL OKAY")
 
-            sps = repo.sessions_personals.get_all(session=session)
-            if not sps and not change_fi:
-                self.logger(f"#{session.id} CHANGE FI")
-                repo.sessions_tasks.create(session=session, type=SessionTaskType.change_fi,
-                                           state=SessionTaskStates.enable)
-                change_fi = True
-            if not avatar:
-                personals_types = [repo.personals.get(sp.personal_id).type for sp in sps]
-                if PersonalTypes.avatar not in personals_types:
-                    self.logger(f"#{session.id} AVATAR")
-                    repo.sessions_tasks.create(
-                        session=session,
-                        type=SessionTaskType.change_avatar, state=SessionTaskStates.enable
-                    )
-                    avatar = True
+                sps = repo.sessions_personals.get_all(session=session)
+                if not sps and not change_fi:
+                    self.logger(f"#{session.id} CHANGE FI")
+                    repo.sessions_tasks.create(session=session, type=SessionTaskType.change_fi,
+                                               state=SessionTaskStates.enable)
+                    change_fi = True
+                if not avatar:
+                    personals_types = [repo.personals.get(sp.personal_id).type for sp in sps]
+                    if PersonalTypes.avatar not in personals_types:
+                        self.logger(f"#{session.id} AVATAR")
+                        repo.sessions_tasks.create(
+                            session=session,
+                            type=SessionTaskType.change_avatar, state=SessionTaskStates.enable
+                        )
+                        avatar = True

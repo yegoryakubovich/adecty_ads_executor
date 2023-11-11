@@ -38,7 +38,7 @@ class BotAction:
 
     def __init__(self, session: Session):
         self.session = session
-        self.black_list = [session.id, 777000]
+        self.black_list = [session.tg_user_id, 777000]
         self.prefix = f"Session #{self.session.id}"
 
     async def open_session(self) -> Optional[Client]:
@@ -151,10 +151,10 @@ class BotAction:
                             await asyncio.sleep(await smart_create_sleep(self.session, mi=sleep_min, ma=sleep_max))
                         else:
                             self.logger(f"Task not found {task.type}")
+                        await self.stop_session()
                         my_tasks = repo.sessions_tasks.get_all(
                             in_list=True, session=self.session, state=SessionTaskStates.enable
                         )
-                        await self.stop_session()
             else:
                 self.logger("Not find task")
                 await self.start_answers()
