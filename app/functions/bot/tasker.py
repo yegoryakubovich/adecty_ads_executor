@@ -85,20 +85,28 @@ class BotTaskerAction:
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
 
     async def check_message(self, task: SessionTask):
-        self.logger("check_message")
+        self.logger(f"check_message")
         """
             Задача проверки сообщения.
         """
         message = repo.messages.get(id=task.message_id)
         group = repo.groups.get(id=message.group_id)
-        setting_msg: Setting = repo.settings.get_by(key="assistant_sleep")
-        setting_words: Setting = repo.settings.get_by(key="assistant_sleep")
+        setting_msg: Setting = repo.settings.get_by(key="send_message_delay")
+        setting_words: Setting = repo.settings.get_by(key="user_save_key_word")
 
         chat = await self.executor.get_chat_by_group(group)
+        self.logger(f"[check_message] group={group.name}, message={message.message_id}")
 
         if isinstance(chat, str):
             repo.messages.update(message, state=MessageStates.fine)
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
+
+        msg = await self.executor.get_messages(chat_id=group.name, msg_id=message.message_id)
+        if msg.empty:
+            self.logger(f"[check_message] empty")
+            repo.messages.update(message, state=MessageStates.deleted)
+            repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
+            return
 
         repo.groups.update(group, subscribers=chat.members_count)
         chat_messages = await self.executor.get_all_messages(
@@ -107,13 +115,11 @@ class BotTaskerAction:
         await self.executor.check_by_key_word(messages=chat_messages, key_words=setting_words.value.split(','))
         chat_messages_ids = [chat_message.id for chat_message in chat_messages]
 
-        msg = await self.executor.get_messages(chat_id=group.name, msg_id=message.message_id)
-        if msg.empty:
-            repo.messages.update(message, state=MessageStates.deleted)
-        else:
-            if message.message_id in chat_messages_ids:
-                return
-            repo.messages.update(message, state=MessageStates.fine)
+        if message.message_id in chat_messages_ids:
+            self.logger(f"[check_message] В СПИСКЕ")
+            return
+        self.logger(f"[check_message] Вышел из списка")
+        repo.messages.update(message, state=MessageStates.fine)
         repo.sessions_tasks.update(task, state=SessionTaskStates.finished)
 
     async def send_by_order(self, task: SessionTask):

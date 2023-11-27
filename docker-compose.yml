@@ -24,6 +24,7 @@ services:
     volumes:
       - ./app/new:/src/new
       - ./data/media:/src/media
+      - ./app/logs:/src/logs
     env_file:
       - .env
     depends_on:

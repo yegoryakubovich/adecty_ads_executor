@@ -46,6 +46,8 @@ settings_list = [
         'name': 'Обновление статистики присутствия (сек)', 'key': 'group_presence_delay',
         'type': SettingTypes.num, 'value': '300'
     },
+
+
 ]
 
 groups_list = (

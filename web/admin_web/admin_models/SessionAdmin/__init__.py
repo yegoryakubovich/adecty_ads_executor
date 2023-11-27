@@ -33,8 +33,8 @@ from ..SessionProxyAdmin.inlines import SessionProxyInline
 @admin.register(Session, site=admin_site)
 class SessionAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "work", "phone", "name", "surname", "state", "order", "created",
-        "message_send_now", "message_send_day", "sleep_now", "groups_count", "tasks_count"
+        "id", "work", "phone", "fio", "state", "order", "date", "message_send_now", "message_send_day", "sleep_now",
+        "groups_count", "tasks_count", "message_tasks_count"
     )
     search_fields = ("id",)
     list_filter = ("state", "work", "created")
@@ -52,6 +52,15 @@ class SessionAdmin(admin.ModelAdmin):
         choices.reverse()
         return choices
 
+    @admin.display(description="ФИО")
+    def fio(self, model: Session):
+        sp_name = SessionPersonal.objects.filter(session=model, type=PersonalTypes.name).all()
+        sp_surname = SessionPersonal.objects.filter(session=model, type=PersonalTypes.surname).all()
+
+        name = Personal.objects.get(id=sp_name[0].personal_id).value if sp_name else ""
+        surname = Personal.objects.get(id=sp_surname[0].personal_id).value if sp_surname else ""
+        return f"{surname} {name}"
+
     @admin.display(description="Заказ")
     def order(self, model: Session):
         so = SessionOrder.objects.filter(session=model).all()
@@ -59,7 +68,11 @@ class SessionAdmin(admin.ModelAdmin):
             return "Нет"
         return so[0].order.name
 
-    @admin.display(description="Сообщений")
+    @admin.display(description="Дата")
+    def date(self, model: Session):
+        return model.created.strftime("%d.%m.%y")
+
+    @admin.display(description="Всего")
     def message_send_now(self, model: Session):
         msg_all_count = len(Message.objects.filter(session=model).all())
         msg_for_count = len(Message.objects.filter(session=model, state=MessageStates.to_user).all())
@@ -102,18 +115,11 @@ class SessionAdmin(admin.ModelAdmin):
             return f"{result}"
         return f"0"
 
-    @admin.display(description="Имя")
-    def name(self, model: Session):
-        sp = SessionPersonal.objects.filter(session=model, type=PersonalTypes.name).all()
-        if sp:
-            personal = Personal.objects.get(id=sp[0].personal_id)
-            return personal.value
-        return None
-
-    @admin.display(description="Фамилия")
-    def surname(self, model: Session):
-        sp = SessionPersonal.objects.filter(session=model, type=PersonalTypes.surname).all()
-        if sp:
-            personal = Personal.objects.get(id=sp[0].personal_id)
-            return personal.value
-        return None
+    @admin.display(description="Проверок")
+    def message_tasks_count(self, model: Session):
+        tasks_check_message = SessionTask.objects.filter(
+            session=model, state=SessionTaskStates.enable, type=SessionTaskType.check_message
+        ).all()
+        if tasks_check_message:
+            return f"{len(tasks_check_message)}"
+        return f"0"

@@ -30,15 +30,15 @@ from utils.helpers import smart_sleep, smart_create_sleep
 
 
 class BotAction:
-    client = None
-    executor = None
-    simulator = None
-    tasker = None
-    started = False
-
     def __init__(self, session: Session):
+        self.client: Client = None
+        self.executor = None
+        self.simulator = None
+        self.tasker = None
+
         self.session = session
         self.black_list = [session.tg_user_id, 777000]
+        self.auto_answer = ["arthur_air", "SpamBot"]
         self.prefix = f"Session #{self.session.id}"
 
     async def open_session(self) -> Optional[Client]:
@@ -55,25 +55,6 @@ class BotAction:
     def logger(self, txt):
         logger.info(f"[{self.prefix}] {txt}")
 
-    async def start_session(self):
-        if self.started:
-            return
-        try:
-            await self.client.start()
-            self.started = True
-        except (
-                errors.SessionExpired, errors.SessionRevoked, errors.UserDeactivated, errors.UserDeactivatedBan,
-                errors.AuthKeyUnregistered, errors.AuthKeyDuplicated, errors.InputUserDeactivated
-        ) as e:
-            self.logger(f"{e}")
-            return await self.executor.session_banned()
-
-    async def stop_session(self):
-        if not self.started:
-            return
-        await self.client.stop()
-        self.started = False
-
     async def all_connection(self):
         self.client = await self.open_session()
         if not self.client:
@@ -83,10 +64,10 @@ class BotAction:
         self.simulator = SimulatorAction(client=self.client)
 
     async def check(self) -> bool:
-        await self.start_session()
-        await self.stop_session()
-        await self.start_session()
-        await self.stop_session()
+        await self.executor.start_session()
+        await self.executor.stop_session()
+        await self.executor.start_session()
+        await self.executor.stop_session()
         repo.sessions.update(self.session, state=SessionStates.free)
         return True
 
@@ -101,6 +82,7 @@ class BotAction:
         self.logger(f"Started!")
         await self.all_connection()
         while True:
+            await self.start_answers()
             setting: Setting = repo.settings.get_by(key="assistant_sleep")
             await asyncio.sleep(await smart_sleep(self.session))
             my_tasks = repo.sessions_tasks.get_all(in_list=True, session=self.session, state=SessionTaskStates.enable)
@@ -112,46 +94,43 @@ class BotAction:
                     setting_ma: Setting = repo.settings.get_by(key="session_sleep_max")
                     sleep_max = int(setting_ma.value) if setting_ma.type == SettingTypes.num else setting_ma.value
 
-                    await self.start_session()
                     for task in my_tasks:
                         if task.type != SessionTaskType.check_message:
                             continue
                         await self.tasker.check_message(task)
-                    await self.stop_session()
 
                     for task in my_tasks:
                         await self.start_answers()
                         await asyncio.sleep(await smart_sleep(self.session))
-                        await self.start_session()
                         if task.type == SessionTaskType.check_message:
                             pass
                         elif task.type == SessionTaskType.join_group:  # JOIN GROUP
                             await self.tasker.join_group(task)
-                            await self.stop_session()
+                            await self.executor.stop_session()
                             await asyncio.sleep(await smart_create_sleep(self.session, mi=sleep_min, ma=sleep_max))
                         elif task.type == SessionTaskType.send_by_order:  # SEND BY ORDER
                             await self.tasker.send_by_order(task)
-                            await self.stop_session()
+                            await self.executor.stop_session()
                             await asyncio.sleep(await smart_create_sleep(self.session, mi=sleep_min, ma=sleep_max))
                         elif task.type == SessionTaskType.send_by_mailing:  # SEND BY MAILING
                             await self.tasker.send_by_mailing(task)
-                            await self.stop_session()
+                            await self.executor.stop_session()
                             await asyncio.sleep(await smart_create_sleep(self.session, mi=sleep_min, ma=sleep_max))
                         elif task.type == SessionTaskType.check_spamblock:  # SEND BY MAILING
                             await self.tasker.check_spamblock(task)
-                            await self.stop_session()
+                            await self.executor.stop_session()
                             await asyncio.sleep(await smart_create_sleep(self.session, mi=sleep_min, ma=sleep_max))
                         elif task.type == SessionTaskType.change_fi:  # CHANGE FI
                             await self.tasker.change_fi(task)
-                            await self.stop_session()
+                            await self.executor.stop_session()
                             await asyncio.sleep(await smart_create_sleep(self.session, mi=sleep_min, ma=sleep_max))
                         elif task.type == SessionTaskType.change_avatar:  # CHANGE AVATAR
                             await self.tasker.change_avatar(task)
-                            await self.stop_session()
+                            await self.executor.stop_session()
                             await asyncio.sleep(await smart_create_sleep(self.session, mi=sleep_min, ma=sleep_max))
                         else:
                             self.logger(f"Task not found {task.type}")
-                        await self.stop_session()
+                        await self.executor.stop_session()
                         my_tasks = repo.sessions_tasks.get_all(
                             in_list=True, session=self.session, state=SessionTaskStates.enable
                         )
@@ -161,36 +140,41 @@ class BotAction:
             await asyncio.sleep(int(setting.value) if setting.type == SettingTypes.num else setting.value)
 
     async def start_answers(self):
+        logger.info(f"start_answers #{self.session.id}")
         so = repo.sessions_orders.get_by(session_id=self.session.id)
         if not so:
+            logger.info(f"[start_answers #{self.session.id}] not so")
             return
-        order = repo.orders.get(so.order_id)
-        order_attachment = repo.orders_attachments.get_by(order_id=order.id, type=OrderAttachmentTypes.text_answer)
+        order_attachment = repo.orders_attachments.get_by(order_id=so.order_id, type=OrderAttachmentTypes.text_answer)
         if not order_attachment:
+            logger.info(f"[start_answers #{self.session.id}] not order_attachment")
             return
 
-        await self.start_session()
+        await self.executor.start_session()
         try:
-            async for dialog in self.client.get_dialogs(limit=25):
+            for dialog_name in self.auto_answer:
+                try:
+                    await self.client.get_chat_history_count(chat_id=dialog_name)
+                except Exception as e:
+                    continue
+                async for msg in self.client.get_chat_history(chat_id=dialog_name, limit=1):
+                    for answer in repo.answers.get_all():
+                        if answer.text_from in msg.text:
+                            msg_to = await msg.reply(text=answer.text_to)
+                            repo.messages.create(
+                                session=self.session, message_id=msg.id,
+                                text=msg.text, state=MessageStates.from_user
+                            )
+                            repo.messages.create(
+                                session=self.session, message_id=msg.id,
+                                text=msg_to.text, state=MessageStates.to_user
+                            )
+            async for dialog in self.client.get_dialogs(limit=15):
                 if dialog.chat.type != enums.ChatType.PRIVATE:
                     continue
                 if dialog.chat.id in self.black_list:
                     continue
-
-                if dialog.chat.id in [178220800, 451867324]:
-                    async for msg in self.client.get_chat_history(chat_id=dialog.chat.id, limit=1):
-                        for answer in repo.answers.get_all():
-                            if answer.text_from in msg.text:
-                                msg_to = await msg.reply(text=answer.text_to)
-                                repo.messages.create(
-                                    session=self.session, message_id=msg.id,
-                                    text=msg.text, state=MessageStates.from_user
-                                )
-                                repo.messages.create(
-                                    session=self.session, message_id=msg.id,
-                                    text=msg_to.text, state=MessageStates.to_user
-                                )
-
+                if dialog.chat.id in self.auto_answer:
                     continue
 
                 async for msg in self.client.get_chat_history(chat_id=dialog.chat.id, limit=1):
@@ -219,4 +203,4 @@ class BotAction:
             self.logger("ChannelPrivate")
         except errors.InputUserDeactivated:
             self.logger("InputUserDeactivated")
-        await self.stop_session()
+        await self.executor.stop_session()

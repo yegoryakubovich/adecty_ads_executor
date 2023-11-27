@@ -19,13 +19,14 @@ class AssistantExecutorAction(BaseExecutorAction):
             r = httpx.get(url=int(setting.value) if setting.type == SettingTypes.num else setting.value, timeout=10,
                           proxies=f'{proxy.type}://{proxy.user}:{proxy.password}@{proxy.host}:{proxy.port}')
             if r.status_code == 200:
-                country_type = get_by_ip(r.json()['ip_addr'])
-                country = repo.countries.create(code=country_type.code, name=country_type.name)
-                repo.proxies.update(proxy, country=country)
+                # country_type = get_by_ip(r.json()['ip_addr'])
+                # country = repo.countries.create(code=country_type.code, name=country_type.name)
+                # repo.proxies.update(proxy, country=country)
                 return True
         except:
             pass
-        return False
+        # return False
+        return True
 
     async def proxy_disable(self, proxy: Proxy, log: bool = True):
         proxy_shop: Shop = repo.shops.get(proxy.shop_id)
@@ -52,7 +53,7 @@ class AssistantExecutorAction(BaseExecutorAction):
             proxy_id=proxy.id, proxy_shop_id=proxy_shop.id, proxy_shop_name=proxy_shop.name
         )
 
-    async def get_session_by_group(self, group: Group, order: Order, spam: bool = False):
+    async def get_session_by_group(self, order: Order, group: Group, spam: bool = False):
         setting: Setting = repo.settings.get_by(key="session_task_max")
         max_task = int(setting.value) if setting.type == SettingTypes.num else setting.value
         maybe_sessions = []
@@ -102,3 +103,18 @@ class AssistantExecutorAction(BaseExecutorAction):
         if maybe_sessions_by_order:
             logger.info(sorted(maybe_sessions_by_order, key=itemgetter('tasks')))
             return repo.sessions.get(sorted(maybe_sessions_by_order, key=itemgetter('tasks'))[0]['id'])
+
+    async def get_session_from_message_check(self, spam: bool = False):
+        states = [SessionStates.free]
+        if spam:
+            states.append(SessionStates.spam_block)
+        maybe_sessions = []
+        for state in states[::-1]:
+            for session in repo.sessions.get_all(state=state):
+                message_check_tasks = len([task.id for task in repo.sessions_tasks.get_all(
+                    session=session, state=SessionTaskStates.enable, type=SessionTaskType.check_message
+                )])
+                maybe_sessions.append({'id': session.id, 'count': message_check_tasks})
+        if maybe_sessions:
+            logger.info(sorted(maybe_sessions, key=itemgetter('count')))
+            return repo.sessions.get(id=sorted(maybe_sessions, key=itemgetter('count'))[0]['id'])

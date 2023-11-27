@@ -15,7 +15,7 @@
 #
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from loguru import logger
 
@@ -136,13 +136,11 @@ class CheckerAction:
 
     async def wait_session_check(self):
         self.logger("wait_session_check")
-        setting: Setting = repo.settings.get_by(key="assistant_sleep")
+        setting: Setting = repo.settings.get_by(key="new_session_sleep")
         for session in repo.sessions.get_all(state=SessionStates.waiting):
             bot = BotAction(session=session)
             await bot.all_connection()
             if await bot.check():
-                await bot.start_session()
-                await bot.stop_session()
                 repo.sleeps.create(
                     session=session,
                     time_second=int(setting.value) if setting.type == SettingTypes.num else setting.value
@@ -196,29 +194,30 @@ class CheckerAction:
         for message in repo.messages.get_all(state=MessageStates.waiting):
             group = repo.groups.get(message.group_id)
             if group.state != GroupStates.active:
+                repo.messages.update(message, state=MessageStates.fine)
                 continue
             st: SessionTask = repo.sessions_tasks.get_by(
                 group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.enable,
             )
             if st:
                 continue
-            order = repo.orders.get(message.order_id)
-            session = await self.executor.get_session_by_group(group=group, spam=True, order=order)
-            if session:
-                repo.sessions_tasks.create(
-                    session=session,
-                    group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.enable
-                )
-            else:
-                orders = []
-                for og in repo.orders_groups.get_all(group=group):
-                    orders.append(repo.orders.get(id=og.order_id))
-                session = repo.sessions.get_free(orders=orders, group=group)
-                if session:
-                    repo.sessions_tasks.create(
-                        session=session,
-                        group=group, type=SessionTaskType.join_group, state=SessionTaskStates.enable
-                    )
+            st_last: SessionTask = repo.sessions_tasks.get_last(
+                group=group, message=message, type=SessionTaskType.check_message, state=SessionTaskStates.finished
+            )
+            if st_last:
+                time_now = datetime.utcnow()
+                if (st_last.created + timedelta(hours=1)) < time_now:
+                    logger.info(f"({st_last.created} + {timedelta(hours=1)}) < {time_now}")
+                    continue
+                logger.info(f"YES ({st_last.created} + {timedelta(hours=1)}) < {time_now}")
+
+            session = await self.executor.get_session_from_message_check(spam=True)
+            if not session:
+                continue
+            repo.sessions_tasks.create(
+                session=session, group=group, message=message,
+                type=SessionTaskType.check_message, state=SessionTaskStates.enable
+            )
 
     # WAIT ORDER CHECK
 
