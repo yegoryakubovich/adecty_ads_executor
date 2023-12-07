@@ -165,7 +165,7 @@ class CheckerAction:
                 repo.sessions_tasks.create(
                     session=session, type=SessionTaskType.check_spamblock, state=SessionTaskStates.enable
                 )
-        await asyncio.sleep(hour2sec(12))
+        await asyncio.sleep(hour2sec(6))
 
     # WAIT SESSION_GROUP CHECK
 

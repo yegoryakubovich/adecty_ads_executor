@@ -46,7 +46,8 @@ class BotExecutorAction(BaseExecutorAction):
                 errors.AuthKeyUnregistered, errors.AuthKeyDuplicated, errors.InputUserDeactivated
         ) as e:
             self.logger(f"{e}")
-            return await self.session_banned()
+            await self.session_banned()
+            return False
 
     async def stop_session(self):
         if not self.started:

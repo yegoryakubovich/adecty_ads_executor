@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 import asyncio
+import sys
 
 from loguru import logger
 
@@ -33,10 +34,10 @@ def on_start_up():
         exit(1)
 
     """temporary"""
-    repo.shops.fill()
-    repo.groups.fill()
-    repo.personals.fill()
-    repo.settings.fill()
+    # repo.shops.fill()
+    # repo.groups.fill()
+    # repo.personals.fill()
+    # repo.settings.fill()
     """temporary"""
 
     repo.sessions.not_work()

@@ -20,7 +20,8 @@ from datetime import datetime, timedelta
 from loguru import logger
 
 from database import repo
-from database.models import GroupStates, MessageStates, OrderTypes, Setting, SettingTypes
+from database.models import GroupStates, MessageStates, OrderTypes, Setting, SettingTypes, SessionOrder, Session, \
+    SessionStates
 from functions.other.checker import CheckerAction
 from functions.other.executor import AssistantExecutorAction
 from functions.other.innovation import InnovationAction
@@ -115,10 +116,11 @@ class AssistantAction:
                     group = repo.groups.get(id=og.group_id)
                     if group.state != GroupStates.active:
                         continue
-                    messages_waiting = repo.messages.get_last(group=group, state=MessageStates.waiting)
+                    messages_waiting = repo.messages.get_last(order=order, group=group, state=MessageStates.waiting)
                     if messages_waiting:
-                        link = await self.executor.create_link(group_name=group.name,
-                                                               post_id=messages_waiting.message_id)
+                        link = await self.executor.create_link(
+                            group_name=group.name, post_id=messages_waiting.message_id
+                        )
                         text.append(f"🟢 {link}")
                         presence_count += 1
                     else:
@@ -128,9 +130,17 @@ class AssistantAction:
                     if msg.created < date_24_hour:
                         break
                     msg_count += 1
+                sessions_free, sessions_spam = 0, 0
+                for so in repo.sessions_orders.get_all(order=order):
+                    session: Session = repo.sessions.get(id=so.session_id)
+                    if session.state == SessionStates.free:
+                        sessions_free += 1
+                    elif session.state == SessionStates.spam_block:
+                        sessions_spam += 1
                 await self.executor.change_log_message(
                     order_name=order.name, chat_id=int(chat_split[0]), message_id=int(chat_split[1]),
-                    text='\n'.join(text), presence_count=presence_count, all_count=all_count, msg_count=msg_count
+                    text='\n'.join(text), presence_count=presence_count, all_count=all_count, msg_count=msg_count,
+                    sessions_free=sessions_free, sessions_spam=sessions_spam
                 )
                 await asyncio.sleep(15)
             await asyncio.sleep(int(setting.value) if setting.type == SettingTypes.num else setting.value)

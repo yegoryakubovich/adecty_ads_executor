@@ -122,7 +122,8 @@ class BaseExecutorAction:
 
     async def change_log_message(self,
                                  order_name: str, chat_id: int, message_id: int,
-                                 text: str, presence_count: int, all_count: int, msg_count: int):
+                                 text: str, presence_count: int, all_count: int, msg_count: int,
+                                 sessions_free: int, sessions_spam: int):
         bot = Bot(token=self.token, parse_mode="HTML")
         data = (datetime.utcnow() + timedelta(hours=3)).strftime("%d.%m.%y %H:%M")
         return await bot.edit_message_text(
@@ -130,6 +131,7 @@ class BaseExecutorAction:
             text=f"\n".join([
                 f"Заказ: <b>{order_name}</b> ({presence_count}/{all_count})",
                 f"Сообщений за 24ч: {msg_count}",
+                f"Сессий актив/спам: {sessions_free}/{sessions_spam}",
                 f"Изменено: {data}",
                 f"",
                 text

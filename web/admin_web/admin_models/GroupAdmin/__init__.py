@@ -20,8 +20,7 @@ from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 
 from admin_web.admin import admin_site
 from admin_web.admin_models import max_rows
-from admin_web.models import Group, Message, MessageStates, SessionTask, SessionGroup, SessionGroupState
-from admin_web.models.sessions_tasks import SessionTaskStates, SessionTaskType
+from admin_web.models import Group, Message, MessageStates, SessionGroup, SessionGroupState, OrderGroup
 from .actions import actions_list
 from ..GroupCountryAdmin.inlines import GroupCountryInline
 from ..MessageAdmin.inlines import MessageInline
@@ -39,7 +38,7 @@ class PresenceState:
 class GroupAdmin(admin.ModelAdmin):
     list_display = (
         "id", "name_fix", "state", "subscribers", "can_image", "type", "join_request", "captcha_have", "captcha_type",
-        "created", "delete_count", "delete_count_today", "abortively_percent", "sessions_count"
+        "date", "delete_count", "delete_count_today", "orders_group", "sessions_count"
     )
     list_filter = ("state", "can_image", "type", "join_request", "captcha_have", "captcha_type")
     search_fields = ("id",)
@@ -55,6 +54,10 @@ class GroupAdmin(admin.ModelAdmin):
         a = len(active) if active else 0
         b = len(banned) if banned else 0
         return f"{a}/{b}"
+
+    @admin.display(description="Дата")
+    def date(self, model: Group):
+        return model.created.strftime("%d.%m.%y")
 
     @admin.display(description="Удалений")
     def delete_count(self, model: Group):
@@ -83,31 +86,9 @@ class GroupAdmin(admin.ModelAdmin):
             return f"{PresenceState.yes} {model.name}"
         return f"{PresenceState.no} {model.name}"
 
-    @admin.display(description="Вступления/Отправка")
-    def abortively_percent(self, model: Group):
-        len_abortively_join = len(SessionTask.objects.filter(
-            group=model, state=SessionTaskStates.abortively, type=SessionTaskType.join_group
-        ).all())
-        len_finished_join = len(SessionTask.objects.filter(
-            group=model, state=SessionTaskStates.finished, type=SessionTaskType.join_group
-        ).all())
-        len_all_join = len_abortively_join + len_finished_join
-
-        len_abortively_send = len(SessionTask.objects.filter(
-            group=model, state=SessionTaskStates.abortively, type=SessionTaskType.send_by_order
-        ).all())
-        len_finished_send = len(SessionTask.objects.filter(
-            group=model, state=SessionTaskStates.finished, type=SessionTaskType.send_by_order
-        ).all())
-        len_all_send = len_abortively_send + len_finished_send
-
-        if len_all_join == 0 or len_all_send == 0:
-            return f"0%"
-
-        math_join = round(len_abortively_join / len_all_join * 100, 2)
-        math_send = round(len_abortively_send / len_all_send * 100, 2)
-
-        return f"{math_join}% | {math_send}%"
+    @admin.display(description="Заказы")
+    def orders_group(self, model: Group):
+        return "\n".join([og.order.name for og in OrderGroup.objects.filter(group=model).all()])
 
     def changelist_view(self, request, extra_context=None):
         if 'action' in request.POST and request.POST['action'] == 'export_presence':
