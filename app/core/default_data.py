@@ -19,8 +19,12 @@ settings_list = [
         'type': SettingTypes.num, 'value': '900'
     },
     {
-        'name': 'Сон между проверкой сообщений (сек)', 'key': 'session_answer_sleep',
-        'type': SettingTypes.num, 'value': '300'
+        'name': 'Максимальный сон между задачами (сек)', 'key': 'session_sleep_max',
+        'type': SettingTypes.num, 'value': '900'
+    },
+    {
+        'name': 'Сон сессии между (сек)', 'key': 'session_sleep_between',
+        'type': SettingTypes.num, 'value': '60'
     },
     {
         'name': 'Сон ассистента долгий (сек)', 'key': 'assistant_sleep',

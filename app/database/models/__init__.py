@@ -16,6 +16,7 @@
 """FIRST"""
 from .answers import Answer
 from .countries import Country
+from .devices import Device, DeviceTypes
 from .groups import Group, GroupStates, GroupType, GroupCaptionType
 from .orders import Order, OrderStates, OrderTypes
 from .personals import Personal, PersonalTypes, PersonalSex
@@ -41,10 +42,11 @@ from .sessions_orders import SessionOrder
 from .sessions_proxies import SessionProxy
 from .sessions_tasks import SessionTask, SessionTaskStates, SessionTaskType
 from .sessions_personals import SessionPersonal
+from .sessions_devices import SessionDevice
 
 all_models = (
     Answer, Country, Group, Order, Personal, Setting, Shop, User,
     Proxy, Session, CountryLink, Sleep, Message,
     GroupCountry, OrderGroup, OrderUser, OrderPersonal, OrderAttachment,
-    SessionGroup, SessionOrder, SessionProxy, SessionTask, SessionPersonal
+    SessionGroup, SessionOrder, SessionProxy, SessionTask, SessionPersonal, SessionDevice
 )

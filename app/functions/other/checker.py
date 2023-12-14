@@ -139,8 +139,8 @@ class CheckerAction:
         setting: Setting = repo.settings.get_by(key="new_session_sleep")
         for session in repo.sessions.get_all(state=SessionStates.waiting):
             bot = BotAction(session=session)
-            await bot.all_connection()
-            if await bot.check():
+            if await bot.all_connection():
+                repo.sessions.update(session, state=SessionStates.free)
                 repo.sleeps.create(
                     session=session,
                     time_second=int(setting.value) if setting.type == SettingTypes.num else setting.value
@@ -154,18 +154,19 @@ class CheckerAction:
     # SPAM_BLOCK SESSION CHECK
 
     async def session_spam_block_check(self):
-        self.logger("session_spam_block_check")
-        for state in [SessionStates.free, SessionStates.spam_block]:
-            for session in repo.sessions.get_all(state=state):
-                st = repo.sessions_tasks.get_by(
-                    session=session, type=SessionTaskType.check_spamblock, state=SessionTaskStates.enable
-                )
-                if st:
-                    continue
-                repo.sessions_tasks.create(
-                    session=session, type=SessionTaskType.check_spamblock, state=SessionTaskStates.enable
-                )
-        await asyncio.sleep(hour2sec(6))
+        while True:
+            await asyncio.sleep(hour2sec(2))
+            self.logger("session_spam_block_check")
+            for state in [SessionStates.free, SessionStates.spam_block]:
+                for session in repo.sessions.get_all(state=state):
+                    st = repo.sessions_tasks.get_by(
+                        session=session, type=SessionTaskType.check_spamblock, state=SessionTaskStates.enable
+                    )
+                    if st:
+                        continue
+                    repo.sessions_tasks.create(
+                        session=session, type=SessionTaskType.check_spamblock, state=SessionTaskStates.enable
+                    )
 
     # WAIT SESSION_GROUP CHECK
 
@@ -206,10 +207,10 @@ class CheckerAction:
             )
             if st_last:
                 time_now = datetime.utcnow()
-                if (st_last.created + timedelta(hours=1)) < time_now:
-                    logger.info(f"({st_last.created} + {timedelta(hours=1)}) < {time_now}")
+                if (st_last.created + timedelta(minutes=30)) < time_now:
+                    logger.info(f"({st_last.created} + {timedelta(minutes=30)}) < {time_now}")
                     continue
-                logger.info(f"YES ({st_last.created} + {timedelta(hours=1)}) < {time_now}")
+                logger.info(f"YES ({st_last.created} + {timedelta(minutes=30)}) < {time_now}")
 
             session = await self.executor.get_session_from_message_check(spam=True)
             if not session:

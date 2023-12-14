@@ -16,6 +16,7 @@
 from .answers import answers
 from .countries import countries
 from .countries_links import countries_links
+from .devices import devices
 from .groups import groups
 from .messages import messages
 from .orders import orders
@@ -26,6 +27,7 @@ from .orders_users import orders_users
 from .personals import personals
 from .proxies import proxies
 from .sessions import sessions
+from .sessions_devices import sessions_devices
 from .sessions_groups import sessions_groups
 from .sessions_orders import sessions_orders
 from .sessions_personals import sessions_personals

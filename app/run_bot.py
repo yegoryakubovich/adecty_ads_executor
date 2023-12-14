@@ -61,6 +61,7 @@ def on_start_up():
     for task in all_tasks:
         logger.info(task)
         loop.run_until_complete(task)
+    loop.run_forever()
 
     logger.info("Success init")
 

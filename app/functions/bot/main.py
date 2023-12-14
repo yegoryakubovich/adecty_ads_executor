@@ -20,10 +20,11 @@ from typing import Optional
 from loguru import logger
 from pyrogram import Client, enums, errors
 from pyrogram.errors.exceptions.flood_420 import FloodWait
+from pyrogram.types import Message
 
 from database import repo
 from database.models import Session, SessionProxy, SessionStates, MessageStates, User, SessionTaskType, \
-    SessionTaskStates, OrderAttachmentTypes
+    SessionTaskStates, OrderAttachmentTypes, SessionDevice
 from functions.bot.executor import BotExecutorAction
 from functions.bot.simulator import SimulatorAction
 from functions.bot.tasker import BotTaskerAction
@@ -34,7 +35,7 @@ from utils.helpers import smart_sleep, smart_create_sleep
 class BotAction:
     def __init__(self, session: Session):
         self.client: Client = None
-        self.executor = None
+        self.executor: BotExecutorAction = None
         self.simulator = None
         self.tasker = None
 
@@ -47,10 +48,12 @@ class BotAction:
         if not sp:
             self.logger("No find proxy")
             return
+        sp: SessionDevice = repo.sessions_devices.get_by_session(session=self.session)
+        device = repo.devices.get(id=sp.device.id)
         return Client(
             f"{self.session.id}", session_string=self.session.string,
             api_id=self.session.api_id, api_hash=self.session.api_hash,
-            system_version="4.16.30-vxCUSTOM", device_model="iPhone 11",
+            system_version=device.app_version, device_model=device.device_model,
             proxy=repo.proxies.get_dict(proxy_id=sp.proxy_id)
         )
 
@@ -61,17 +64,57 @@ class BotAction:
         self.client = await self.open_session()
         if not self.client:
             raise
+
+        @self.client.on_message()
+        async def message_handler(client, message: Message):
+            if message.chat.type != enums.ChatType.PRIVATE:
+                return
+            if message.chat.id in [self.session.tg_user_id, 777000]:
+                return
+            if message.chat.username in ["SpamBot"]:
+                return
+            so = repo.sessions_orders.get_by(session_id=self.session.id)
+            if not so:
+                self.logger(f"[start_answers] not sessions_orders")
+                return
+            order_attachment = repo.orders_attachments.get_by(
+                order_id=so.order_id, type=OrderAttachmentTypes.text_answer
+            )
+            if not order_attachment:
+                self.logger(f"[start_answers] not order_attachment")
+                return
+            try:
+                user: User = repo.users.create(tg_user_id=message.from_user.id)
+                await self.executor.update_user(user=user, tg_user=message.from_user)
+                repo.messages.create(
+                    session=self.session, user=user,
+                    message_id=message.id, text=message.text or message.caption, state=MessageStates.from_user
+                )
+                msg_send = await message.reply(order_attachment.value, disable_web_page_preview=True)
+                if msg_send and not msg_send.empty:
+                    if msg_send.from_user:
+                        await self.executor.update_session(msg_send.from_user)
+                repo.messages.create(
+                    session=self.session, user=user, message_id=msg_send.id,
+                    text=msg_send.text, state=MessageStates.to_user
+                )
+                await self.executor.send_message_answer_log(
+                    session_id=self.session.id, username=message.from_user.username, user_id=user.id
+                )
+            except errors.InputUserDeactivated:
+                pass
+            except errors.PeerFlood:
+                pass
+            except FloodWait as wait_err:
+                await asyncio.sleep(wait_err.value)
+
         self.executor = BotExecutorAction(client=self.client, session=self.session)
         self.tasker = BotTaskerAction(client=self.client, session=self.session, executor=self.executor)
         self.simulator = SimulatorAction(client=self.client)
-
-    async def check(self) -> bool:
-        await self.executor.start_session()
-        await self.executor.stop_session()
-        await self.executor.start_session()
-        await self.executor.stop_session()
-        repo.sessions.update(self.session, state=SessionStates.free)
+        if not await self.executor.start_session():
+            return False
         return True
+
 
     """
         MAIN FUNCTION
@@ -86,18 +129,21 @@ class BotAction:
             SessionTaskType.check_spamblock, SessionTaskType.change_fi, SessionTaskType.change_avatar,
         ]
         while True:
+            self.session = repo.sessions.get(id=self.session.id)
+            if self.session.state == SessionStates.banned:
+                return
             await asyncio.sleep(int(repo.settings.get_by(key="session_sleep_between").value))
             """SPAM ANSWER"""
             await self.spam_answer()
             """MESSAGE ANSWER"""
-            await self.message_answer()
+            # await self.message_answer()
             """CHECK MESSAGE TASK"""
             check_message_task = repo.sessions_tasks.get_all(
                 in_list=True, session=self.session, type=SessionTaskType.check_message, state=SessionTaskStates.enable
             )
             for task in check_message_task:
                 await self.tasker.check_message(task)
-                await asyncio.sleep(random.choice([0.1, 0.2, 0.3, 0.4, 0.5]))
+                await asyncio.sleep(random.choice([1, 1, 2, 2, 2, 3, 3, 5, 10, 15]))
             """CHECK SLEEP"""
             sleep_time = await smart_sleep(self.session)
             if sleep_time > 0:
@@ -123,7 +169,7 @@ class BotAction:
                     await self.tasker.change_fi(task)
                 elif task.type == SessionTaskType.change_avatar:  # CHANGE AVATAR
                     await self.tasker.change_avatar(task)
-                await self.executor.stop_session()
+                # await self.executor.stop_session()
                 """Создаем сон"""
                 sleep_min = int(repo.settings.get_by(key="session_sleep_min").value)
                 sleep_max = int(repo.settings.get_by(key="session_sleep_max").value)
@@ -133,19 +179,19 @@ class BotAction:
     @func_logger
     async def spam_answer(self):
         active_session: Session = repo.sessions.get(id=self.session.id)
-        if active_session.state != SessionStates.spam_block:
-            logger.info(f"NOT spam_answer {active_session.state}")
-            return
+        # if active_session.state != SessionStates.spam_block:
+        #     logger.info(f"NOT spam_answer {active_session.state}")
+        #     return
         logger.info(f"spam_answer {active_session.state}")
         try:
-            await self.executor.start_session()
+            # await self.executor.start_session()
             await self.client.get_chat_history_count(chat_id="SpamBot")
-            await self.executor.stop_session()
+            # await self.executor.stop_session()
         except Exception as e:
-            await self.executor.stop_session()
+            # await self.executor.stop_session()
             return
 
-        await self.executor.start_session()
+        # await self.executor.start_session()
         async for msg in self.client.get_chat_history(chat_id="SpamBot", limit=1):
             for answer in repo.answers.get_all():
                 if answer.text_from in msg.text:
@@ -156,60 +202,59 @@ class BotAction:
                     repo.messages.create(
                         session=self.session, message_id=msg.id, text=msg_to.text, state=MessageStates.to_user
                     )
+        # await self.executor.stop_session()
 
-        await self.executor.stop_session()
-
-    @func_logger
-    async def message_answer(self):
-        self.logger("message_answer")
-        so = repo.sessions_orders.get_by(session_id=self.session.id)
-        if not so:
-            self.logger(f"[start_answers] not sessions_orders")
-            return
-        order_attachment = repo.orders_attachments.get_by(order_id=so.order_id, type=OrderAttachmentTypes.text_answer)
-        if not order_attachment:
-            self.logger(f"[start_answers] not order_attachment")
-            return
-
-        await self.executor.start_session()
-        async for dialog in self.client.get_dialogs(limit=35):
-            await asyncio.sleep(0.1)
-            if dialog.chat.type != enums.ChatType.PRIVATE:
-                continue
-            if dialog.chat.id in [self.session.tg_user_id, 777000]:
-                continue
-            try:
-                async for msg in self.client.get_chat_history(chat_id=dialog.chat.id, limit=1):
-                    if msg.from_user.id == self.session.tg_user_id:
-                        logger.info(f"msg id {msg.from_user.id}")
-                        continue
-                    if msg.empty:
-                        logger.info(f"empty {msg.empty}")
-                        continue
-
-                    user: User = repo.users.create(tg_user_id=msg.from_user.id)
-                    await self.executor.update_user(user=user, tg_user=msg.from_user)
-                    repo.messages.create(
-                        session=self.session, user=user,
-                        message_id=msg.id, text=msg.text or msg.caption, state=MessageStates.from_user
-                    )
-                    msg_send = await msg.reply(order_attachment.value, disable_web_page_preview=True)
-                    if msg_send and not msg_send.empty:
-                        if msg_send.from_user:
-                            await self.executor.update_session(msg_send.from_user)
-                    repo.messages.create(
-                        session=self.session, user=user, message_id=msg_send.id,
-                        text=msg_send.text, state=MessageStates.to_user
-                    )
-                    await self.executor.send_message_answer_log(
-                        session_id=self.session.id, username=msg.from_user.username, user_id=user.id
-                    )
-                    await asyncio.sleep(10)
-            except errors.InputUserDeactivated:
-                pass
-            except errors.PeerFlood:
-                pass
-            except FloodWait as wait_err:
-                await asyncio.sleep(wait_err.value)
-
-        await self.executor.stop_session()
+    # @func_logger
+    # async def message_answer(self):
+    #     self.logger("message_answer")
+    #     so = repo.sessions_orders.get_by(session_id=self.session.id)
+    #     if not so:
+    #         self.logger(f"[start_answers] not sessions_orders")
+    #         return
+    #     order_attachment = repo.orders_attachments.get_by(order_id=so.order_id, type=OrderAttachmentTypes.text_answer)
+    #     if not order_attachment:
+    #         self.logger(f"[start_answers] not order_attachment")
+    #         return
+    #
+    #     await self.executor.start_session()
+    #     async for dialog in self.client.get_dialogs(limit=35):
+    #         await asyncio.sleep(0.1)
+    #         if dialog.chat.type != enums.ChatType.PRIVATE:
+    #             continue
+    #         if dialog.chat.id in [self.session.tg_user_id, 777000]:
+    #             continue
+    #         try:
+    #             async for msg in self.client.get_chat_history(chat_id=dialog.chat.id, limit=1):
+    #                 if msg.from_user.id == self.session.tg_user_id:
+    #                     logger.info(f"msg id {msg.from_user.id}")
+    #                     continue
+    #                 if msg.empty:
+    #                     logger.info(f"empty {msg.empty}")
+    #                     continue
+    #
+    #                 user: User = repo.users.create(tg_user_id=msg.from_user.id)
+    #                 await self.executor.update_user(user=user, tg_user=msg.from_user)
+    #                 repo.messages.create(
+    #                     session=self.session, user=user,
+    #                     message_id=msg.id, text=msg.text or msg.caption, state=MessageStates.from_user
+    #                 )
+    #                 msg_send = await msg.reply(order_attachment.value, disable_web_page_preview=True)
+    #                 if msg_send and not msg_send.empty:
+    #                     if msg_send.from_user:
+    #                         await self.executor.update_session(msg_send.from_user)
+    #                 repo.messages.create(
+    #                     session=self.session, user=user, message_id=msg_send.id,
+    #                     text=msg_send.text, state=MessageStates.to_user
+    #                 )
+    #                 await self.executor.send_message_answer_log(
+    #                     session_id=self.session.id, username=msg.from_user.username, user_id=user.id
+    #                 )
+    #                 await asyncio.sleep(10)
+    #         except errors.InputUserDeactivated:
+    #             pass
+    #         except errors.PeerFlood:
+    #             pass
+    #         except FloodWait as wait_err:
+    #             await asyncio.sleep(wait_err.value)
+    #
+    #     await self.executor.stop_session()
