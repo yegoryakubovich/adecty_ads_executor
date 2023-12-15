@@ -42,6 +42,7 @@ class Proxy(BaseModel):
     user = CharField(max_length=128)
     password = CharField(max_length=256)
     max_link = IntegerField(default=3)
+    ban_count = IntegerField(default=0)
 
     state = CharField(max_length=64, default=ProxyStates.wait)
     state_description = CharField(max_length=2056, null=True)

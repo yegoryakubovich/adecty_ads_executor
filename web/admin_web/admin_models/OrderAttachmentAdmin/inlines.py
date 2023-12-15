@@ -15,7 +15,6 @@
 #
 from django.contrib import admin
 
-from admin_web.admin_models import max_rows_inline
 from admin_web.models import OrderAttachment
 
 
@@ -24,6 +23,7 @@ class OrderAttachmentInline(admin.TabularInline):
     extra = 0
     fields = ("id", "order", "type", "value", "created")
     readonly_fields = ("id", "created")
+
     # classes = ['collapse']
 
     def get_queryset(self, request):

@@ -15,6 +15,7 @@
 #
 import asyncio
 import random
+from random import randint
 from typing import Optional
 
 from loguru import logger
@@ -48,12 +49,12 @@ class BotAction:
         if not sp:
             self.logger("No find proxy")
             return
-        sp: SessionDevice = repo.sessions_devices.get_by_session(session=self.session)
-        device = repo.devices.get(id=sp.device.id)
+        sd: SessionDevice = repo.sessions_devices.get_by_session(session=self.session)
+        device = repo.devices.get(id=sd.device_id)
         return Client(
             f"{self.session.id}", session_string=self.session.string,
             api_id=self.session.api_id, api_hash=self.session.api_hash,
-            system_version=device.app_version, device_model=device.device_model,
+            system_version=device.system_version, device_model=device.device_model,
             proxy=repo.proxies.get_dict(proxy_id=sp.proxy_id)
         )
 
@@ -122,6 +123,7 @@ class BotAction:
 
     @func_logger
     async def start(self):
+        await asyncio.sleep(randint(30, 300))
         self.logger(f"Started!")
         await self.all_connection()
         other_task_types = [

@@ -15,7 +15,6 @@
 #
 from django.contrib import admin
 
-from admin_web.admin_models import max_rows_inline
 from admin_web.models import OrderGroup
 
 
@@ -37,4 +36,3 @@ class OrderGroupInline(admin.TabularInline):
 
     def get_queryset(self, request):
         return super().get_queryset(request).order_by("-id")
-

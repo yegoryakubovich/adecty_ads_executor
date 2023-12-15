@@ -46,4 +46,11 @@ def state_to_wait(model_admin: admin.ModelAdmin, request, queryset):
         proxy.save()
 
 
-actions_list = [state_to_active, state_to_disable, state_to_wait, state_to_stop]
+@admin.action(description="Обнулить баны")
+def ban_refresh(model_admin: admin.ModelAdmin, request, queryset):
+    for proxy in queryset:
+        proxy.ban_count = 0
+        proxy.save()
+
+
+actions_list = [state_to_active, state_to_disable, state_to_wait, state_to_stop, ban_refresh]

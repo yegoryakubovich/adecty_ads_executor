@@ -15,24 +15,20 @@
 #
 from django.contrib import admin
 
-from admin_web.models import SessionPersonal
+from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
+from admin_web.models import SessionDevice
 
 
-class SessionPersonalInline(admin.TabularInline):
-    model = SessionPersonal
-    extra = 0
-    fields = ("id", "session", "personal", "created")
-    classes = ['collapse']
-    show_change_link = False
+@admin.register(SessionDevice, site=admin_site)
+class SessionDeviceAdmin(admin.ModelAdmin):
+    list_display = ("id", "session", "device")
+    search_fields = ("id",)
+    readonly_fields = ("id", "created")
+    list_per_page = max_rows
 
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request, obj):
-        return False
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).order_by("-id")
+    def get_action_choices(self, request, *args, **kwargs):  # auto select action
+        choices = super(SessionDeviceAdmin, self).get_action_choices(request)
+        choices.pop(0)
+        choices.reverse()
+        return choices

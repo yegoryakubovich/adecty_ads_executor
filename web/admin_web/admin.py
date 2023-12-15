@@ -31,7 +31,7 @@ class MyAdminSite(AdminSite):
 
             addon_app = {"name": "Побочный", "has_module_perms": True, "models": []}
             addon_app_list = [
-                "SessionProxy", "SessionGroup", "SessionPersonal", "SessionOrder",
+                "SessionProxy", "SessionGroup", "SessionPersonal", "SessionOrder", "SessionDevice",
                 "GroupCountry",
                 "OrderAttachment", "OrderGroup", "OrderPersonal", "OrderUser",
                 "CountryLink",

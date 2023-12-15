@@ -53,6 +53,7 @@ class Proxy(models.Model):
     user = models.CharField(max_length=128, verbose_name="User")
     password = models.CharField(max_length=256, verbose_name="Password")
     max_link = models.IntegerField(default=3, verbose_name="Максимум подключений")
+    ban_count = models.IntegerField(default=0, verbose_name="Банов")
 
     state = models.CharField(max_length=64, default=ProxyStates.wait, choices=ProxyStates.choices,
                              verbose_name="Состояние")

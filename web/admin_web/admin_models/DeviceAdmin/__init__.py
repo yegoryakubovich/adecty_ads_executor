@@ -13,26 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from django.contrib import admin
 
-from admin_web.models import SessionPersonal
+from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
+from admin_web.admin_models.SessionDeviceAdmin.inlines import SessionDeviceInline
+from admin_web.models import Device
 
 
-class SessionPersonalInline(admin.TabularInline):
-    model = SessionPersonal
-    extra = 0
-    fields = ("id", "session", "personal", "created")
-    classes = ['collapse']
-    show_change_link = False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request, obj):
-        return False
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).order_by("-id")
+@admin.register(Device, site=admin_site)
+class DeviceAdmin(admin.ModelAdmin):
+    list_display = ("id", "system_version", "device_model", "created")
+    search_fields = ("id",)
+    readonly_fields = ("id", "created")
+    inlines = [SessionDeviceInline]
+    list_per_page = max_rows

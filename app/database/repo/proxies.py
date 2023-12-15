@@ -24,19 +24,6 @@ model = Proxy
 
 class ProxyRepository(BaseRepository):
 
-    # @db_manager
-    # def fill(self):
-    #     for item in proxies_list:
-    #         item_data = item.split("@")
-    #         host, port = item_data[1].split(':')[0], item_data[1].split(':')[1]
-    #         user, password = item_data[0].split(':')[0], item_data[0].split(':')[1]
-    #         country_type = get_by_ip(host)
-    #         country = repo.countries.create(code=country_type.code, name=country_type.name)
-    #         shop = repo.shops.get(1)
-    #         self.model.get_or_create(
-    #             type=ProxyTypes.socks5, host=host, port=port, user=user, password=password, country=country, shop=shop
-    #         )
-
     @db_manager
     def get_dict(self, proxy_id: int) -> dict:
         proxy = self.get(proxy_id)

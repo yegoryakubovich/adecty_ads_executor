@@ -16,6 +16,7 @@
 """FIRST"""
 from .answers import Answer
 from .countries import Country
+from .device import Device
 from .groups import Group, GroupStates, GroupType
 from .orders import Order, OrderStates, OrderTypes
 from .personals import Personal, PersonalTypes, PersonalSex
@@ -41,3 +42,4 @@ from .sessions_orders import SessionOrder
 from .sessions_proxies import SessionProxy
 from .sessions_tasks import SessionTask, SessionTaskStates, SessionTaskType
 from .sessions_personals import SessionPersonal
+from .sessions_devices import SessionDevice

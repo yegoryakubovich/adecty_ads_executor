@@ -15,8 +15,7 @@
 #
 from django.contrib import admin
 
-from admin_web.admin_models import max_rows_inline
-from admin_web.models import Session, SessionStates
+from admin_web.models import Session
 
 
 class SessionInline(admin.TabularInline):
@@ -37,4 +36,3 @@ class SessionInline(admin.TabularInline):
 
     def get_queryset(self, request):
         return super().get_queryset(request).order_by("-id")
-

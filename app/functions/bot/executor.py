@@ -73,7 +73,6 @@ class BotExecutorAction(BaseExecutorAction):
             repo.groups.update(group, state=GroupStates.inactive)
             return "UsernameNotOccupied"
 
-
     async def get_chat(self, chat_id: [str, int]) -> types.Chat:
         # await self.start_session()
         result = await self.client.get_chat(chat_id=chat_id)
@@ -238,6 +237,7 @@ class BotExecutorAction(BaseExecutorAction):
             proxy_shop = None
             if sp:
                 proxy = repo.proxies.get(sp.proxy_id)
+                repo.proxies.update(proxy, ban_count=proxy.ban_count + 1)
                 proxy_shop = repo.shops.get(proxy.shop_id)
             await self.session_banned_log(session_id=self.session.id, proxy_id=proxy.id if proxy else None,
                                           session_shop_id=session_shop.id, session_shop_name=session_shop.name,

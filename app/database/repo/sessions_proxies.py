@@ -31,6 +31,8 @@ class SessionProxyRepository(BaseRepository):
         proxies = []
         for country in repo.countries_links.get_link_country(session_country):
             for proxy in repo.proxies.get_all(state=ProxyStates.enable, country=country):
+                if proxy.ban_count >= int(repo.settings.get_by(key="proxy_max_ban_count").value):
+                    continue
                 sps = self.get_all(proxy=proxy)
                 if len(sps) < proxy.max_link:
                     proxies.append({'id': proxy.id, 'sessions': len(sps)})

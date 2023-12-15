@@ -50,6 +50,10 @@ settings_list = [
         'name': 'Обновление статистики присутствия (сек)', 'key': 'group_presence_delay',
         'type': SettingTypes.num, 'value': '300'
     },
+    {
+        'name': 'Максимальное количество банов на прокси', 'key': 'proxy_max_ban_count',
+        'type': SettingTypes.num, 'value': '5'
+    },
 
 
 ]

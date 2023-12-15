@@ -23,8 +23,8 @@ from .sessions import Session
 
 class SessionDevice(BaseModel):
     id = PrimaryKeyField()
-    session = ForeignKeyField(Session, to_field='id')
+    session = ForeignKeyField(Session, to_field='id', unique=True)
     device = ForeignKeyField(Device, to_field='id')
 
     class Meta:
-        db_table = 'sessions_groups'
+        db_table = 'sessions_devices'

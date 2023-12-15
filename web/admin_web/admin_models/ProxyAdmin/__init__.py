@@ -24,7 +24,9 @@ from ..SessionProxyAdmin.inlines import SessionProxyInline
 
 @admin.register(Proxy, site=admin_site)
 class ProxyAdmin(admin.ModelAdmin):
-    list_display = ("id", "country", "ip_port", "user", "password", "type", "state", "created", "session_count")
+    list_display = (
+        "id", "country", "ip_port", "user", "password", "type", "state", "ban_count", "created", "session_count"
+    )
     search_fields = ("id",)
     list_filter = ("state", "type", "created")
     readonly_fields = ("id", "created")

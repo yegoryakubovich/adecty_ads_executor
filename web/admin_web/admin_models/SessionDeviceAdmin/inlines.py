@@ -15,13 +15,13 @@
 #
 from django.contrib import admin
 
-from admin_web.models import SessionPersonal
+from admin_web.models import SessionDevice
 
 
-class SessionPersonalInline(admin.TabularInline):
-    model = SessionPersonal
+class SessionDeviceInline(admin.TabularInline):
+    model = SessionDevice
     extra = 0
-    fields = ("id", "session", "personal", "created")
+    fields = ("id", "session", "device", "created")
     classes = ['collapse']
     show_change_link = False
 

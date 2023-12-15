@@ -15,14 +15,13 @@
 #
 from django.contrib import admin
 
-from admin_web.admin_models import max_rows_inline
-from admin_web.models import Proxy, ProxyStates
+from admin_web.models import Proxy
 
 
 class ProxyInline(admin.TabularInline):
     model = Proxy
     extra = 0
-    fields = ("id", "country", "host", "port", "user", "password", "type", "state", "created")
+    fields = ("id", "country", "host", "port", "user", "password", "type", "state", "ban_count", "created")
     classes = ['collapse']
     show_change_link = False
 
@@ -37,4 +36,3 @@ class ProxyInline(admin.TabularInline):
 
     def get_queryset(self, request):
         return super().get_queryset(request).order_by("-id")
-

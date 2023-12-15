@@ -24,6 +24,7 @@ from admin_web.models import Session, Message, Sleep, SleepStates, SessionGroup,
     SessionPersonal, PersonalTypes, MessageStates, SessionTask, SessionTaskStates, SessionTaskType, SessionOrder
 from .actions import actions_list
 from ..MessageAdmin.inlines import MessageInline
+from ..SessionDeviceAdmin.inlines import SessionDeviceInline
 from ..SessionGroupAdmin.inlines import SessionGroupInline
 from ..SessionOrderAdmin.inlines import SessionOrderInline
 from ..SessionPersonalAdmin.inlines import SessionPersonalInline
@@ -42,7 +43,7 @@ class SessionAdmin(admin.ModelAdmin):
     actions = actions_list
     inlines = [
         SessionTaskInline, MessageInline, SessionGroupInline, SessionOrderInline, SessionProxyInline,
-        SessionPersonalInline,
+        SessionPersonalInline, SessionDeviceInline
     ]
     list_per_page = max_rows
 
