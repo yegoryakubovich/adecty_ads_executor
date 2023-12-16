@@ -137,19 +137,26 @@ class CheckerAction:
     async def wait_session_check(self):
         self.logger("wait_session_check")
         setting: Setting = repo.settings.get_by(key="new_session_sleep")
-        for session in repo.sessions.get_all(state=SessionStates.waiting):
-            bot = BotAction(session=session)
-            if await bot.all_connection():
-                repo.sessions.update(session, state=SessionStates.free)
-                repo.sleeps.create(
-                    session=session,
-                    time_second=int(setting.value) if setting.type == SettingTypes.num else setting.value
-                )
-                asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
-                session_shop: Shop = repo.shops.get(session.shop_id)
-                await self.executor.session_added_log(
-                    session_id=session.id, session_shop_id=session_shop.id, session_shop_name=session_shop.name
-                )
+        wait_sessions = [session for session in repo.sessions.get_all(state=SessionStates.waiting)]
+        while wait_sessions:
+            for order in repo.orders.get_all(state=OrderStates.waiting):
+                if not wait_sessions:
+                    continue
+                session = wait_sessions.pop()
+                bot = BotAction(session=session)
+                if await bot.all_connection():
+                    repo.sessions.update(session, state=SessionStates.free)
+                    repo.sessions_orders.create(session=session, order=order)
+                    repo.sleeps.create(
+                        session=session,
+                        time_second=int(setting.value) if setting.type == SettingTypes.num else setting.value
+                    )
+                    asyncio.create_task(coro=BotAction(session=session).start(), name=f"Bot_{session.id}")
+                    session_shop: Shop = repo.shops.get(session.shop_id)
+                    await self.executor.session_added_log(
+                        session_id=session.id, session_shop_id=session_shop.id, session_shop_name=session_shop.name
+                    )
+
 
     # SPAM_BLOCK SESSION CHECK
 

@@ -28,16 +28,10 @@ from ..OrderGroupAdmin.inlines import OrderGroupInline
 from ..SessionGroupAdmin.inlines import SessionGroupInline
 from ..SessionTaskAdmin.inlines import SessionTaskInline
 
-
-class PresenceState:
-    yes = "🟢"
-    no = "🔴"
-
-
 @admin.register(Group, site=admin_site)
 class GroupAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "name_fix", "state", "subscribers", "can_image", "type", "join_request", "captcha_have", "captcha_type",
+        "id", "name", "state", "subscribers", "can_image", "type", "join_request", "captcha_have", "captcha_type",
         "date", "delete_count", "delete_count_today", "orders_group", "sessions_count"
     )
     list_filter = ("state", "can_image", "type", "join_request", "captcha_have", "captcha_type")
@@ -78,13 +72,6 @@ class GroupAdmin(admin.ModelAdmin):
             if msg.state == MessageStates.deleted:
                 delete_count += 1
         return f"{delete_count}/{messages_count}"
-
-    @admin.display(description="Название")
-    def name_fix(self, model: Group):
-        messages_waiting = Message.objects.filter(group=model, state=MessageStates.waiting).all()
-        if messages_waiting:
-            return f"{PresenceState.yes} {model.name}"
-        return f"{PresenceState.no} {model.name}"
 
     @admin.display(description="Заказы")
     def orders_group(self, model: Group):
