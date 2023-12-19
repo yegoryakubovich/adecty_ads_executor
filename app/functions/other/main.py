@@ -21,7 +21,7 @@ from loguru import logger
 
 from database import repo
 from database.models import GroupStates, MessageStates, OrderTypes, Setting, SettingTypes, SessionOrder, Session, \
-    SessionStates
+    SessionStates, Group, GroupCaptionType
 from functions.other.checker import CheckerAction
 from functions.other.executor import AssistantExecutorAction
 from functions.other.innovation import InnovationAction
@@ -113,8 +113,10 @@ class AssistantAction:
                 msg_count = 0
                 presence_count, all_count = 0, 0
                 for og in repo.orders_groups.get_all(order=order):
-                    group = repo.groups.get(id=og.group_id)
+                    group: Group = repo.groups.get(id=og.group_id)
                     if group.state != GroupStates.active:
+                        continue
+                    if group.captcha_type == GroupCaptionType.other:
                         continue
                     messages_waiting = repo.messages.get_last(order=order, group=group, state=MessageStates.waiting)
                     if messages_waiting:

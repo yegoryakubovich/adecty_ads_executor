@@ -39,8 +39,9 @@ class GroupType:
 class GroupCaptionType:
     join_group = "join_group"
     click_button = "click_button"
+    other = "other"
 
-    choices = ((join_group, join_group), (click_button, click_button),)
+    choices = ((join_group, join_group), (click_button, click_button), (other, other),)
 
 
 class Group(models.Model):

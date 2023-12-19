@@ -64,7 +64,7 @@ class BotAction:
     async def all_connection(self):
         self.client = await self.open_session()
         if not self.client:
-            raise
+            return
 
         @self.client.on_message()
         async def message_handler(client, message: Message):
@@ -125,7 +125,8 @@ class BotAction:
     async def start(self):
         await asyncio.sleep(randint(30, 300))
         self.logger(f"Started!")
-        await self.all_connection()
+        if not await self.all_connection():
+            return
         other_task_types = [
             SessionTaskType.join_group, SessionTaskType.send_by_order, SessionTaskType.send_by_mailing,
             SessionTaskType.check_spamblock, SessionTaskType.change_fi, SessionTaskType.change_avatar,

@@ -35,6 +35,7 @@ class GroupType:
 class GroupCaptionType:
     join_group = "join_group"
     click_button = "click_button"
+    other = "other"
 
 
 class Group(BaseModel):

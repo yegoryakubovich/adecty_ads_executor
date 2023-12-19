@@ -23,7 +23,7 @@ from core.constants import hour2sec
 from database import repo
 from database.models import ProxyStates, SessionStates, GroupStates, MessageStates, Shop, ProxyTypes, GroupType, Group, \
     User, OrderUserStates, SessionTask, SessionTaskType, SessionTaskStates, OrderStates, OrderTypes, PersonalTypes, \
-    Order, Setting, SettingTypes
+    Order, Setting, SettingTypes, GroupCaptionType
 from functions import BotAction
 from functions.other.executor import AssistantExecutorAction
 from modules import convert
@@ -157,9 +157,7 @@ class CheckerAction:
                         session_id=session.id, session_shop_id=session_shop.id, session_shop_name=session_shop.name
                     )
 
-
     # SPAM_BLOCK SESSION CHECK
-
     async def session_spam_block_check(self):
         while True:
             await asyncio.sleep(hour2sec(2))
@@ -176,7 +174,6 @@ class CheckerAction:
                     )
 
     # WAIT SESSION_GROUP CHECK
-
     async def wait_session_group_check(self):
         self.logger("wait_session_group_check")
         for group in repo.groups.get_all(state=GroupStates.waiting):
@@ -196,7 +193,6 @@ class CheckerAction:
                 )
 
     # WAIT MESSAGE CHECK
-
     async def wait_message_check(self):
         self.logger("wait_message_check")
         for message in repo.messages.get_all(state=MessageStates.waiting):
@@ -228,7 +224,6 @@ class CheckerAction:
             )
 
     # WAIT ORDER CHECK
-
     async def wait_ads_order_check(self):
         self.logger("wait_ads_order_check")
         date_now = datetime.utcnow()
@@ -248,6 +243,8 @@ class CheckerAction:
                     if not group.can_image:
                         repo.groups.update(group, state=GroupStates.inactive)
                         continue
+                if group.captcha_type == GroupCaptionType.other:
+                    continue
 
                 last_message = repo.messages.get_last(order=order, group=group)
                 if last_message:
@@ -304,7 +301,6 @@ class CheckerAction:
                 )
 
     # Personals Check
-
     async def personals_check(self):
         self.logger("personals_check")
         change_fi = repo.sessions_tasks.get_all(state=SessionTaskStates.enable, type=SessionTaskType.change_fi)
