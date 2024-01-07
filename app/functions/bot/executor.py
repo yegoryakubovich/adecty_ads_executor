@@ -72,6 +72,9 @@ class BotExecutorAction(BaseExecutorAction):
             # await self.stop_session()
             repo.groups.update(group, state=GroupStates.inactive)
             return "UsernameNotOccupied"
+        except errors.UsernameInvalid:
+            repo.groups.update(group, state=GroupStates.inactive)
+            return "UsernameInvalid"
 
     async def get_chat(self, chat_id: [str, int]) -> types.Chat:
         # await self.start_session()

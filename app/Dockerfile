@@ -8,4 +8,4 @@ WORKDIR /src
 
 RUN pip install -r requiruments.txt
 
-ENTRYPOINT python run_bot.py
+ENTRYPOINT python run_bot.py1

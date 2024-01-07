@@ -28,6 +28,7 @@ from ..OrderGroupAdmin.inlines import OrderGroupInline
 from ..SessionGroupAdmin.inlines import SessionGroupInline
 from ..SessionTaskAdmin.inlines import SessionTaskInline
 
+
 @admin.register(Group, site=admin_site)
 class GroupAdmin(admin.ModelAdmin):
     list_display = (

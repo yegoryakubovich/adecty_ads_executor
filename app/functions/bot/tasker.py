@@ -94,11 +94,14 @@ class BotTaskerAction:
         setting_msg: Setting = repo.settings.get_by(key="send_message_delay")
         setting_words: Setting = repo.settings.get_by(key="user_save_key_word")
 
+        if repo.sessions_groups.get_all(session=self.session, group=group, state=SessionGroupState.banned):
+            return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description="SG banned")
+
         chat = await self.executor.get_chat_by_group(group)
         self.logger(f"[check_message] group={group.name}, message={message.message_id}")
 
         if isinstance(chat, str):
-            repo.messages.update(message, state=MessageStates.fine)
+            # repo.messages.update(message, state=MessageStates.fine)
             return repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=chat)
 
         msg = await self.executor.get_messages(chat_id=group.name, msg_id=message.message_id)
@@ -217,7 +220,7 @@ class BotTaskerAction:
             for ou in repo.orders_users.get_all(order=order, user=user):
                 repo.orders_users.update(ou, state=OrderUserStates.abort, state_description=msg)
             repo.sessions_tasks.update(task, state=SessionTaskStates.abortively, state_description=msg)
-            await asyncio.sleep(await smart_create_sleep(self.session, mi=min2sec(45), ma=min2sec(60)))
+            await asyncio.sleep(await smart_create_sleep(self.session, minimum=min2sec(45), maximum=min2sec(60)))
             return
 
         if msg.empty:
