@@ -54,6 +54,11 @@ def on_start_up():
             'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
         } for session in repo.sessions.get_all(state=SessionStates.spam_block)
     ])
+    all_functions.extend([
+        {
+            'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
+        } for session in repo.sessions.get_all(state=SessionStates.in_work)
+    ])
 
     all_tasks = [loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions]
     all_tasks.extend([loop.create_task(hello(), name="TEST")])

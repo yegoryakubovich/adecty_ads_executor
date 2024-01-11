@@ -138,8 +138,6 @@ class BotAction:
             await asyncio.sleep(int(repo.settings.get_by(key="session_sleep_between").value))
             """SPAM ANSWER"""
             await self.spam_answer()
-            """MESSAGE ANSWER"""
-            # await self.message_answer()
             """CHECK MESSAGE TASK"""
             check_message_task = repo.sessions_tasks.get_all(
                 in_list=True, session=self.session, type=SessionTaskType.check_message, state=SessionTaskStates.enable

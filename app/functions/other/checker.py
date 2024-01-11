@@ -43,7 +43,7 @@ class CheckerAction:
     """INSIDE"""
 
     async def all_task_check(self):
-        for state in [SessionStates.free, SessionStates.spam_block]:
+        for state in [SessionStates.free, SessionStates.spam_block, SessionStates.in_work]:
             for session in repo.sessions.get_all(state=state):
                 if f"Bot_{session.id}" not in [task.get_name() for task in asyncio.all_tasks()]:
                     self.logger(f"Повторный запуск Bot_{session.id}")
@@ -215,7 +215,7 @@ class CheckerAction:
                     continue
                 logger.info(f"YES ({st_last.created} + {timedelta(minutes=30)}) < {time_now}")
 
-            session = await self.executor.get_session_from_message_check(spam=True)
+            session = await self.executor.get_session_from_message_check(group=group,spam=True, in_work=True)
             if not session:
                 continue
             repo.sessions_tasks.create(

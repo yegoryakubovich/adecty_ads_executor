@@ -8,7 +8,6 @@ from database.models import Proxy, ProxyStates, Shop, SessionGroup, Group, Sessi
 from database.models.sessions_groups import SessionGroupState
 from database.models.sessions_tasks import SessionTaskStates, SessionTaskType
 from functions import BaseExecutorAction
-from utils.country import get_by_ip
 
 
 class AssistantExecutorAction(BaseExecutorAction):
@@ -104,13 +103,17 @@ class AssistantExecutorAction(BaseExecutorAction):
             logger.info(sorted(maybe_sessions_by_order, key=itemgetter('tasks')))
             return repo.sessions.get(sorted(maybe_sessions_by_order, key=itemgetter('tasks'))[0]['id'])
 
-    async def get_session_from_message_check(self, spam: bool = False):
+    async def get_session_from_message_check(self, group: Group, spam: bool = False, in_work: bool = False):
         states = [SessionStates.free]
         if spam:
             states.append(SessionStates.spam_block)
+        if in_work:
+            states.append(SessionStates.in_work)
         maybe_sessions = []
         for state in states[::-1]:
             for session in repo.sessions.get_all(state=state):
+                if repo.sessions_groups.get_all(session=session, group=group, state=SessionGroupState.banned):
+                    continue
                 message_check_tasks = len([task.id for task in repo.sessions_tasks.get_all(
                     session=session, state=SessionTaskStates.enable, type=SessionTaskType.check_message
                 )])
