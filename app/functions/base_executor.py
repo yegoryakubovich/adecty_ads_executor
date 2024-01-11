@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta
 from random import choice
+from typing import Optional
 
 from aiogram import Bot
 from loguru import logger
 
 from core.config import settings
 from core.constants import LATTERS
+from database.models import Session, Shop, Proxy, Order, Group
 
 
 class BaseExecutorAction:
@@ -48,24 +50,37 @@ class BaseExecutorAction:
             f"#disable_proxy #proxy_{proxy_id} #proxy_shop_{proxy_shop_id}"
         ]))
 
-    async def session_banned_log(self, messages_send: int,
-                                 session_id: int, session_shop_id: int, session_shop_name: str,
-                                 proxy_id: int, proxy_shop_id: int, proxy_shop_name: str):
+    async def session_banned_log(
+            self,
+            session: Session,
+            session_shop: Shop,
+            proxy: Optional[Proxy],
+            proxy_shop: Optional[Shop],
+            order: Order,
+            messages_send: int,
+    ) -> None:
+        proxy_data = f", прокси из {proxy_shop.name}" if proxy else ""
+        proxy_data_ids = f"#proxy_{proxy.id} #proxy_shop_{proxy_shop.id}" if proxy else ""
         return await self.send_log_message(text="\n".join([
-            f"🚫 Сессия #{session_id} заблокирована",
-            f"Сессия из {session_shop_name}, прокси из {proxy_shop_name}",
-            f"Всего сообщений: {messages_send}",
+            f"🚫 Сессия #{session.id} ({session.state}) заблокирована",
+            f"Сессия из {session_shop.name}{proxy_data}",
+            f"Заказ: {order.id} - {order.name} ({messages_send} сообщений)",
             "",
-            f"#ban_session #session_{session_id} #proxy_{proxy_id} #session_shop_{session_shop_id} #proxy_shop_{proxy_shop_id}"
+            f"#ban_session #order_{order.id}"
+            f"#session_{session.id} #session_shop_{session_shop.id} {proxy_data_ids}"
         ]))
 
-    async def new_session_banned_log(self, session_id: int,
-                                     session_shop_id: int, session_shop_name: str):
+    async def new_session_banned_log(
+            self,
+            session: Session,
+            session_shop: Shop
+    ) -> None:
         return await self.send_log_message(text="\n".join([
-            f"🚫 Сессия #{session_id} не прошла проверку",
-            f"Сессия из {session_shop_name}",
+            f"🚫 Сессия #{session.id} ({session.state}) заблокирована",
+            f"Сессия из {session_shop.name}",
             "",
-            f"#ban_new_session #session_{session_id} #session_shop_{session_shop_id}"
+            f"#ban_new_session "
+            f"#session_{session.id} #session_shop_{session_shop.id}"
         ]))
 
     async def session_added_log(self, session_id: int, session_shop_id: int, session_shop_name: str):
@@ -84,18 +99,22 @@ class BaseExecutorAction:
             f"#new_proxy #proxy_{proxy_id} #proxy_shop_{proxy_shop_id}",
         ]))
 
-    async def send_message_log(self, session_id: int,
-                               order_id: int, order_name: str,
-                               group_id: int, group_name: str, post_id: int,
-                               session_messages_count: int):
-        link = await self.create_link(group_name=group_name, post_id=post_id)
+    async def send_message_log(
+            self,
+            session: Session,
+            order: Order,
+            group: Group,
+            post_id: int,
+            session_messages_count: int
+    ) -> None:
+        link = await self.create_link(group_name=group.name, post_id=post_id)
         return await self.send_log_message(text="\n".join([
-            f"️✉️ Сессия #{session_id} направила рекламу",
-            f"Заказ: #{order_id} - {order_name}",
+            f"️✉️ Сессия #{session.id} ({session.state}) направила рекламу",
+            f"Заказ: #{order.id} - {order.name}",
             f"Сообщение: {link}",
             f"Всего сообщений: {session_messages_count}",
             f"",
-            f"#send_ads #session_{session_id} #group_{group_id} #order_{order_id}",
+            f"#send_ads #session_{session.id} #group_{group.id} #order_{order.id}",
         ]))
 
     async def send_message_answer_log(self, session_id: int, username: str, user_id: int):
@@ -119,19 +138,29 @@ class BaseExecutorAction:
         ]))
 
     # Change message
-
-    async def change_log_message(self,
-                                 order_name: str, chat_id: int, message_id: int,
-                                 text: str, presence_count: int, all_count: int, msg_count: int,
-                                 sessions_free: int, sessions_spam: int):
+    async def change_log_message(
+            self,
+            order: Order,
+            chat_id: int,
+            message_id: int,
+            text: str,
+            presence_count: int,
+            all_count: int,
+            msg_count: int,
+            sessions_free: int,
+            sessions_spam: int,
+            sessions_wait: int,
+            sessions_in_work: int
+    ) -> None:
         bot = Bot(token=self.token, parse_mode="HTML")
         data = (datetime.utcnow() + timedelta(hours=3)).strftime("%d.%m.%y %H:%M")
         return await bot.edit_message_text(
             chat_id=chat_id, message_id=message_id, disable_web_page_preview=True,
             text=f"\n".join([
-                f"Заказ: <b>{order_name}</b> ({presence_count}/{all_count})",
+                f"Заказ: <b>{order.name}</b> ({presence_count}/{all_count})",
                 f"Сообщений за 24ч: {msg_count}",
                 f"Сессий актив/спам: {sessions_free}/{sessions_spam}",
+                f"Сессий ожидание/работа: {sessions_wait}/{sessions_in_work}",
                 f"Изменено: {data}",
                 f"",
                 text

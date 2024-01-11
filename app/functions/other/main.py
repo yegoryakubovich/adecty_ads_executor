@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from loguru import logger
 
 from database import repo
-from database.models import GroupStates, MessageStates, OrderTypes, Setting, SettingTypes, SessionOrder, Session, \
+from database.models import GroupStates, MessageStates, OrderTypes, Setting, SettingTypes, Session, \
     SessionStates, Group, GroupCaptionType
 from functions.other.checker import CheckerAction
 from functions.other.executor import AssistantExecutorAction
@@ -139,10 +139,20 @@ class AssistantAction:
                         sessions_free += 1
                     elif session.state == SessionStates.spam_block:
                         sessions_spam += 1
+                sessions_wait = len(repo.sessions.get_all(state=SessionStates.waiting))
+                sessions_in_work = len(repo.sessions.get_all(state=SessionStates.in_work))
                 await self.executor.change_log_message(
-                    order_name=order.name, chat_id=int(chat_split[0]), message_id=int(chat_split[1]),
-                    text='\n'.join(text), presence_count=presence_count, all_count=all_count, msg_count=msg_count,
-                    sessions_free=sessions_free, sessions_spam=sessions_spam
+                    order=order,
+                    chat_id=int(chat_split[0]),
+                    message_id=int(chat_split[1]),
+                    text='\n'.join(text),
+                    presence_count=presence_count,
+                    all_count=all_count,
+                    msg_count=msg_count,
+                    sessions_free=sessions_free,
+                    sessions_spam=sessions_spam,
+                    sessions_wait=sessions_wait,
+                    sessions_in_work=sessions_in_work
                 )
                 await asyncio.sleep(15)
             await asyncio.sleep(int(setting.value) if setting.type == SettingTypes.num else setting.value)

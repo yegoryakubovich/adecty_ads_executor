@@ -231,8 +231,7 @@ class BotExecutorAction(BaseExecutorAction):
         self.logger("session_banned")
         session_shop = repo.shops.get(self.session.shop_id)
         if new:
-            await self.new_session_banned_log(session_id=self.session.id,
-                                              session_shop_id=session_shop.id, session_shop_name=session_shop.name, )
+            await self.new_session_banned_log(session=self.session, session_shop=session_shop)
         else:
             sp: SessionProxy = repo.sessions_proxies.get_by(session=self.session)
             messages_send = len(repo.messages.get_all(session=self.session))
@@ -242,11 +241,16 @@ class BotExecutorAction(BaseExecutorAction):
                 proxy = repo.proxies.get(sp.proxy_id)
                 repo.proxies.update(proxy, ban_count=proxy.ban_count + 1)
                 proxy_shop = repo.shops.get(proxy.shop_id)
-            await self.session_banned_log(session_id=self.session.id, proxy_id=proxy.id if proxy else None,
-                                          session_shop_id=session_shop.id, session_shop_name=session_shop.name,
-                                          proxy_shop_id=proxy_shop.id if proxy else None,
-                                          proxy_shop_name=proxy_shop.name if proxy else None,
-                                          messages_send=messages_send)
+            so = repo.sessions_orders.get_by(session=self.session)
+            order = repo.orders.get(id=so.order_id)
+            await self.session_banned_log(
+                session=self.session,
+                session_shop=session_shop,
+                proxy=proxy.id if proxy else None,
+                proxy_shop=proxy_shop.id if proxy else None,
+                order=order,
+                messages_send=messages_send
+            )
 
         for sgroup in repo.sessions_groups.get_all(session=self.session):
             repo.sessions_groups.remove(sgroup.id)

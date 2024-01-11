@@ -175,9 +175,10 @@ class BotTaskerAction:
         )
 
         await self.executor.send_message_log(
-            session_id=self.session.id,
-            order_id=order.id, order_name=order.name,
-            group_id=group.id, group_name=group.name, post_id=msg.id,
+            session=self.session,
+            order=order,
+            group=group,
+            post_id=msg.id,
             session_messages_count=len(repo.messages.get_all(session=self.session))
         )
 
