@@ -59,8 +59,8 @@ class BaseExecutorAction:
             order: Order,
             messages_send: int,
     ) -> None:
-        proxy_data = f", прокси из {proxy_shop.name}" if proxy else ""
-        proxy_data_ids = f"#proxy_{proxy.id} #proxy_shop_{proxy_shop.id}" if proxy else ""
+        proxy_data = f", прокси из {proxy_shop.name}" if proxy_shop else ""
+        proxy_data_ids = f"#proxy_{proxy.id} #proxy_shop_{proxy_shop.id}" if proxy and proxy_shop else ""
         return await self.send_log_message(text="\n".join([
             f"🚫 Сессия #{session.id} ({session.state}) заблокирована",
             f"Сессия из {session_shop.name}{proxy_data}",

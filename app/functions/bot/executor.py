@@ -247,7 +247,7 @@ class BotExecutorAction(BaseExecutorAction):
                 session=self.session,
                 session_shop=session_shop,
                 proxy=proxy.id if proxy else None,
-                proxy_shop=proxy_shop.id if proxy else None,
+                proxy_shop=proxy_shop if proxy else None,
                 order=order,
                 messages_send=messages_send
             )
