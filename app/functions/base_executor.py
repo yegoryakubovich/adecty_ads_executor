@@ -66,7 +66,8 @@ class BaseExecutorAction:
             f"Сессия из {session_shop.name}{proxy_data}",
             f"Заказ: {order.id} - {order.name} ({messages_send} сообщений)",
             "",
-            f"#ban_session #order_{order.id}"
+            f"#ban_session "
+            f"#order_{order.id} "
             f"#session_{session.id} #session_shop_{session_shop.id} {proxy_data_ids}"
         ]))
 

@@ -21,7 +21,8 @@ from admin_web.admin import admin_site
 from admin_web.admin_models import max_rows
 from admin_web.admin_models.SessionTaskAdmin.inlines import SessionTaskInline
 from admin_web.models import Session, Message, Sleep, SleepStates, SessionGroup, SessionGroupState, Personal, \
-    SessionPersonal, PersonalTypes, MessageStates, SessionTask, SessionTaskStates, SessionTaskType, SessionOrder
+    SessionPersonal, PersonalTypes, SessionTask, SessionTaskStates, SessionTaskType, SessionOrder, \
+    OrderGroup
 from .actions import actions_list
 from ..MessageAdmin.inlines import MessageInline
 from ..SessionDeviceAdmin.inlines import SessionDeviceInline
@@ -75,16 +76,12 @@ class SessionAdmin(admin.ModelAdmin):
 
     @admin.display(description="Всего")
     def message_send_now(self, model: Session):
-        msg_all_count = len(Message.objects.filter(session=model).all())
-        msg_for_count = len(Message.objects.filter(session=model, state=MessageStates.to_user).all())
-        return msg_all_count - msg_for_count
+        return len(Message.objects.filter(session=model).all())
 
     @admin.display(description="Сегодня")
     def message_send_day(self, model: Session):
         msg_all = []
         for msg in Message.objects.filter(session=model).all():
-            if msg.state == MessageStates.to_user:
-                continue
             if msg.created.timestamp() < (datetime.utcnow() - timedelta(hours=24)).timestamp():
                 continue
             msg_all.append(msg)
@@ -101,9 +98,8 @@ class SessionAdmin(admin.ModelAdmin):
     @admin.display(description="Групп")
     def groups_count(self, model: Session):
         groups = SessionGroup.objects.filter(session=model, state=SessionGroupState.active).all()
-        if groups:
-            return f"{len(groups)}"
-        return f"0"
+        groups_ban = SessionGroup.objects.filter(session=model, state=SessionGroupState.banned).all()
+        return f"{len(groups)}/{len(groups_ban)}"
 
     @admin.display(description="Задач")
     def tasks_count(self, model: Session):
