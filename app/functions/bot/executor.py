@@ -168,6 +168,9 @@ class BotExecutorAction(BaseExecutorAction):
             return "UsernameNotOccupied"
         except errors.BadRequest:
             return "BadRequest"
+        except errors.SlowmodeWait:
+            return "SlowmodeWait"
+
 
     async def get_chat_history(self, chat_id: [str, int], limit: int = 0) -> list:
         try:
