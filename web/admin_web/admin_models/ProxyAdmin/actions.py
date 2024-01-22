@@ -15,33 +15,39 @@
 #
 from django.contrib import admin
 
-from admin_web.models import ProxyStates
+from admin_web.models import ProxyStates, SessionProxy
 
 
-@admin.action(description="Активировать")
+@admin.action(description="В enable")
 def state_to_active(model_admin: admin.ModelAdmin, request, queryset):
     for proxy in queryset:
         proxy.state = ProxyStates.enable
         proxy.save()
 
 
-@admin.action(description="Стоп")
+@admin.action(description="В stop")
 def state_to_stop(model_admin: admin.ModelAdmin, request, queryset):
     for proxy in queryset:
+        for sproxy in SessionProxy.objects.filter(proxy=proxy).all():
+            sproxy.delete()
         proxy.state = ProxyStates.stop
         proxy.save()
 
 
-@admin.action(description="Диактивировать")
+@admin.action(description="В disable")
 def state_to_disable(model_admin: admin.ModelAdmin, request, queryset):
     for proxy in queryset:
+        for sproxy in SessionProxy.objects.filter(proxy=proxy).all():
+            sproxy.delete()
         proxy.state = ProxyStates.disable
         proxy.save()
 
 
-@admin.action(description="Ожидание")
+@admin.action(description="В wait")
 def state_to_wait(model_admin: admin.ModelAdmin, request, queryset):
     for proxy in queryset:
+        for sproxy in SessionProxy.objects.filter(proxy=proxy).all():
+            sproxy.delete()
         proxy.state = ProxyStates.wait
         proxy.save()
 
@@ -51,6 +57,14 @@ def ban_refresh(model_admin: admin.ModelAdmin, request, queryset):
     for proxy in queryset:
         proxy.ban_count = 0
         proxy.save()
+
+
+@admin.action(description="-1 бан")
+def ban_refresh(model_admin: admin.ModelAdmin, request, queryset):
+    for proxy in queryset:
+        if proxy.ban_count > 0:
+            proxy.ban_count = proxy.ban_count - 1
+            proxy.save()
 
 
 actions_list = [state_to_active, state_to_disable, state_to_wait, state_to_stop, ban_refresh]
