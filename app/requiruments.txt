@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-pyrogram
+
+
+pyrogram==2.0.106
 peewee
 pydantic-settings
 # pydantic[dotenv]

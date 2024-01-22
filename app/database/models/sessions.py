@@ -26,6 +26,7 @@ class SessionStates:
     free = "free"
     in_work = "in_work"
     banned = "banned"
+    kicked = "kicked"
     spam_block = "spam_block"
 
 

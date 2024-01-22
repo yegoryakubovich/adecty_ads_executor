@@ -15,8 +15,10 @@
 #
 from django.contrib import admin
 from django.http import HttpResponseRedirect
+
+from admin_web.models import SessionStates, SessionGroup, SessionOrder, Sleep, SessionTask, SessionProxy, \
+    SessionPersonal
 from .views import LinkedSessionOrderURL
-from admin_web.models import SessionStates
 
 
 @admin.action(description="В work")
@@ -40,10 +42,29 @@ def to_wait(model_admin: admin.ModelAdmin, request, queryset):
         session.save()
 
 
+@admin.action(description="В kicked")
+def to_kicked(model_admin: admin.ModelAdmin, request, queryset):
+    for session in queryset:
+        for sgroup in SessionGroup.objects.all(session=session):
+            sgroup.delete()
+        for sorder in SessionOrder.objects.all(session=session):
+            sorder.delete()
+        for spersonal in SessionPersonal.objects.all(session=session):
+            spersonal.delete()
+        for sproxy in SessionProxy.objects.all(session=session):
+            sproxy.delete()
+        for stask in SessionTask.objects.all(session=session):
+            stask.delete()
+        for sleep in Sleep.objects.all(session=session):
+            sleep.delete()
+        session.state = SessionStates.kicked
+        session.save()
+
+
 @admin.action(description="Связать с заказом")
 def select_link_order(model_admin: admin.ModelAdmin, request, queryset):
     sessions = ','.join([str(session.id) for session in queryset])
     return HttpResponseRedirect(f"/{LinkedSessionOrderURL}?sessions={sessions}")
 
 
-actions_list = [select_link_order, to_in_work, to_free, to_wait]
+actions_list = [select_link_order, to_in_work, to_free, to_kicked, to_wait]

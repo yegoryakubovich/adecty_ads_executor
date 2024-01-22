@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-pyrogram
+pyrogram==2.0.106
 peewee
 pydantic[dotenv]
 pymysql

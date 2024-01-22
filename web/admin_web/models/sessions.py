@@ -26,10 +26,12 @@ class SessionStates:
     free = "free"
     in_work = "in_work"
     banned = "banned"
+    kicked = "kicked"
     spam_block = "spam_block"
 
     choices = (
-        (waiting, waiting), (check, check), (free, free), (in_work, in_work), (banned, banned), (spam_block, spam_block)
+        (waiting, waiting), (check, check), (free, free), (in_work, in_work),
+        (kicked, kicked), (banned, banned), (spam_block, spam_block)
     )
 
 
