@@ -21,7 +21,7 @@ from loguru import logger
 from pyrogram import Client, types, errors
 
 from database import repo
-from database.models import Session, SessionStates, SessionProxy, Group, SessionGroup, GroupStates, User, \
+from database.models import Session, SessionStates, Group, SessionGroup, GroupStates, User, \
     SessionGroupState
 from functions import BaseExecutorAction
 
@@ -120,33 +120,31 @@ class BotExecutorAction(BaseExecutorAction):
             return await self.join_chat(chat_id=username)
         except KeyError as e:
             self.logger(str(e))
-            return "BanInGroup"
+            return 'BanInGroup'
         except errors.UsernameNotOccupied:
-            return "UsernameNotOccupied"
+            return 'UsernameNotOccupied'
         except errors.InviteRequestSent:
-            return "InviteRequestSent"
+            return 'InviteRequestSent'
         except errors.ChatInvalid:
-            return "ChatInvalid"
+            return 'ChatInvalid'
         except errors.ChannelInvalid:
-            return "ChannelInvalid"
+            return 'ChannelInvalid'
         except errors.UserAlreadyParticipant:
             return self.get_chat(chat_id=username)
+        except errors.InviteHashExpired:
+            return 'InviteHashExpired'
 
     async def join_chat(self, chat_id: [str, int]) -> [types.Chat, str]:
-        result = await self.client.join_chat(chat_id=chat_id)
-        return result
+        return await self.client.join_chat(chat_id=chat_id)
 
     async def get_messages(self, chat_id: [str, int], msg_id: int) -> types.Message:
-        result = await self.client.get_messages(chat_id=chat_id, message_ids=msg_id)
-        return result
+        return await self.client.get_messages(chat_id=chat_id, message_ids=msg_id)
 
     async def get_all_messages(self, chat_id: [str, int], limit: int = 0) -> List[types.Message]:
-        result = [message async for message in self.client.get_chat_history(chat_id=chat_id, limit=limit)]
-        return result
+        return [message async for message in self.client.get_chat_history(chat_id=chat_id, limit=limit)]
 
     async def get_all_messages_ids(self, chat_id: [str, int], limit: int = 0) -> List[int]:
-        result = [message.id async for message in self.client.get_chat_history(chat_id=chat_id, limit=limit)]
-        return result
+        return [message.id async for message in self.client.get_chat_history(chat_id=chat_id, limit=limit)]
 
     async def send_message(self, chat_id: [str, int], text: str = None, photo: str = None) -> [types.Message, str]:
         try:
@@ -157,20 +155,19 @@ class BotExecutorAction(BaseExecutorAction):
                 result = await self.client.send_message(chat_id=chat_id, text=text)
                 return result
         except errors.ChatAdminRequired:
-            return "ChatAdminRequired"
+            return 'ChatAdminRequired'
         except errors.UserBannedInChannel:
-            return "UserBannedInChannel"
+            return 'UserBannedInChannel'
         except errors.Forbidden:
-            return "Forbidden"
+            return 'Forbidden'
         except errors.PeerFlood:
-            return "PeerFlood"
+            return 'PeerFlood'
         except errors.UsernameNotOccupied:
-            return "UsernameNotOccupied"
+            return 'UsernameNotOccupied'
         except errors.BadRequest:
-            return "BadRequest"
+            return 'BadRequest'
         except errors.SlowmodeWait:
-            return "SlowmodeWait"
-
+            return 'SlowmodeWait'
 
     async def get_chat_history(self, chat_id: [str, int], limit: int = 0) -> list:
         try:
@@ -180,40 +177,32 @@ class BotExecutorAction(BaseExecutorAction):
             self.logger(f"get_chat_history\n {e}")
 
     async def update_profile(self, name=None, surname=None, about=None):
-        result = await self.client.update_profile(first_name=name, last_name=surname, bio=about)
-        return result
+        return await self.client.update_profile(first_name=name, last_name=surname, bio=about)
 
     async def update_profile_photo(self, photo=None):
-        result = await self.client.set_profile_photo(photo=photo)
-        return result
+        return await self.client.set_profile_photo(photo=photo)
 
     """OTHER"""
 
     async def session_banned(self, new=False):
         self.logger("session_banned")
         session_shop = repo.shops.get(self.session.shop_id)
-        if new:
+        so = repo.sessions_orders.get_by(session=self.session)
+        sp = repo.sessions_proxies.get_by(session=self.session)
+        if new or not so or not sp:
             await self.new_session_banned_log(session=self.session, session_shop=session_shop)
         else:
-            sp: SessionProxy = repo.sessions_proxies.get_by(session=self.session)
             messages_send = len(repo.messages.get_all(session=self.session))
-            proxy = None
-            proxy_shop = None
-            if sp:
-                proxy = repo.proxies.get(sp.proxy_id)
-                repo.proxies.update(proxy, ban_count=proxy.ban_count + 1)
-                proxy_shop = repo.shops.get(proxy.shop_id)
-            so = repo.sessions_orders.get_by(session=self.session)
+            proxy = repo.proxies.get(sp.proxy_id)
+            repo.proxies.update(proxy, ban_count=proxy.ban_count + 1)
+            proxy_shop = repo.shops.get(proxy.shop_id)
             order = repo.orders.get(id=so.order_id)
             await self.session_banned_log(
-                session=self.session,
-                session_shop=session_shop,
-                proxy=proxy if proxy else None,
-                proxy_shop=proxy_shop if proxy else None,
+                session=self.session, session_shop=session_shop,
+                proxy=proxy, proxy_shop=proxy_shop,
                 order=order,
                 messages_send=messages_send
             )
-
         for sgroup in repo.sessions_groups.get_all(session=self.session):
             repo.sessions_groups.remove(sgroup.id)
         for sorder in repo.sessions_orders.get_all(session=self.session):
@@ -226,7 +215,6 @@ class BotExecutorAction(BaseExecutorAction):
             repo.sessions_tasks.remove(stask.id)
         for sleep in repo.sleeps.get_all(session=self.session):
             repo.sleeps.remove(sleep.id)
-
         repo.sessions.update(self.session, state=SessionStates.banned, work=False)
 
     async def update_session(self, tg_user: types.User):
@@ -236,7 +224,6 @@ class BotExecutorAction(BaseExecutorAction):
             updates['username'] = tg_user.username
         if self.session.tg_user_id != tg_user.id:
             updates['tg_user_id'] = tg_user.id
-
         if updates:
             repo.sessions.update(self.session, **updates)
 
@@ -251,7 +238,6 @@ class BotExecutorAction(BaseExecutorAction):
             updates['last_name'] = tg_user.last_name
         if user.tg_user_id != tg_user.id:
             updates['tg_user_id'] = tg_user.id
-
         if updates:
             repo.users.update(user, **updates)
 
@@ -269,7 +255,6 @@ class BotExecutorAction(BaseExecutorAction):
                     continue
                 if message.from_user.id in my_sessions_ids:
                     continue
-
                 repo.users.create(
                     tg_user_id=message.from_user.id, username=message.from_user.username,
                     first_name=message.from_user.first_name, last_name=message.from_user.last_name

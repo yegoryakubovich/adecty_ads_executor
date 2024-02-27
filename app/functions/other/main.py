@@ -123,10 +123,10 @@ class AssistantAction:
                         link = await self.executor.create_link(
                             group_name=group.name, post_id=messages_waiting.message_id
                         )
-                        text.append(f"🟢 {link}")
+                        text.append(f"🟢{link}")
                         presence_count += 1
                     else:
-                        text.append(f"🔴 @{group.name}")
+                        text.append(f"🔴@{group.name}")
                     all_count += 1
                 for msg in repo.messages.get_all(order=order)[::-1]:
                     if msg.created < date_24_hour:
@@ -145,7 +145,7 @@ class AssistantAction:
                     order=order,
                     chat_id=int(chat_split[0]),
                     message_id=int(chat_split[1]),
-                    text='\n'.join(text),
+                    text=' | '.join(text),
                     presence_count=presence_count,
                     all_count=all_count,
                     msg_count=msg_count,
