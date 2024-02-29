@@ -77,5 +77,11 @@ class SessionRepository(BaseRepository):
             session.work = False
             session.save()
 
+    @db_manager
+    def check_exists(self, **filters) -> bool:
+        if self.get_all(**filters):
+            return True
+        return False
+
 
 sessions = SessionRepository(Session)

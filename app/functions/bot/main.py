@@ -70,9 +70,9 @@ class BotAction:
         async def message_handler(client, message: Message):
             if message.chat.type != enums.ChatType.PRIVATE:
                 return
-            if message.chat.id in [self.session.tg_user_id, 777000]:
+            if message.chat.id == 777000 or message.chat.username == 'SpamBot':
                 return
-            if message.chat.username in ["SpamBot"]:
+            if repo.sessions.check_exists(tg_user_id=message.chat.id):
                 return
             so = repo.sessions_orders.get_by(session_id=self.session.id)
             if not so:
