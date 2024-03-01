@@ -20,7 +20,7 @@ from database.models import User
 
 
 class UserRepository(BaseRepository):
-    pass
+    model = User
 
 
 users = UserRepository(User)

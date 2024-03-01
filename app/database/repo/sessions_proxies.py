@@ -26,6 +26,7 @@ from database.models import SessionProxy, ProxyStates, Proxy, Session
 
 
 class SessionProxyRepository(BaseRepository):
+    model = SessionProxy
 
     @db_manager
     def get_free_proxy(self, country_id: int) -> Optional[Proxy]:

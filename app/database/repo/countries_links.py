@@ -21,6 +21,7 @@ from database.models import CountryLink, Country
 
 
 class CountryLinkRepository(BaseRepository):
+    model = CountryLink
 
     @db_manager
     def get_link_country(self, country: Country):

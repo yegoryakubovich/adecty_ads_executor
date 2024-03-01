@@ -20,7 +20,7 @@ from database.models import Answer
 
 
 class AnswerRepository(BaseRepository):
-    pass
+    model = Answer
 
 
 answers = AnswerRepository(Answer)

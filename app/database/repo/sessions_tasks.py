@@ -15,25 +15,17 @@
 #
 
 
-from typing import List
-
 from database import db_manager
 from database.base_repository import BaseRepository
 from database.models import SessionTask, Session
-from database.models.sessions_tasks import SessionTaskStates
 
 
 class SessionTaskRepository(BaseRepository):
+    model = SessionTask
 
     @db_manager
     def get_by_session(self, session: Session) -> SessionTask:
         return self.model.get_or_none(session=session)
-    #
-    # @db_manager
-    # def get_active_task(self, session: Session) -> List[SessionTask]:
-    #     return self.model.select().where(
-    #         self.model.session == session, self.model.state == SessionTaskStates.enable
-    #     ).execute()
 
 
 sessions_tasks = SessionTaskRepository(SessionTask)

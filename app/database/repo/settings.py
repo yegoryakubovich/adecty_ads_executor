@@ -22,6 +22,8 @@ from database.models import Setting
 
 
 class SettingRepository(BaseRepository):
+    model = Setting
+
     @db_manager
     def fill(self):
         for item in settings_list:

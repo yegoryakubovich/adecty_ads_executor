@@ -26,6 +26,7 @@ from database.models import Personal, PersonalTypes, PersonalSex
 
 
 class PersonalRepository(BaseRepository):
+    model = Personal
 
     @db_manager
     def fill(self):

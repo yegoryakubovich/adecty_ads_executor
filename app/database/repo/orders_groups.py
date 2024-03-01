@@ -15,15 +15,12 @@
 #
 
 
-from database import db_manager, repo
 from database.base_repository import BaseRepository
 from database.models import OrderGroup
 
-model = OrderGroup
-
 
 class OrderGroupRepository(BaseRepository):
-    pass
+    model = OrderGroup
 
 
 orders_groups = OrderGroupRepository(OrderGroup)

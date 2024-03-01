@@ -22,6 +22,7 @@ from database.models import Group, GroupType
 
 
 class GroupRepository(BaseRepository):
+    model = Group
 
     @db_manager
     def fill(self):

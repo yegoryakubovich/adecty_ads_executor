@@ -19,10 +19,10 @@ from database import db_manager, repo
 from database.base_repository import BaseRepository
 from database.models import OrderAttachment
 
-model = OrderAttachment
-
 
 class OrderAttachmentRepository(BaseRepository):
+    model = OrderAttachment
+
     @db_manager
     def fill(self):
         for order in repo.orders.get_all():

@@ -25,6 +25,8 @@ from database.models import SessionDevice, Session
 
 
 class SessionDeviceRepository(BaseRepository):
+    model = SessionDevice
+
     @db_manager
     def get_by_session(self, session: Session):
         result = self.model.get_or_none(session=session)

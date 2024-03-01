@@ -21,6 +21,7 @@ from database.models import SessionGroup, Session, Group
 
 
 class SessionGroupRepository(BaseRepository):
+    model = SessionGroup
 
     @db_manager
     def check_subscribe(self, session: Session, group: Group) -> bool:

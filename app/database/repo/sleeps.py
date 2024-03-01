@@ -20,7 +20,7 @@ from database.models import Sleep
 
 
 class SleepRepository(BaseRepository):
-    pass
+    model = Sleep
 
 
 sleeps = SleepRepository(Sleep)

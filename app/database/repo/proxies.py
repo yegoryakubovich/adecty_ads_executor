@@ -21,10 +21,9 @@ from database import db_manager
 from database.base_repository import BaseRepository
 from database.models import Proxy
 
-model = Proxy
-
 
 class ProxyRepository(BaseRepository):
+    model = Proxy
 
     @db_manager
     def get_dict(self, proxy_id: int) -> dict:

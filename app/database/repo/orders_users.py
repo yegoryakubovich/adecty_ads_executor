@@ -15,14 +15,12 @@
 #
 
 
-from core.default_data import groups_list
-from database import db_manager
 from database.base_repository import BaseRepository
 from database.models import OrderUser
 
 
 class OrderUserRepository(BaseRepository):
-    pass
+    model = OrderUser
 
 
 orders_users = OrderUserRepository(OrderUser)

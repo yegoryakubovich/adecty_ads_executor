@@ -19,10 +19,9 @@ from database import repo, db_manager
 from database.base_repository import BaseRepository
 from database.models import Message, SessionStates, Session, Order, Group
 
-model = Message
-
 
 class MessageRepository(BaseRepository):
+    model = Message
 
     @db_manager
     def get_session_from_send_message(self, order: Order, group: Group) -> Session:

@@ -20,7 +20,7 @@ from database.models import OrderPersonal
 
 
 class OrderPersonalRepository(BaseRepository):
-    pass
+    model = OrderPersonal
 
 
 orders_personals = OrderPersonalRepository(OrderPersonal)

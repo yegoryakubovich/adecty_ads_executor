@@ -21,6 +21,8 @@ from database.models import SessionPersonal, Session, PersonalSex
 
 
 class SessionPersonalRepository(BaseRepository):
+    model = SessionPersonal
+
     @db_manager
     def get_sex(self, session: Session) -> PersonalSex:
         sps = self.get_all(session=session)

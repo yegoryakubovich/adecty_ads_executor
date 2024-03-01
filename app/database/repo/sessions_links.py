@@ -16,11 +16,11 @@
 
 
 from database.base_repository import BaseRepository
-from database.models import SessionOrder
+from database.models import SessionLink
 
 
-class SessionOrderRepository(BaseRepository):
-    model = SessionOrder
+class SessionLinkRepository(BaseRepository):
+    model = SessionLink
 
 
-sessions_orders = SessionOrderRepository(SessionOrder)
+sessions_links = SessionLinkRepository(SessionLink)

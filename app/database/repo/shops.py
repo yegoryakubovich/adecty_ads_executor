@@ -22,6 +22,7 @@ from database.models import Shop
 
 
 class ShopRepository(BaseRepository):
+    model = Shop
 
     @db_manager
     def fill(self):

@@ -20,7 +20,7 @@ from database.models import Device
 
 
 class DeviceRepository(BaseRepository):
-    pass
+    model = Device
 
 
 devices = DeviceRepository(Device)

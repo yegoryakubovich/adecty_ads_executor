@@ -20,7 +20,7 @@ from database.models import Country
 
 
 class CountryRepository(BaseRepository):
-    pass
+    model = Country
 
 
 countries = CountryRepository(Country)
