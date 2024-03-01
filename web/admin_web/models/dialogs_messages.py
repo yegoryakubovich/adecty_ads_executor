@@ -15,15 +15,22 @@
 #
 
 
-def registration_load():
-    from . import SessionAdmin, UserAdmin, GroupAdmin, OurGroupAdmin, OrderAdmin, ProxyAdmin, PersonalAdmin
-    from . import SessionTaskAdmin, MessageAdmin, SleepAdmin, ShopAdmin, CounryAdmin
-    from . import AnswerAdmin, SettingAdmin, DeviceAdmin, DialogMessageAdmin
+from datetime import datetime
 
-    from . import SessionProxyAdmin, SessionGroupAdmin, SessionOurGroupAdmin, SessionPersonalAdmin, SessionOrderAdmin
-    from . import GroupCountryAdmin
-    from . import OrderAttachmentAdmin, OrderGroupAdmin, OrderPersonalAdmin, OrderUserAdmin
-    from . import CountryLinkAdmin, SessionLinkAdmin
+from django.db import models
 
 
-max_rows = 200
+class DialogMessage(models.Model):
+    class Meta:
+        db_table = 'dialogs_messages'
+        verbose_name = 'Сообщение диалога'
+        verbose_name_plural = 'Сообщения диалогов'
+
+    id = models.AutoField(primary_key=True)
+    created = models.DateTimeField(default=datetime.utcnow, verbose_name="Время создания")
+
+    message = models.CharField(max_length=512, unique=True, verbose_name="Сообщение")
+
+    def __str__(self):
+        return f"{self.id}"
+

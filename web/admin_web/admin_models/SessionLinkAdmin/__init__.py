@@ -14,16 +14,17 @@
 # limitations under the License.
 #
 
+from django.contrib import admin
 
-def registration_load():
-    from . import SessionAdmin, UserAdmin, GroupAdmin, OurGroupAdmin, OrderAdmin, ProxyAdmin, PersonalAdmin
-    from . import SessionTaskAdmin, MessageAdmin, SleepAdmin, ShopAdmin, CounryAdmin
-    from . import AnswerAdmin, SettingAdmin, DeviceAdmin, DialogMessageAdmin
-
-    from . import SessionProxyAdmin, SessionGroupAdmin, SessionOurGroupAdmin, SessionPersonalAdmin, SessionOrderAdmin
-    from . import GroupCountryAdmin
-    from . import OrderAttachmentAdmin, OrderGroupAdmin, OrderPersonalAdmin, OrderUserAdmin
-    from . import CountryLinkAdmin, SessionLinkAdmin
+from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
+from admin_web.models import SessionLink
 
 
-max_rows = 200
+@admin.register(SessionLink, site=admin_site)
+class SessionLinkAdmin(admin.ModelAdmin):
+    list_display = ("id", "session_1", "session_2", "created")
+    list_filter = ("created",)
+    readonly_fields = ("id", "created")
+    list_per_page = max_rows
+
