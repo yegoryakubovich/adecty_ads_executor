@@ -15,40 +15,41 @@
 #
 
 
-"""FIRST"""
 from .answers import Answer
 from .countries import Country
 from .devices import Device
 from .groups import Group, GroupStates, GroupType, GroupCaptionType
 from .orders import Order, OrderStates, OrderTypes
+from .ours_groups import OurGroup, OurGroupStates
 from .personals import Personal, PersonalTypes, PersonalSex
 from .settings import Setting, SettingTypes
 from .shops import Shop
 from .users import User
 
-"""SECOND"""
+from .countries_links import CountryLink
 from .proxies import Proxy, ProxyTypes, ProxyStates
 from .sessions import Session, SessionStates
-from .countries_links import CountryLink
 
-"""THREE"""
+from .groups_countries import GroupCountry
+from .messages import Message, MessageStates
 from .orders_attachments import OrderAttachment, OrderAttachmentTypes
 from .orders_groups import OrderGroup
-from .orders_users import OrderUser, OrderUserStates
 from .orders_personals import OrderPersonal
-from .groups_countries import GroupCountry
-from .sleeps import Sleep, SleepStates
-from .messages import Message, MessageStates
+from .orders_users import OrderUser, OrderUserStates
+from .sessions_devices import SessionDevice
 from .sessions_groups import SessionGroup, SessionGroupState
+from .sessions_links import SessionLink
 from .sessions_orders import SessionOrder
+from .sessions_ours_groups import SessionOurGroup
+from .sessions_personals import SessionPersonal
 from .sessions_proxies import SessionProxy
 from .sessions_tasks import SessionTask, SessionTaskStates, SessionTaskType
-from .sessions_personals import SessionPersonal
-from .sessions_devices import SessionDevice
+from .sleeps import Sleep, SleepStates
+
 
 all_models = (
-    Answer, Country, Device, Group, Order, Personal, Setting, Shop, User,
-    Proxy, Session, CountryLink, Sleep, Message,
-    GroupCountry, OrderGroup, OrderUser, OrderPersonal, OrderAttachment,
-    SessionGroup, SessionOrder, SessionProxy, SessionTask, SessionPersonal, SessionDevice
+    Answer, Country, Device, Group, Order, OurGroup, Personal, Setting, Shop, User,
+    CountryLink, Proxy, Session,
+    GroupCountry, Message, OrderAttachment, OrderGroup, OrderPersonal, OrderUser, SessionDevice, SessionGroup,
+    SessionLink, SessionOrder, SessionOurGroup,  SessionPersonal, SessionProxy, SessionTask, Sleep,
 )
