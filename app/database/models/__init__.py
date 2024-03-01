@@ -18,6 +18,7 @@
 from .answers import Answer
 from .countries import Country
 from .devices import Device
+from .dialogs_messages import DialogMessage
 from .groups import Group, GroupStates, GroupType, GroupCaptionType
 from .orders import Order, OrderStates, OrderTypes
 from .ours_groups import OurGroup, OurGroupStates
