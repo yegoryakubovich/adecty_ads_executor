@@ -24,7 +24,7 @@ from .sessions import Session
 
 class SessionDevice(BaseModel):
     id = PrimaryKeyField()
-    session = ForeignKeyField(Session, to_field='id', unique=True)
+    session = ForeignKeyField(Session, to_field='id')
     device = ForeignKeyField(Device, to_field='id')
 
     class Meta:

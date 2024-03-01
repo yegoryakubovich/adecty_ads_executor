@@ -49,7 +49,7 @@ from .sleeps import Sleep, SleepStates
 
 
 all_models = (
-    Answer, Country, Device, Group, Order, OurGroup, Personal, Setting, Shop, User,
+    Answer, Country, Device, DialogMessage, Group, Order, OurGroup, Personal, Setting, Shop, User,
     CountryLink, Proxy, Session,
     GroupCountry, Message, OrderAttachment, OrderGroup, OrderPersonal, OrderUser, SessionDevice, SessionGroup,
     SessionLink, SessionOrder, SessionOurGroup,  SessionPersonal, SessionProxy, SessionTask, Sleep,
