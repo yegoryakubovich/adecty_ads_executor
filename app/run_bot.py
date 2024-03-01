@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 import asyncio
 import sys
 
@@ -44,30 +46,17 @@ def on_start_up():
 
     loop = asyncio.get_event_loop()
     all_functions = [{'fun': AssistantAction(), 'name': 'Assistant'}]
-    all_functions.extend([
-        {
-            'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
-        } for session in repo.sessions.get_all(state=SessionStates.free)
-    ])
-    all_functions.extend([
-        {
-            'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
-        } for session in repo.sessions.get_all(state=SessionStates.spam_block)
-    ])
-    all_functions.extend([
-        {
-            'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
-        } for session in repo.sessions.get_all(state=SessionStates.in_work)
-    ])
-
+    for state in [SessionStates.free, SessionStates.spam_block, SessionStates.in_work]:
+        all_functions.extend([
+            {
+                'fun': BotAction(session=session), 'name': f"Bot_{session.id}"
+            } for session in repo.sessions.get_all(state=state)
+        ])
     all_tasks = [loop.create_task(coro=function['fun'].start(), name=function['name']) for function in all_functions]
     all_tasks.extend([loop.create_task(hello(), name="TEST")])
-
     for task in all_tasks:
-        logger.info(task)
         loop.run_until_complete(task)
     loop.run_forever()
-
     logger.info("Success init")
 
 

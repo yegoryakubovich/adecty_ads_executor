@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+
 class InnovationAction:
     def __init__(self):
         pass

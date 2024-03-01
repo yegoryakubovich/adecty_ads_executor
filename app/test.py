@@ -4,8 +4,15 @@ from pyrogram import Client
 
 
 async def start():
-    client = Client('lol',
-                    session_string='BAAAB_gAW7rCChmyNXDDkl9vj2DeBlRQWvTUyzN4NKrc-pGXhIXYcW0vhcSYHFzGOQTRJJjclyr19oRSa_-1ViN73HjUyNZCRMCpgnWdN32FLMw3KysGNFDjIdHkzd8uYIM3fWgdao75MzhRW_vWPbWBYahtYqNzVyRZhy7FTkWkfK-p2HdyMIuWkPX0hYi1SyrIdyo-xAVcbTmK06AE7Vx3byeCoeuOCsCtP89EYw27jHkD71h9EInzxIK1rx7xJ2NdRfQhU_He1zToy5r_3-y_rMDAfJARH7tXn0fT2pa9T7o3kx-hvpIfUmd0b7-0vI_r0L_xDl9VCr3KggdgIejXJYPtcwAAAAGVSZKcAA')
+    client = Client(
+        'lol',
+        session_string='AgAAB_gABn4ZCosXClTBK1PjzAy6KogbzNhmw_LdUoKN5McWWqip_I9EnVFJ320Pq0M1i5Z1e6d5bvuVhs-6QtX4U_b3Qh5bUOxrO0mffjfZMTIjKzMPPKI8ftvetWPW1M7pFi4sxKTVv1BrrJ0BZO84M16A-FcDNDhKv9FYz0MAwGc9-mjbeCrD_TVs2kabzrqnH0FI9t0IghtAHo3KotdT0NosMTH2GXLYnguNVypZum_CSWOwtNS4BnVqZON6zJytdq3CSPvjCEexBISbNnyGxU_AWdrAzFdNwkhMUL2XqW1K98KBmDj1wLu5JDPElpzugul_aabv_N-iNF71QsU4c1AolwAAAAFEpfzaAA',
+        proxy={
+            "scheme": 'http',
+            "hostname": '85.143.45.20', "port": 63272,
+            "username": '18PSkbwQ', "password": 'ngPiajzG'
+        },
+    )
     await client.start()
     print(await client.get_users(user_ids='arthur_air'))
     await client.stop()
