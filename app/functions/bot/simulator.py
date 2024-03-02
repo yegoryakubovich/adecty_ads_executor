@@ -15,10 +15,43 @@
 #
 
 
+from datetime import datetime, timedelta
+
 from pyrogram import Client
+
+from database import repo
+from database.models import Session, SessionTaskType, SessionTaskStates, OurGroupStates
+from functions.bot.executor import BotExecutorAction
 
 
 class SimulatorAction:
-    def __init__(self, client: Client):
-        self.client: Client = client
+    def __init__(self, client: Client, session: Session, executor: BotExecutorAction):
+        self.client = client
+        self.session = session
+        self.executor = executor
+        self.next_data: datetime = datetime.utcnow()
 
+    def run(self):
+        date_now = datetime.utcnow()
+        if self.next_data > date_now:
+            return
+        self.session = repo.sessions.get(id=self.session.id)
+        our_group = repo.ours_groups.get_by(state=OurGroupStates.active)
+        session_our_group = repo.sessions_ours_groups.get_by(session=self.session, our_group=our_group)
+        if not session_our_group:
+            task = repo.sessions_tasks.get_by(
+                session=self.session,
+                our_group=our_group,
+                type=SessionTaskType.join_group,
+                state=SessionTaskStates.enable,
+            )
+            if task:
+                return
+            repo.sessions_tasks.create(
+                session=self.session,
+                our_group=our_group,
+                type=SessionTaskType.join_group,
+                state=SessionTaskStates.enable,
+            )
+        sleep = int(repo.settings.get_by(key="simulator_sleep").value)
+        self.next_data = date_now + timedelta(seconds=sleep)

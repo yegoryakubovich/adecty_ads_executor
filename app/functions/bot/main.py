@@ -113,7 +113,7 @@ class BotAction:
 
         self.executor = BotExecutorAction(client=self.client, session=self.session)
         self.tasker = BotTaskerAction(client=self.client, session=self.session, executor=self.executor)
-        self.simulator = SimulatorAction(client=self.client)
+        self.simulator = SimulatorAction(client=self.client, session=self.session, executor=self.executor)
         if not await self.executor.start_session():
             return False
         return True
