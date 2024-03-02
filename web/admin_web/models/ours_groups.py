@@ -21,11 +21,10 @@ from django.db import models
 
 
 class OurGroupStates:
-    waiting = 'waiting'
     active = 'active'
     inactive = 'inactive'
 
-    choices = ((waiting, waiting), (active, active), (inactive, inactive))
+    choices = ((active, active), (inactive, inactive))
 
 
 class OurGroup(models.Model):

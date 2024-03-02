@@ -21,7 +21,6 @@ from database.db import BaseModel
 
 
 class OurGroupStates:
-    waiting = 'waiting'
     active = 'active'
     inactive = 'inactive'
 
@@ -29,7 +28,7 @@ class OurGroupStates:
 class OurGroup(BaseModel):
     id = PrimaryKeyField()
     name = CharField(max_length=64)
-    state = CharField(max_length=16, default=OurGroupStates.waiting)
+    state = CharField(max_length=16, default=OurGroupStates.active)
 
     class Meta:
         db_table = 'ours_groups'
