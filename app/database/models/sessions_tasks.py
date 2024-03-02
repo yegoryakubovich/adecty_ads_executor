@@ -18,7 +18,7 @@
 from peewee import PrimaryKeyField, ForeignKeyField, CharField, TextField
 
 from database.db import BaseModel
-from . import Session, Group, Order, Message, User
+from . import Session, Group, Order, Message, User, OurGroup
 
 
 class SessionTaskType:
@@ -43,6 +43,7 @@ class SessionTask(BaseModel):
     session = ForeignKeyField(Session, to_field='id', null=True)
     user = ForeignKeyField(User, to_field='id', null=True)
     group = ForeignKeyField(Group, to_field='id', null=True)
+    our_group = ForeignKeyField(OurGroup, to_field='id', null=True)
     order = ForeignKeyField(Order, to_field='id', null=True)
     message = ForeignKeyField(Message, to_field='id', null=True)
 
