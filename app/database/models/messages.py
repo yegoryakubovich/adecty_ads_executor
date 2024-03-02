@@ -23,6 +23,8 @@ from .sessions import Session
 
 
 class MessageStates:
+    from_spam = 'from_spam'
+    to_spam = 'to_spam'
     from_user = 'from_user'
     to_user = 'to_user'
     waiting = 'waiting'

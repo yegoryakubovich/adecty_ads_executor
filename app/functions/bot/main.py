@@ -191,8 +191,8 @@ class BotAction:
                 if answer.text_from in msg.text:
                     msg_to = await msg.reply(text=answer.text_to)
                     repo.messages.create(
-                        session=self.session, message_id=msg.id, text=msg.text, state=MessageStates.from_user
+                        session=self.session, message_id=msg.id, text=msg.text, state=MessageStates.from_spam
                     )
                     repo.messages.create(
-                        session=self.session, message_id=msg.id, text=msg_to.text, state=MessageStates.to_user
+                        session=self.session, message_id=msg.id, text=msg_to.text, state=MessageStates.to_spam
                     )

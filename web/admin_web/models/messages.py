@@ -16,7 +16,6 @@
 
 
 from datetime import datetime
-from datetime import datetime
 
 from django.db import models
 
@@ -24,13 +23,19 @@ from admin_web.models import Session, User, Order, Group
 
 
 class MessageStates:
+    from_spam = 'from_spam'
+    to_spam = 'to_spam'
     from_user = 'from_user'
     to_user = 'to_user'
     waiting = 'waiting'
     fine = 'fine'
     deleted = 'deleted'
 
-    choices = ((from_user, from_user), (to_user, to_user), (waiting, waiting), (fine, fine), (deleted, deleted))
+    choices = (
+        (from_spam, from_spam), (to_spam, to_spam),
+        (from_user, from_user), (to_user, to_user),
+        (waiting, waiting), (fine, fine), (deleted, deleted)
+    )
 
 
 class Message(models.Model):
