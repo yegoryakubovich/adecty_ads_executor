@@ -15,15 +15,15 @@
 #
 
 
-def registration_load():
-    from . import SessionAdmin, UserAdmin, GroupAdmin, OurGroupAdmin, OrderAdmin, ProxyAdmin, PersonalAdmin, GradeAdmin
-    from . import SessionTaskAdmin, MessageAdmin, SleepAdmin, ShopAdmin, CounryAdmin
-    from . import AnswerAdmin, SettingAdmin, DeviceAdmin, DialogMessageAdmin
+from django.contrib import admin
 
-    from . import SessionProxyAdmin, SessionGroupAdmin, SessionOurGroupAdmin, SessionPersonalAdmin, SessionOrderAdmin
-    from . import GroupCountryAdmin
-    from . import OrderAttachmentAdmin, OrderGroupAdmin, OrderPersonalAdmin, OrderUserAdmin
-    from . import CountryLinkAdmin, SessionLinkAdmin
+from admin_web.admin import admin_site
+from admin_web.admin_models import max_rows
+from admin_web.models import Grade
 
 
-max_rows = 200
+@admin.register(Grade, site=admin_site)
+class GradeAdmin(admin.ModelAdmin):
+    list_display = ('level', 'message_day', 'check_message_max', 'contact_max', 'active_group_max',)
+    readonly_fields = ("id", "created")
+    list_per_page = max_rows

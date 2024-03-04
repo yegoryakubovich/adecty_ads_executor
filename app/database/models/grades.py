@@ -15,15 +15,18 @@
 #
 
 
-def registration_load():
-    from . import SessionAdmin, UserAdmin, GroupAdmin, OurGroupAdmin, OrderAdmin, ProxyAdmin, PersonalAdmin, GradeAdmin
-    from . import SessionTaskAdmin, MessageAdmin, SleepAdmin, ShopAdmin, CounryAdmin
-    from . import AnswerAdmin, SettingAdmin, DeviceAdmin, DialogMessageAdmin
+from peewee import PrimaryKeyField, BigIntegerField, IntegerField
 
-    from . import SessionProxyAdmin, SessionGroupAdmin, SessionOurGroupAdmin, SessionPersonalAdmin, SessionOrderAdmin
-    from . import GroupCountryAdmin
-    from . import OrderAttachmentAdmin, OrderGroupAdmin, OrderPersonalAdmin, OrderUserAdmin
-    from . import CountryLinkAdmin, SessionLinkAdmin
+from database.db import BaseModel
 
 
-max_rows = 200
+class Grade(BaseModel):
+    id = PrimaryKeyField()
+    level = IntegerField(unique=True, null=False)
+    message_day = BigIntegerField(default=0)
+    check_message_max = BigIntegerField(default=0)
+    contact_max = BigIntegerField(default=0)
+    active_group_max = BigIntegerField(default=0)
+
+    class Meta:
+        db_table = 'grade'

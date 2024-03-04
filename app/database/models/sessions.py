@@ -18,7 +18,7 @@
 from peewee import PrimaryKeyField, BigIntegerField, CharField, ForeignKeyField, BooleanField
 
 from database.db import BaseModel
-from . import Shop
+from . import Shop, Grade
 from .countries import Country
 
 
@@ -37,6 +37,7 @@ class Session(BaseModel):
     phone = BigIntegerField()
     country = ForeignKeyField(Country, to_field='id')
     shop = ForeignKeyField(Shop, to_field='id')
+    grade = ForeignKeyField(Grade, to_field='id')
 
     string = CharField(max_length=512)
     api_id = BigIntegerField()

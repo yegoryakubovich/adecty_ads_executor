@@ -23,8 +23,7 @@ from admin_web.admin import admin_site
 from admin_web.admin_models import max_rows
 from admin_web.admin_models.SessionTaskAdmin.inlines import SessionTaskInline
 from admin_web.models import Session, Message, Sleep, SleepStates, SessionGroup, SessionGroupState, Personal, \
-    SessionPersonal, PersonalTypes, SessionTask, SessionTaskStates, SessionTaskType, SessionOrder, \
-    OrderGroup
+    SessionPersonal, PersonalTypes, SessionTask, SessionTaskStates, SessionTaskType, SessionOrder
 from .actions import actions_list
 from ..MessageAdmin.inlines import MessageInline
 from ..SessionDeviceAdmin.inlines import SessionDeviceInline
@@ -37,8 +36,8 @@ from ..SessionProxyAdmin.inlines import SessionProxyInline
 @admin.register(Session, site=admin_site)
 class SessionAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "work", "phone", "fio", "state", "order", "date", "message_send_now", "message_send_day", "sleep_now",
-        "groups_count", "tasks_count", "message_tasks_count"
+        "id", "work", "phone", "fio", "state", "order", 'grade', "date", "message_send_now", "message_send_day",
+        "sleep_now", "groups_count", "tasks_count", "message_tasks_count"
     )
     search_fields = ("id",)
     list_filter = ("state", "work", "created")

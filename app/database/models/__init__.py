@@ -19,6 +19,7 @@ from .answers import Answer
 from .countries import Country
 from .devices import Device
 from .dialogs_messages import DialogMessage
+from .grades import Grade
 from .groups import Group, GroupStates, GroupType, GroupCaptionType
 from .orders import Order, OrderStates, OrderTypes
 from .ours_groups import OurGroup, OurGroupStates
@@ -49,7 +50,7 @@ from .sleeps import Sleep, SleepStates
 
 
 all_models = (
-    Answer, Country, Device, DialogMessage, Group, Order, OurGroup, Personal, Setting, Shop, User,
+    Answer, Country, Device, DialogMessage, Grade, Group, Order, OurGroup, Personal, Setting, Shop, User,
     CountryLink, Proxy, Session,
     GroupCountry, Message, OrderAttachment, OrderGroup, OrderPersonal, OrderUser, SessionDevice, SessionGroup,
     SessionLink, SessionOrder, SessionOurGroup,  SessionPersonal, SessionProxy, SessionTask, Sleep,

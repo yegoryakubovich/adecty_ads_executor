@@ -19,7 +19,7 @@ from datetime import datetime
 
 from django.db import models
 
-from admin_web.models import Country, Shop
+from admin_web.models import Country, Shop, Grade
 
 
 class SessionStates:
@@ -49,6 +49,7 @@ class Session(models.Model):
     phone = models.BigIntegerField(verbose_name="Номер")
     country = models.ForeignKey(Country, on_delete=models.CASCADE, verbose_name="Страна")
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, verbose_name="Магазин")
+    grade = models.ForeignKey(Grade, on_delete=models.SET_NULL, verbose_name="Уровень сессии")
 
     string = models.CharField(max_length=512, verbose_name="String session")
     api_id = models.BigIntegerField(verbose_name="API ID")
