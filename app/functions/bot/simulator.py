@@ -35,23 +35,41 @@ class SimulatorAction:
         date_now = datetime.utcnow()
         if self.next_data > date_now:
             return
+        # update session data
         self.session = repo.sessions.get(id=self.session.id)
+        # read history
+        await self.executor.read_chat_history()
+        # check our group follower
         our_group = repo.ours_groups.get_by(state=OurGroupStates.active)
         session_our_group = repo.sessions_ours_groups.get_by(session=self.session, our_group=our_group)
         if not session_our_group:
-            task = repo.sessions_tasks.get_by(
-                session=self.session,
-                our_group=our_group,
-                type=SessionTaskType.join_group,
-                state=SessionTaskStates.enable,
-            )
-            if task:
+            if repo.sessions_tasks.get_by(
+                    session=self.session,
+                    our_group=our_group,
+                    type=SessionTaskType.join_group,
+                    state=SessionTaskStates.enable,
+            ):
                 return
+            # create task join group
             repo.sessions_tasks.create(
                 session=self.session,
                 our_group=our_group,
                 type=SessionTaskType.join_group,
                 state=SessionTaskStates.enable,
             )
+        # add contact
+        contacts_count = repo.sessions_links.get_contacts_count()
+        if contacts_count < self.session.grade.contact_max:  # check contact limits
+            chat_members = await self.executor.get_our_group_members(our_group=our_group, limit=1)
+            for chat_member in chat_members:
+                await self.executor.add_contact(chat_member=chat_member)
+        # send message to mutual contact
+        for session_link in repo.sessions_links.get_all(session_1=self.session):
+            mutual = repo.sessions_links.get_by(session_1=session_link.session_2, session_2=session_link.session_1)
+            if not mutual:
+                continue
+            dialog_message = repo.dialogs_messages.get_random()
+            await self.executor.send_message(chat_id=session_link.session_2.tg_user_id, text=dialog_message.message)
+        # sleep
         sleep = int(repo.settings.get_by(key="simulator_sleep").value)
         self.next_data = date_now + timedelta(seconds=sleep)
