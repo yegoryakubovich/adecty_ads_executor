@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     MYSQL_PASSWORD: str
     MYSQL_NAME: str
 
+    SERVER_IP: str
     ADMIN_USER: str
     ADMIN_PASSWORD: str
 
