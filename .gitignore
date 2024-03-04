@@ -19,11 +19,11 @@
 .mypy_cache
 .env
 data
-src/bot/app/data/images/nft_items/*
 logs/
 tests/
 *.session
 *.json
+test.py
 
 # PYTHON STANDART
 # Byte-compiled / optimized / DLL files

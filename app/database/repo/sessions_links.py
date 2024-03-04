@@ -13,14 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+from database import db_manager
 from database.base_repository import BaseRepository
-from database.models import SessionLink
+from database.models import SessionLink, Session
 
 
 class SessionLinkRepository(BaseRepository):
     model = SessionLink
+
+    @db_manager
+    def get_contacts_count(self, session: Session):
+        contacts = self.get_all(session_1=session)
+        return len(contacts)
 
 
 sessions_links = SessionLinkRepository(SessionLink)

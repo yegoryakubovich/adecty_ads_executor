@@ -133,6 +133,7 @@ class BotAction:
             SessionTaskType.check_spamblock, SessionTaskType.change_fi, SessionTaskType.change_avatar,
         ]
         while True:
+            # update session data
             self.session = repo.sessions.get(id=self.session.id)
             if self.session.state == SessionStates.banned:
                 return
