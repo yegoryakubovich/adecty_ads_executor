@@ -24,6 +24,7 @@ tests/
 *.session
 *.json
 test.py
+test_leave_chats.py
 
 # PYTHON STANDART
 # Byte-compiled / optimized / DLL files
