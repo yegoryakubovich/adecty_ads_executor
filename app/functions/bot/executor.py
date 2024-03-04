@@ -21,10 +21,11 @@ from typing import List
 
 from loguru import logger
 from pyrogram import Client, types, errors
+from pyrogram.types import ChatMember
 
 from database import repo
 from database.models import Session, SessionStates, Group, SessionGroup, GroupStates, User, \
-    SessionGroupState
+    SessionGroupState, OurGroup
 from functions import BaseExecutorAction
 
 
@@ -190,6 +191,24 @@ class BotExecutorAction(BaseExecutorAction):
                 continue
             await self.client.read_chat_history(chat_id=dialog.chat.id)
             await asyncio.sleep(randint(5, 20))
+
+    async def get_our_group_members(self, our_group: OurGroup, limit: int = 5) -> List[ChatMember]:
+        result = []
+        async for member in self.client.get_chat_members(chat_id=our_group.name):
+            if member.user.is_contact or member.user.is_deleted or member.user.is_bot or member.user.is_self:
+                continue
+            result.append(member)
+            if len(result) >= limit:
+                break
+        return result
+
+    async def add_contact(self, chat_member: ChatMember):
+        await self.client.add_contact(
+            user_id=chat_member.user.id,
+            first_name=chat_member.user.first_name,
+            last_name=chat_member.user.last_name,
+            share_phone_number=True,
+        )
 
     """OTHER"""
 
