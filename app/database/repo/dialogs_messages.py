@@ -13,14 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import random
 
-
+from database import db_manager
 from database.base_repository import BaseRepository
 from database.models import DialogMessage
 
 
 class DialogMessageRepository(BaseRepository):
     model = DialogMessage
+
+    @db_manager
+    def get_random(self) -> DialogMessage:
+        return random.choice(self.get_all())
 
 
 dialogs_messages = DialogMessageRepository(DialogMessage)
