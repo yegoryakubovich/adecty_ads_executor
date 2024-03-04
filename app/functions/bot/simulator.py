@@ -38,7 +38,7 @@ class SimulatorAction:
         # update session data
         self.session = repo.sessions.get(id=self.session.id)
         # read history
-        await self.executor.read_chat_history()
+        await self.executor.read_all_chat_history()
         # check our group follower
         our_group = repo.ours_groups.get_by(state=OurGroupStates.active)
         session_our_group = repo.sessions_ours_groups.get_by(session=self.session, our_group=our_group)

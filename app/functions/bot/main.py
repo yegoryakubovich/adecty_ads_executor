@@ -43,21 +43,23 @@ class BotAction:
         self.tasker = None
 
         self.session = session
-        self.black_list = [session.tg_user_id, 777000]
-        self.prefix = f"Session #{self.session.id}"
+        self.prefix = f'Session #{self.session.id}'
 
     async def open_session(self) -> Optional[Client]:
         sp: SessionProxy = repo.sessions_proxies.get_by_session(session=self.session)
         if not sp:
-            self.logger(f"No find proxy ({self.session.phone})")
+            self.logger(f'No find proxy ({self.session.phone})')
             return
         sd: SessionDevice = repo.sessions_devices.get_by_session(session=self.session)
         device = repo.devices.get(id=sd.device_id)
         return Client(
-            f"{self.session.id}", session_string=self.session.string,
-            api_id=self.session.api_id, api_hash=self.session.api_hash,
-            system_version=device.system_version, device_model=device.device_model,
-            proxy=repo.proxies.get_dict(proxy_id=sp.proxy_id)
+            f"{self.session.id}",
+            session_string=self.session.string,
+            api_id=self.session.api_id,
+            api_hash=self.session.api_hash,
+            system_version=device.system_version,
+            device_model=device.device_model,
+            proxy=repo.proxies.get_dict(proxy_id=sp.proxy_id),
         )
 
     def logger(self, txt):
@@ -118,14 +120,12 @@ class BotAction:
             return False
         return True
 
-    """
-        MAIN FUNCTION
-    """
+    """MAIN FUNCTION"""
 
     @func_logger
     async def start(self):
         await asyncio.sleep(randint(30, 300))
-        self.logger(f"Started!")
+        self.logger(f'Started!')
         if not await self.all_connection():
             return
         other_task_types = [
@@ -137,7 +137,7 @@ class BotAction:
             self.session = repo.sessions.get(id=self.session.id)
             if self.session.state == SessionStates.banned:
                 return
-            await asyncio.sleep(int(repo.settings.get_by(key="session_sleep_between").value))
+            await asyncio.sleep(int(repo.settings.get_by(key='session_sleep_between').value))
             """SPAM ANSWER"""
             await self.spam_answer()
             """CHECK MESSAGE TASK"""
@@ -150,7 +150,7 @@ class BotAction:
             """CHECK SLEEP"""
             sleep_time = await smart_sleep(self.session)
             if sleep_time > 0:
-                self.logger(f"Спать ещё минимум {sleep_time} сек.")
+                self.logger(f'Спать ещё минимум {sleep_time} сек.')
                 continue
             """OTHER TASK"""
             my_tasks = repo.sessions_tasks.get_all(in_list=True, session=self.session, state=SessionTaskStates.enable)
@@ -173,21 +173,21 @@ class BotAction:
                 elif task.type == SessionTaskType.change_avatar:  # CHANGE AVATAR
                     await self.tasker.change_avatar(task)
                 """Создаем сон"""
-                sleep_min = int(repo.settings.get_by(key="session_sleep_min").value)
-                sleep_max = int(repo.settings.get_by(key="session_sleep_max").value)
+                sleep_min = int(repo.settings.get_by(key='session_sleep_min').value)
+                sleep_max = int(repo.settings.get_by(key='session_sleep_max').value)
                 await smart_create_sleep(self.session, minimum=sleep_min, maximum=sleep_max)
                 break
 
     @func_logger
     async def spam_answer(self):
         active_session: Session = repo.sessions.get(id=self.session.id)
-        logger.info(f"spam_answer {active_session.state}")
+        logger.info(f'spam_answer {active_session.state}')
         try:
-            await self.client.get_chat_history_count(chat_id="SpamBot")
+            await self.client.get_chat_history_count(chat_id='SpamBot')
         except Exception as e:
             return
-
-        async for msg in self.client.get_chat_history(chat_id="SpamBot", limit=1):
+        await self.executor.read_chat_history(chat_id='SpamBot')
+        async for msg in self.client.get_chat_history(chat_id='SpamBot', limit=1):
             for answer in repo.answers.get_all():
                 if answer.text_from in msg.text:
                     msg_to = await msg.reply(text=answer.text_to)

@@ -58,8 +58,12 @@ class BaseExecutorAction:
         return await bot.send_message(chat_id=self.chat_id, text=text, disable_web_page_preview=True)
         return logger.info(text)
 
-    async def proxy_disable_log(self, proxy_id: int,
-                                proxy_shop_id: int, proxy_shop_name: str):
+    async def proxy_disable_log(
+            self,
+            proxy_id: int,
+            proxy_shop_id: int,
+            proxy_shop_name: str,
+    ):
         return await self.send_log_message(text="\n".join([
             f"🚫 Прокси #{proxy_id} заблокирован",
             f"Магазин: {proxy_shop_name}({proxy_shop_id})",
@@ -91,7 +95,7 @@ class BaseExecutorAction:
     async def new_session_banned_log(
             self,
             session: Session,
-            session_shop: Shop
+            session_shop: Shop,
     ) -> None:
         return await self.send_log_message(text="\n".join([
             f"🚫 Сессия #{session.id} ({session.state}) заблокирована",
@@ -109,7 +113,7 @@ class BaseExecutorAction:
             f"#new_session #session_{session_id} #session_shop_{session_shop_id}",
         ]))
 
-    async def proxy_added_log(self, proxy_id: int, proxy_shop_id: int, proxy_shop_name: str, ):
+    async def proxy_added_log(self, proxy_id: int, proxy_shop_id: int, proxy_shop_name: str):
         return await self.send_log_message(text="\n".join([
             f"➡️ Прокси: #{proxy_id} успешно добавлена",
             f"Магазин: {proxy_shop_name}",
@@ -123,7 +127,7 @@ class BaseExecutorAction:
             order: Order,
             group: Group,
             post_id: int,
-            session_messages_count: int
+            session_messages_count: int,
     ) -> None:
         link = await self.create_link(group_name=group.name, post_id=post_id)
         return await self.send_log_message(text="\n".join([
@@ -144,8 +148,14 @@ class BaseExecutorAction:
             f"#send_answer #session_{session_id} #user_{user_id}"
         ]))
 
-    async def send_message_mailing_log(self,
-                                       session_id: int, username: str, user_id: int, order_id: int, order_name: str):
+    async def send_message_mailing_log(
+            self,
+            session_id: int,
+            username: str,
+            user_id: int,
+            order_id: int,
+            order_name: str,
+    ):
         user_link = await self.create_user_link(username=username, user_id=user_id)
         return await self.send_log_message(text="\n".join([
             f"️✉️ Сессия #{session_id} направила сообщение рассылки",

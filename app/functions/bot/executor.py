@@ -185,12 +185,15 @@ class BotExecutorAction(BaseExecutorAction):
     async def update_profile_photo(self, photo=None):
         return await self.client.set_profile_photo(photo=photo)
 
-    async def read_chat_history(self):
+    async def read_all_chat_history(self):
         async for dialog in self.client.get_dialogs():
             if not dialog.unread_messages_count:
                 continue
-            await self.client.read_chat_history(chat_id=dialog.chat.id)
+            await self.read_chat_history(chat_id=dialog.chat.id)
             await asyncio.sleep(randint(5, 20))
+
+    async def read_chat_history(self, chat_id: int):
+        await self.client.read_chat_history(chat_id=chat_id)
 
     async def get_our_group_members(self, our_group: OurGroup, limit: int = 5) -> List[ChatMember]:
         result = []

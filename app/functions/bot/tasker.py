@@ -45,9 +45,7 @@ class BotTaskerAction:
 
     async def join_group(self, task: SessionTask):
         self.logger("join_group")
-        """
-            Задача входа в группу.
-        """
+        """Задача входа в группу"""
         group = repo.groups.get(task.group_id)
 
         if group.captcha_have:
@@ -88,9 +86,7 @@ class BotTaskerAction:
 
     async def check_message(self, task: SessionTask):
         self.logger(f"check_message")
-        """
-            Задача проверки сообщения.
-        """
+        """Задача проверки сообщения"""
         message = repo.messages.get(id=task.message_id)
         group = repo.groups.get(id=message.group_id)
         setting_msg: Setting = repo.settings.get_by(key="send_message_delay")
@@ -129,9 +125,7 @@ class BotTaskerAction:
 
     async def send_by_order(self, task: SessionTask):
         self.logger("send_by_order")
-        """
-            Задача отправки сообщения.
-        """
+        """Задача отправки сообщения"""
         order: Order = repo.orders.get(id=task.order_id)
         group: Group = repo.groups.get(id=task.group_id)
         sg: SessionGroup = repo.sessions_groups.get_by(session=self.session, group=group)
@@ -186,9 +180,7 @@ class BotTaskerAction:
 
     async def send_by_mailing(self, task: SessionTask):
         self.logger("send_by_mailing")
-        """
-            Задача отправки сообщения.
-        """
+        """Задача отправки сообщения"""
         order: Order = repo.orders.get(id=task.order_id)
         user: User = repo.users.get(id=task.user_id)
 
