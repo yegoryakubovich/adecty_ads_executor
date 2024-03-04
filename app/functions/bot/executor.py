@@ -15,6 +15,8 @@
 #
 
 
+import asyncio
+from random import randint
 from typing import List
 
 from loguru import logger
@@ -182,10 +184,19 @@ class BotExecutorAction(BaseExecutorAction):
     async def update_profile_photo(self, photo=None):
         return await self.client.set_profile_photo(photo=photo)
 
+    async def read_chat_history(self):
+        async for dialog in self.client.get_dialogs():
+            if not dialog.unread_messages_count:
+                continue
+            await self.client.read_chat_history(chat_id=dialog.chat.id)
+            await asyncio.sleep(randint(5, 20))
+
     """OTHER"""
 
     async def session_banned(self, new=False):
         self.logger("session_banned")
+        # update session data
+        self.session = repo.sessions.get(id=self.session.id)
         session_shop = repo.shops.get(self.session.shop_id)
         so = repo.sessions_orders.get_by(session=self.session)
         sp = repo.sessions_proxies.get_by(session=self.session)
@@ -203,18 +214,20 @@ class BotExecutorAction(BaseExecutorAction):
                 order=order,
                 messages_send=messages_send
             )
-        for sgroup in repo.sessions_groups.get_all(session=self.session):
-            repo.sessions_groups.remove(sgroup.id)
-        for sorder in repo.sessions_orders.get_all(session=self.session):
-            repo.sessions_orders.remove(sorder.id)
-        for spersonal in repo.sessions_personals.get_all(session=self.session):
-            repo.sessions_personals.remove(spersonal.id)
-        for sproxy in repo.sessions_proxies.get_all(session=self.session):
-            repo.sessions_proxies.remove(sproxy.id)
-        for stask in repo.sessions_tasks.get_all(session=self.session):
-            repo.sessions_tasks.remove(stask.id)
-        for sleep in repo.sleeps.get_all(session=self.session):
-            repo.sleeps.remove(sleep.id)
+        all_functions = [
+            dict(repository=repo.sessions_groups, items=repo.sessions_groups.get_all(session=self.session)),
+            dict(repository=repo.sessions_ours_groups, items=repo.sessions_ours_groups.get_all(session=self.session)),
+            dict(repository=repo.sessions_orders, items=repo.sessions_orders.get_all(session=self.session)),
+            dict(repository=repo.sessions_personals, items=repo.sessions_personals.get_all(session=self.session)),
+            dict(repository=repo.sessions_proxies, items=repo.sessions_proxies.get_all(session=self.session)),
+            dict(repository=repo.sessions_tasks, items=repo.sessions_tasks.get_all(session=self.session)),
+            dict(repository=repo.sleeps, items=repo.sleeps.get_all(session=self.session)),
+            dict(repository=repo.sessions_links, items=repo.sessions_groups.get_all(session_1=self.session)),
+            dict(repository=repo.sessions_links, items=repo.sessions_groups.get_all(session_2=self.session)),
+        ]
+        for item_function in all_functions:
+            for item in item_function['items']:
+                item_function['repository'].remove(item.id)
         repo.sessions.update(self.session, state=SessionStates.banned, work=False)
 
     async def update_session(self, tg_user: types.User):
