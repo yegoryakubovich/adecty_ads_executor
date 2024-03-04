@@ -15,4 +15,5 @@
 #
 
 
-from .converter import convert
+from .session import session_convert
+from .tdata import tdata_converter

@@ -27,8 +27,7 @@ from database.models import ProxyStates, SessionStates, GroupStates, MessageStat
     Order, Setting, SettingTypes, GroupCaptionType
 from functions import BotAction
 from functions.other.executor import AssistantExecutorAction
-from modules import convert
-from modules.tdata import tdata_converter
+from modules import session_convert, tdata_converter
 from utils.country import get_by_phone
 from utils.new import new
 
@@ -106,9 +105,10 @@ class CheckerAction:
 
     async def new_session_check(self):
         self.logger("new_session_check")
-        new_session = convert.start()
+        new_session = session_convert.start()
         if new_session:
             self.logger("Find new sessions")
+            grade = repo.grades.get_default_grade()
             for item in new_session:
                 shop = repo.shops.create(name=item['shop_name'])
                 for session in item['items']:
@@ -116,21 +116,34 @@ class CheckerAction:
                     country_type = get_by_phone(elem["phone"])
                     country = repo.countries.create(code=country_type.code, name=country_type.name)
                     repo.sessions.create(
-                        phone=elem["phone"], string=elem["string_session"], tg_user_id=elem["user_id"],
-                        api_id=elem["api_id"], api_hash=elem["api_hash"], country=country, shop=shop
+                        phone=elem["phone"],
+                        string=elem["string_session"],
+                        tg_user_id=elem["user_id"],
+                        api_id=elem["api_id"],
+                        api_hash=elem["api_hash"],
+                        country=country,
+                        shop=shop,
+                        grade=grade,
                     )
-        new_tdata_session = tdata_converter.start()
-        if new_tdata_session:
+        new_tdata = tdata_converter.start()
+        if new_tdata:
             self.logger("Find new sessions")
-            for item in new_tdata_session:
+            grade = repo.grades.get_default_grade()
+            for item in new_tdata:
                 shop = repo.shops.create(name=item['shop_name'])
                 for session in item['items']:
                     elem = item['items'][session]
                     country_type = get_by_phone(elem["session_name"])
                     country = repo.countries.create(code=country_type.code, name=country_type.name)
                     repo.sessions.create(
-                        phone=elem["session_name"], string=elem["string"], tg_user_id=elem["user_id"],
-                        api_id=elem["api_id"], api_hash=elem["api_hash"], country=country, shop=shop
+                        phone=elem["session_name"],
+                        string=elem["string"],
+                        tg_user_id=elem["user_id"],
+                        api_id=elem["api_id"],
+                        api_hash=elem["api_hash"],
+                        country=country,
+                        shop=shop,
+                        grade=grade,
                     )
 
     # WAIT SESSION CHECK
@@ -216,7 +229,7 @@ class CheckerAction:
                     continue
                 logger.info(f"YES ({st_last.created} + {timedelta(minutes=30)}) < {time_now}")
 
-            session = await self.executor.get_session_from_message_check(group=group,spam=True, in_work=True)
+            session = await self.executor.get_session_from_message_check(group=group, spam=True, in_work=True)
             if not session:
                 continue
             repo.sessions_tasks.create(

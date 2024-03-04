@@ -20,6 +20,7 @@ from .countries import countries
 from .countries_links import countries_links
 from .devices import devices
 from .dialogs_messages import dialogs_messages
+from .grades import grades
 from .groups import groups
 from .messages import messages
 from .orders import orders

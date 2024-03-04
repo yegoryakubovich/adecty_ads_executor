@@ -27,7 +27,7 @@ from peewee import SqliteDatabase, Model, IntegerField, TextField, BlobField
 from pyrogram.storage import Storage
 
 
-class Converter:
+class SessionConverter:
     def __init__(self):
         self.okay = None
         self.export_dir, self.input_dir = "export", "new/session"
@@ -107,4 +107,4 @@ class Converter:
         return self.result
 
 
-convert = Converter()
+session_convert = SessionConverter()
